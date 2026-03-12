@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Computer | Management System</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --primary: #1e40af; --secondary: #3b82f6; --dark: #0f172a; --bg: #e2e8f0; --text: #1e293b; --success: #059669; --danger: #dc2626; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; }
+        .hidden { display: none !important; }
+
+        .navbar { background: var(--dark); color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; }
+        .nav-links button { background: #334155; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 6px; margin-left: 5px; transition: 0.3s; }
+        .nav-links button:hover { background: var(--primary); }
+
+        .external-actions { position: fixed; top: 80px; left: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 500; }
+        
+        .invoice-sheet { width: 210mm; min-height: 297mm; background: white; padding: 15mm; margin: 20px auto; position: relative; color: #000; box-sizing: border-box; display: flex; flex-direction: column; border: 1px solid #d1d5db; }
+        
+        /* Header Size Update */
+        .header { display: flex; justify-content: space-between; border-bottom: 4px solid var(--primary); padding-bottom: 15px; margin-bottom: 20px; }
+        .header h1 { margin: 0; font-size: 42px; color: var(--primary); font-weight: 900; }
+        .slogan { font-size: 14px; color: #444; font-weight: 600; font-style: italic; margin-top: -5px; margin-bottom: 10px; }
+        
+        .header-info p { margin: 3px 0; font-size: 13px; display: flex; align-items: center; gap: 8px; }
+
+        .cust-box { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; background: #f8fafc; padding: 15px; border-radius: 5px; border: 1px solid #e2e8f0; }
+        .field { font-size: 14px; display: flex; align-items: center; gap: 5px; }
+        .field b { min-width: 120px; color: var(--primary); }
+        input { border: 1px solid #ccc; padding: 5px; border-radius: 3px; font-size: 13px; outline: none; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: #e2e8f0; color: #000; padding: 10px; border: 1px solid #000; font-size: 13px; text-transform: uppercase; }
+        td { border: 1px solid #000; padding: 6px; text-align: center; }
+
+        /* QR Code border and spacing */
+        #qrcode { margin-top: 15px; margin-bottom: 15px; display: inline-block; padding: 5px; border: 2px solid #000; border-radius: 4px; }
+
+        .footer-icons { display: flex; justify-content: center; gap: 18px; margin-top: auto; padding: 15px 0; border-top: 2px solid var(--primary); }
+        .icon-box { text-align: center; width: 65px; color: var(--primary); }
+        .icon-box i { font-size: 20px; }
+        .icon-box span { display: block; font-size: 9px; font-weight: bold; color: #334155; margin-top: 4px; text-transform: uppercase; }
+
+        .panel { padding: 30px; max-width: 1100px; margin: 20px auto; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+
+        /* Password Show Icon Style */
+        .pass-container { position: relative; width: 90%; margin: 10px auto; }
+        .toggle-password { position: absolute; right: 10px; top: 12px; cursor: pointer; color: #666; }
+
+        @media print {
+            .no-print, .external-actions, .navbar { display: none !important; }
+            body { background: white; }
+            .invoice-sheet { box-shadow: none; margin: 0; width: 100%; border: none; padding: 5mm; }
+            input { border: none !important; }
+            select { border: none !important; appearance: none; color: black !important; font-weight: bold; font-size: 18px; }
+        }
+    </style>
+</head>
+<body onload="document.getElementById('uId').focus()">
+
+<div id="loginPage" style="position:fixed; inset:0; background:var(--dark); display:flex; align-items:center; justify-content:center; z-index:9999;">
+    <div style="background:white; padding:40px; border-radius:15px; width:350px; text-align:center;">
+        <h2 style="color:var(--primary)">Smart Computer EBR System</h2>
+        <input type="text" id="uId" placeholder="User ID" style="width:90%; padding:12px; margin:10px 0;">
+        <div class="pass-container">
+            <input type="password" id="uPass" placeholder="Password" style="width:100%; padding:12px; margin:0;" onkeypress="if(event.key === 'Enter') login()">
+            <i class="fa-solid fa-eye toggle-password" onclick="togglePass()"></i>
+        </div>
+        <button onclick="login()" class="btn btn-primary" style="width:100%; justify-content:center; margin-top: 10px;">LOGIN</button>
+    </div>
+</div>
+
+<div id="app" class="hidden">
+    <nav class="navbar no-print">
+        <div style="font-size:20px; font-weight:bold;"><i class="fa-solid fa-laptop-code"></i> SMART COMPUTER</div>
+        <div class="nav-links">
+            <button onclick="showSec('pos')">Invoice</button>
+            <button onclick="showSec('history')">History</button>
+            <button onclick="showSec('stock')">Inventory</button>
+            <button id="navSettings" onclick="showSec('settings')">Admin</button>
+            <button onclick="exportData()" style="background:var(--success)">Backup</button>
+            <button onclick="document.getElementById('restoreInput').click()" style="background:var(--secondary)">Restore</button>
+            <input type="file" id="restoreInput" accept=".json" style="display:none" onchange="importData(event)">
+            <button onclick="location.reload()" style="background:var(--danger)">Logout</button>
+        </div>
+    </nav>
+
+    <div id="posSec">
+        <div class="external-actions no-print">
+            <button onclick="saveAndPrint()" class="btn btn-primary"><i class="fa-solid fa-print"></i> Save & Print</button>
+            <button onclick="resetPOS()" class="btn btn-success"><i class="fa-solid fa-file-circle-plus"></i> New Record</button>
+        </div>
+
+        <div class="invoice-sheet" id="invoice">
+            <div class="header">
+                <div>
+                    <h1>SMART COMPUTER</h1>
+                    <div class="slogan">Quality Service, Smart Solution, Your Digital Service Partner.</div>
+                    <div class="header-info">
+                        <p><i class="fa-solid fa-phone"></i> 01614-398989</p>
+                        <p><i class="fa-solid fa-envelope"></i> smartcomputer660@gmail.com</p>
+                        <p><i class="fa-solid fa-location-dot"></i> 1 No Camp, Housing Bajar Road, Ward No-12, Khalishpur, Khulna</p>
+                        <p><i class="fa-solid fa-globe"></i> smartcomputer-bd.github.io/com</p>
+                    </div>
+                </div>
+                <div style="text-align:right">
+                    <select id="docType" onchange="genId()" style="font-size:16px; font-weight:bold; color:var(--primary);">
+                        <option value="Inv">INVOICE</option>
+                        <option value="Req">REQUISITION</option>
+                    </select>
+                    <p><b>No:</b> <span id="invId" style="font-weight:bold; color:var(--danger)"></span></p>
+                    <p><b>Date:</b> <span id="curDate"></span></p>
+                    <p><b>Time:</b> <span id="curTime"></span></p>
+                </div>
+            </div>
+
+            <div class="cust-box">
+                <div class="field"><b>Customer Name:</b> <input type="text" id="cName" style="flex:1"></div>
+                <div class="field"><b>Mobile:</b> <input type="text" id="cPhone" style="flex:1"></div>
+                <div class="field" style="grid-column: span 2;"><b>Address:</b> <input type="text" id="cAddr" style="flex:1"></div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr><th width="5%">SL</th><th width="20%">Code (Scan)</th><th>Description</th><th width="10%">Qty</th><th width="15%">Price</th><th width="15%">Total</th></tr>
+                </thead>
+                <tbody id="billBody"></tbody>
+            </table>
+
+            <div style="display:flex; justify-content:space-between; margin-top:20px;">
+                <div style="width:50%">
+                    <p style="font-size:12px; font-weight:bold; text-decoration:underline;">Terms & Conditions:</p>
+                    <p style="font-size:10px; line-height:1.5;">
+                        1. Warranty covers manufacturing defects only.<br>
+                        2. Physical damage, burn, or liquid damage voids warranty.<br>
+                        3. Product must be returned with original invoice and packaging.<br>
+                        4. Warranty period starts from the date of purchase.
+                    </p>
+                    <div id="qrcode"></div> 
+                </div>
+                <div style="width:300px; text-align:right;">
+                    <div style="display:flex; justify-content:space-between; padding:4px 0;"><span>Sub Total:</span> <span id="subT">0.00</span></div>
+                    <div style="display:flex; justify-content:space-between; padding:4px 0;"><span>Discount (%):</span> <input type="number" id="vP" value="0" style="width:60px; text-align:center" oninput="calc()"></div>
+                    <div style="display:flex; justify-content:space-between; padding:4px 0;"><span>VAT (%):</span> <input type="number" id="vatInp" value="0" style="width:60px; text-align:center" oninput="calc()"></div>
+                    <div style="display:flex; justify-content:space-between; padding:8px 0; font-weight:bold; font-size:16px; border-top:2px solid #000;"><span>Grand Total:</span> <span id="grandT">0.00</span></div>
+                    <div style="display:flex; justify-content:space-between; padding:4px 0;"><span>Paid:</span> <input type="number" id="pPaid" value="0" style="width:80px; text-align:right" oninput="calc()"></div>
+                    <div style="display:flex; justify-content:space-between; padding:4px 0; color:var(--danger); font-weight:bold;"><span>Due:</span> <span id="pDue">0.00</span></div>
+                    <div style="text-align:left; margin-top:35px; font-size:11px; font-style:italic; border-top:1px dashed #ccc; padding-top:10px;">
+                        <b>In Words:</b> <span id="inWords">Zero Taka Only</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-icons">
+                <div class="icon-box"><i class="fa-solid fa-desktop"></i><span>Desktop</span></div>
+                <div class="icon-box"><i class="fa-solid fa-laptop"></i><span>Laptop</span></div>
+                <div class="icon-box"><i class="fa-solid fa-mouse"></i><span>Mouse</span></div>
+                <div class="icon-box"><i class="fa-solid fa-hard-drive"></i><span>Storage</span></div>
+                <div class="icon-box"><i class="fa-solid fa-headphones"></i><span>Audio</span></div>
+                <div class="icon-box"><i class="fa-solid fa-plug"></i><span>Charger</span></div>
+                <div class="icon-box"><i class="fa-solid fa-print"></i><span>Printer</span></div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; margin-top:20px; border-top:1px solid #eee; padding-top:10px;">
+                <div style="border-top:1.5px solid #000; width:150px; text-align:center; font-size:12px; font-weight:bold;">Customer Signature</div>
+                <div style="font-size:11px;">Sold By: <span id="soldBy"></span></div>
+                <div style="border-top:1.5px solid #000; width:150px; text-align:center; font-size:12px; font-weight:bold;">Authorized Sign</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="historySec" class="hidden panel">
+        <h3>Sales & Requisition History</h3>
+        <input type="text" id="searchInv" placeholder="Search by ID, Name or Mobile..." oninput="renderHistory()" style="width:100%; padding:12px; margin-bottom:15px; border:1px solid #ddd; border-radius:8px;">
+        <table style="width:100%">
+            <thead><tr><th>Date</th><th>ID</th><th>Customer</th><th>Phone</th><th>Total</th><th>Action</th></tr></thead>
+            <tbody id="historyBody"></tbody>
+        </table>
+    </div>
+
+    <div id="stockSec" class="hidden panel">
+        <h3>Inventory Control (Scan Enabled)</h3>
+        <div style="display:grid; grid-template-columns: 1fr 2fr 1fr auto; gap:10px; margin-bottom:20px; background:#f8fafc; padding:15px; border-radius:10px;">
+            <input type="text" id="sCode" placeholder="Scan Barcode" autofocus onkeypress="if(event.key==='Enter') document.getElementById('sName').focus()">
+            <input type="text" id="sName" placeholder="Product Details">
+            <input type="number" id="sPrice" placeholder="Price">
+            <button onclick="addStock()" class="btn btn-success">Add Item</button>
+        </div>
+        <table style="width:100%">
+            <thead><tr><th>Code</th><th>Name</th><th>Price</th><th>Action</th></tr></thead>
+            <tbody id="stockBody"></tbody>
+        </table>
+    </div>
+
+    <div id="settingsSec" class="hidden panel">
+        <h3>User Administration</h3>
+        <div style="display:grid; grid-template-columns: 1fr 1.5fr; gap:20px;">
+            <div style="border:1px solid #ddd; padding:20px; border-radius:10px; background:#f9fafb;">
+                <h4 id="userFormTitle">Manage User</h4>
+                <input type="hidden" id="editUserIndex" value="-1">
+                <input type="text" id="newUId" placeholder="Login ID" style="width:94%; padding:10px; margin-bottom:10px;">
+                <input type="password" id="newUPass" placeholder="Login Password" style="width:94%; padding:10px; margin-bottom:15px;">
+                <button id="userBtn" onclick="saveUser()" class="btn btn-primary" style="width:100%; justify-content:center;">Save User</button>
+                <button id="cancelUserEdit" onclick="resetUserForm()" class="btn btn-danger hidden" style="width:100%; margin-top:5px; justify-content:center;">Cancel</button>
+            </div>
+            <div style="border:1px solid #ddd; padding:20px; border-radius:10px;">
+                <h4>Registered Users</h4>
+                <ul id="userList" style="list-style:none; padding:0;"></ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let users = JSON.parse(localStorage.getItem('sm_users')) || [{id:'admin', pass:'724672'}];
+    let stock = JSON.parse(localStorage.getItem('sm_stock')) || [];
+    let invoices = JSON.parse(localStorage.getItem('sm_invoices')) || [];
+    let currentUser = "";
+    let isEditMode = false;
+
+    // Toggle Password Visibility
+    function togglePass() {
+        const passInput = document.getElementById('uPass');
+        const icon = document.querySelector('.toggle-password');
+        if(passInput.type === "password") {
+            passInput.type = "text";
+            icon.classList.replace('fa-eye', 'fa-eye-slash');
+        } else {
+            passInput.type = "password";
+            icon.classList.replace('fa-eye-slash', 'fa-eye');
+        }
+    }
+
+    function login() {
+        const id = document.getElementById('uId').value.trim();
+        const pass = document.getElementById('uPass').value.trim();
+        const u = users.find(x => x.id === id && x.pass === pass);
+        if(u) {
+            currentUser = id;
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+            id === 'admin' ? document.getElementById('navSettings').classList.remove('hidden') : document.getElementById('navSettings').classList.add('hidden');
+            resetPOS();
+            renderUsers();
+        } else alert("Invalid ID or Password!");
+    }
+
+    function resetPOS() {
+        isEditMode = false;
+        const d = new Date();
+        const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+        document.getElementById('curDate').innerText = String(d.getDate()).padStart(2,'0') + "-" + months[d.getMonth()] + "-" + d.getFullYear();
+        document.getElementById('curTime').innerText = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: true});
+        genId();
+        document.getElementById('soldBy').innerText = currentUser;
+        ['cName','cPhone','cAddr','vP','vatInp','pPaid'].forEach(id => document.getElementById(id).value = (id=='vP'||id=='vatInp'||id=='pPaid') ? 0 : "");
+        
+        document.getElementById('qrcode').innerHTML = "";
+        new QRCode(document.getElementById("qrcode"), { 
+            text: "https://smartcomputer-bd.github.io/com", 
+            width: 80, height: 80 
+        });
+
+        let rows = "";
+        for(let i=1; i<=15; i++) {
+            rows += `<tr><td>${i}</td><td><input type="text" class="it-c" onchange="fetchItem(this)"></td><td><input type="text" class="it-n" style="width:95%"></td><td><input type="number" class="it-q" value="0" oninput="calc()" style="width:50px"></td><td><input type="number" class="it-p" value="0" oninput="calc()" style="width:80px"></td><td class="it-t">0.00</td></tr>`;
+        }
+        document.getElementById('billBody').innerHTML = rows;
+        calc();
+    }
+
+    function genId() {
+        if(!isEditMode) {
+            const type = document.getElementById('docType').value;
+            document.getElementById('invId').innerText = type + "-" + Math.floor(100000 + Math.random() * 900000);
+        }
+    }
+
+    function fetchItem(input) {
+        const p = stock.find(x => x.code === input.value.trim());
+        const row = input.parentElement.parentElement;
+        if(p) {
+            row.querySelector('.it-n').value = p.name;
+            row.querySelector('.it-p').value = p.price;
+            row.querySelector('.it-q').value = 1;
+            calc();
+            const next = row.nextElementSibling;
+            if(next) next.querySelector('.it-c').focus();
+        }
+    }
+
+    function calc() {
+        let sub = 0;
+        document.querySelectorAll('#billBody tr').forEach(r => {
+            const q = parseFloat(r.querySelector('.it-q').value) || 0;
+            const p = parseFloat(r.querySelector('.it-p').value) || 0;
+            const t = q * p;
+            r.querySelector('.it-t').innerText = t.toFixed(2);
+            sub += t;
+        });
+
+        const discRate = parseFloat(document.getElementById('vP').value) || 0;
+        const vatRate = parseFloat(document.getElementById('vatInp').value) || 0;
+
+        const discAmt = (sub * discRate) / 100;
+        const vatAmt = (sub * vatRate) / 100; // Calculated on Sub Total
+
+        const grand = Math.round(sub - discAmt + vatAmt);
+        
+        document.getElementById('subT').innerText = sub.toFixed(2);
+        document.getElementById('grandT').innerText = grand.toFixed(2);
+        document.getElementById('pDue').innerText = (grand - (parseFloat(document.getElementById('pPaid').value) || 0)).toFixed(2);
+        
+        document.getElementById('inWords').innerText = numberToWords(grand) + " Taka Only";
+    }
+
+    function numberToWords(num) {
+        const a = ['', 'One ', 'Two ', 'Three ', 'Four ', 'Five ', 'Six ', 'Seven ', 'Eight ', 'Nine ', 'Ten ', 'Eleven ', 'Twelve ', 'Thirteen ', 'Fourteen ', 'Fifteen ', 'Sixteen ', 'Seventeen ', 'Eighteen ', 'Nineteen '];
+        const b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+        if ((num = num.toString()).length > 9) return 'Overflow';
+        let n = ('000000000' + num).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
+        if (!n) return ''; 
+        let str = '';
+        str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + 'Crore ' : '';
+        str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + 'Lakh ' : '';
+        str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + 'Thousand ' : '';
+        str += (n[4] != 0) ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + 'Hundred ' : '';
+        str += (n[5] != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) : '';
+        return str || 'Zero';
+    }
+
+    function saveAndPrint() {
+        const inv = {
+            id: document.getElementById('invId').innerText,
+            type: document.getElementById('docType').value,
+            date: document.getElementById('curDate').innerText,
+            customer: document.getElementById('cName').value,
+            phone: document.getElementById('cPhone').value,
+            addr: document.getElementById('cAddr').value,
+            items: [],
+            vat: document.getElementById('vatInp').value,
+            disc: document.getElementById('vP').value,
+            paid: document.getElementById('pPaid').value,
+            grand: document.getElementById('grandT').innerText,
+            soldBy: currentUser
+        };
+        document.querySelectorAll('#billBody tr').forEach(r => {
+            if(parseFloat(r.querySelector('.it-q').value) > 0) {
+                inv.items.push({ c: r.querySelector('.it-c').value, n: r.querySelector('.it-n').value, q: r.querySelector('.it-q').value, p: r.querySelector('.it-p').value });
+            }
+        });
+        if(isEditMode) {
+            const idx = invoices.findIndex(x => x.id === inv.id);
+            if(idx !== -1) invoices[idx] = inv;
+        } else invoices.push(inv);
+        localStorage.setItem('sm_invoices', JSON.stringify(invoices));
+        window.print();
+    }
+
+    function renderHistory() {
+        const q = document.getElementById('searchInv').value.toLowerCase();
+        let h = "";
+        invoices.slice().reverse().filter(x => x.id.toLowerCase().includes(q) || x.customer.toLowerCase().includes(q) || x.phone.includes(q)).forEach(x => {
+            h += `<tr><td>${x.date}</td><td>${x.id}</td><td>${x.customer}</td><td>${x.phone}</td><td>${x.grand}</td>
+            <td>
+                <button onclick="editInv('${x.id}')" class="btn-primary" style="padding:4px 8px; border-radius:4px; border:none; cursor:pointer;">Edit</button>
+                <button onclick="deleteInv('${x.id}')" class="btn-danger" style="padding:4px 8px; border-radius:4px; border:none; cursor:pointer; margin-left:5px;">Del</button>
+            </td></tr>`;
+        });
+        document.getElementById('historyBody').innerHTML = h;
+    }
+
+    function editInv(id) {
+        const inv = invoices.find(x => x.id === id);
+        isEditMode = true;
+        document.getElementById('docType').value = inv.type || "Inv";
+        document.getElementById('invId').innerText = inv.id;
+        document.getElementById('cName').value = inv.customer;
+        document.getElementById('cPhone').value = inv.phone;
+        document.getElementById('cAddr').value = inv.addr;
+        document.getElementById('vP').value = inv.disc || 0;
+        document.getElementById('vatInp').value = inv.vat || 0;
+        document.getElementById('pPaid').value = inv.paid;
+        const rows = document.querySelectorAll('#billBody tr');
+        rows.forEach(r => { r.querySelector('.it-c').value = ""; r.querySelector('.it-q').value = 0; });
+        inv.items.forEach((item, i) => {
+            rows[i].querySelector('.it-c').value = item.c;
+            rows[i].querySelector('.it-n').value = item.n;
+            rows[i].querySelector('.it-q').value = item.q;
+            rows[i].querySelector('.it-p').value = item.p;
+        });
+        calc();
+        showSec('pos');
+    }
+
+    function deleteInv(id) {
+        if(confirm("Are you sure to delete this record?")) {
+            invoices = invoices.filter(x => x.id !== id);
+            localStorage.setItem('sm_invoices', JSON.stringify(invoices));
+            renderHistory();
+        }
+    }
+
+    function renderUsers() {
+        let h = "";
+        users.forEach((u, i) => {
+            h += `<li style="padding:10px; border-bottom:1px solid #ddd; display:flex; justify-content:space-between; align-items:center;">
+                <span><b>${u.id}</b></span>
+                <div>
+                    <button onclick="editUser(${i})" style="color:blue; border:none; background:none; cursor:pointer; margin-right:10px;"><i class="fa-solid fa-edit"></i> Edit</button>
+                    ${u.id !== 'admin' ? `<button onclick="delUser(${i})" style="color:red; border:none; background:none; cursor:pointer;"><i class="fa-solid fa-trash"></i> Del</button>` : ''}
+                </div>
+            </li>`;
+        });
+        document.getElementById('userList').innerHTML = h;
+    }
+
+    function saveUser() {
+        const id = document.getElementById('newUId').value.trim();
+        const pass = document.getElementById('newUPass').value.trim();
+        const editIdx = parseInt(document.getElementById('editUserIndex').value);
+        if(!id || !pass) return alert("All fields are required!");
+        if(editIdx > -1) {
+            users[editIdx] = {id, pass};
+            alert("User updated successfully!");
+        } else {
+            users.push({id, pass});
+            alert("New user created!");
+        }
+        localStorage.setItem('sm_users', JSON.stringify(users));
+        resetUserForm();
+        renderUsers();
+    }
+
+    function editUser(idx) {
+        const u = users[idx];
+        document.getElementById('newUId').value = u.id;
+        document.getElementById('newUPass').value = u.pass;
+        document.getElementById('editUserIndex').value = idx;
+        document.getElementById('userFormTitle').innerText = "Edit User Settings";
+        document.getElementById('userBtn').innerText = "Update User Info";
+        document.getElementById('cancelUserEdit').classList.remove('hidden');
+    }
+
+    function resetUserForm() {
+        document.getElementById('newUId').value = "";
+        document.getElementById('newUPass').value = "";
+        document.getElementById('editUserIndex').value = "-1";
+        document.getElementById('userFormTitle').innerText = "Manage User";
+        document.getElementById('userBtn').innerText = "Save User";
+        document.getElementById('cancelUserEdit').classList.add('hidden');
+    }
+
+    function delUser(idx) {
+        if(confirm("Permanently delete this user?")) {
+            users.splice(idx, 1);
+            localStorage.setItem('sm_users', JSON.stringify(users));
+            renderUsers();
+        }
+    }
+
+    function addStock() {
+        const c = document.getElementById('sCode').value;
+        const n = document.getElementById('sName').value;
+        const p = document.getElementById('sPrice').value;
+        if(c && n) {
+            stock.push({code:c, name:n, price:p});
+            localStorage.setItem('sm_stock', JSON.stringify(stock));
+            renderStock();
+            document.getElementById('sCode').value = ''; document.getElementById('sName').value = ''; document.getElementById('sPrice').value = '';
+            document.getElementById('sCode').focus();
+        }
+    }
+
+    function renderStock() {
+        let h = "";
+        stock.slice().reverse().forEach((x, i) => {
+            h += `<tr><td>${x.code}</td><td>${x.name}</td><td>${x.price}</td><td><button onclick="delStock(${stock.length-1-i})" class="btn-danger" style="padding:2px 5px; border:none; border-radius:4px; cursor:pointer;">Del</button></td></tr>`;
+        });
+        document.getElementById('stockBody').innerHTML = h;
+    }
+
+    function delStock(idx) { stock.splice(idx, 1); localStorage.setItem('sm_stock', JSON.stringify(stock)); renderStock(); }
+
+    function exportData() {
+        const blob = new Blob([JSON.stringify({users, stock, invoices})], {type: 'application/json'});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'SmartComputer_System_Backup.json'; a.click();
+    }
+
+    function importData(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                if (data.users && data.stock && data.invoices) {
+                    if(confirm("Restore করার ফলে বর্তমান সকল ডাটা মুছে যাবে। আপনি কি নিশ্চিত?")) {
+                        localStorage.setItem('sm_users', JSON.stringify(data.users));
+                        localStorage.setItem('sm_stock', JSON.stringify(data.stock));
+                        localStorage.setItem('sm_invoices', JSON.stringify(data.invoices));
+                        alert("Data Restored Successfully! সিস্টেম রিলোড হচ্ছে...");
+                        location.reload();
+                    }
+                } else {
+                    alert("ভুল ফাইল ফরম্যাট! সঠিক ব্যাকআপ ফাইল নির্বাচন করুন।");
+                }
+            } catch (err) {
+                alert("ফাইলটি পড়তে সমস্যা হচ্ছে।");
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    function showSec(id) {
+        ['posSec','historySec','stockSec','settingsSec'].forEach(s => document.getElementById(s).classList.add('hidden'));
+        document.getElementById(id + 'Sec').classList.remove('hidden');
+        if(id=='history') renderHistory();
+        if(id=='stock') renderStock();
+        if(id=='settings') renderUsers();
+    }
+</script>
+</body>
+</html>
