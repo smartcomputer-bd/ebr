@@ -7,6 +7,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
     <script>
         // আপনার দেওয়া Firebase কনফিগারেশন
         const firebaseConfig = {
@@ -47,35 +50,7 @@
                         if(typeof renderUsers === "function") renderUsers();
                     }
                 } else {
-                    // ডাটাবেস একদম খালি থাকলে ডিফল্ট ইউজার সেট করা
-                    window.users = [{id:'admin', pass:'smart123'}];
-                }
-            });
-        }
-
-        loadCloudData();
-
-        // লগইন ফাংশন (সংশোধিত)
-        function login() {
-            const id = document.getElementById('uId').value.trim();
-            const pass = document.getElementById('uPass').value.trim();
-            
-            // যদি ডাটাবেস থেকে ইউজার লিস্ট লোড না হয়, তবে ডিফল্ট ইউজার ব্যবহার করবে
-            const activeUsers = (window.users && window.users.length > 0) ? window.users : [{id:'admin', pass:'smart123'}];
-            const u = activeUsers.find(x => x.id === id && x.pass === pass);
-            
-            if(u) {
-                currentUser = id;
-                document.getElementById('loginPage').classList.add('hidden');
-                document.getElementById('app').classList.remove('hidden');
-                document.getElementById('soldBy').innerText = currentUser;
-                resetPOS();
-            } else {
-                alert("Inviled User ID or Password.");
-            }
-        }
-    </script>
-    
+                    
     <style>
         :root { --primary: #1e40af; --secondary: #3b82f6; --dark: #0f172a; --bg: #e2e8f0; --text: #1e293b; --success: #059669; --danger: #dc2626; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; }
