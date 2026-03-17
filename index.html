@@ -239,7 +239,7 @@
     let currentUser = "";
     let isEditMode = false;
 
-    // Cloud Data Sync (অটোমেটিক ডাটা লোড হবে)
+    // Cloud Data Sync
     db.ref('smart_erp/').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
@@ -290,12 +290,13 @@
         
         document.getElementById('qrcode').innerHTML = "";
         new QRCode(document.getElementById("qrcode"), { 
-            text: "https://smartcomputer-bd.github.io/com", 
+            text: "SMART COMPUTER - DIGITAL SERVICE", 
             width: 80, height: 80 
         });
 
         let rows = "";
-        for(let i=1; i<=15; i++) {
+        // Updated to 10 Rows as requested
+        for(let i=1; i<=10; i++) {
             rows += `<tr><td>${i}</td><td><input type="text" class="it-c" onchange="fetchItem(this)"></td><td><input type="text" class="it-n" style="width:95%"></td><td><input type="number" class="it-q" value="0" oninput="calc()" style="width:50px"></td><td><input type="number" class="it-p" value="0" oninput="calc()" style="width:80px"></td><td class="it-t">0.00</td></tr>`;
         }
         document.getElementById('billBody').innerHTML = rows;
@@ -338,11 +339,37 @@
         const vatAmt = (sub * vatRate) / 100;
 
         const grand = Math.round(sub - discAmt + vatAmt);
+        const paid = parseFloat(document.getElementById('pPaid').value) || 0;
+        const due = grand - paid;
         
         document.getElementById('subT').innerText = sub.toFixed(2);
         document.getElementById('grandT').innerText = grand.toFixed(2);
-        document.getElementById('pDue').innerText = (grand - (parseFloat(document.getElementById('pPaid').value) || 0)).toFixed(2);
+        document.getElementById('pDue').innerText = due.toFixed(2);
         document.getElementById('inWords').innerText = numberToWords(grand) + " Taka Only";
+
+        // Updated QR Code Logic
+        updateQRCode(grand, due);
+    }
+
+    function updateQRCode(grand, due) {
+        const invId = document.getElementById('invId').innerText;
+        const customer = document.getElementById('cName').value || "Unknown";
+        const phone = document.getElementById('cPhone').value || "N/A";
+        
+        let productList = "";
+        document.querySelectorAll('#billBody tr').forEach(r => {
+            const name = r.querySelector('.it-n').value;
+            const qty = r.querySelector('.it-q').value;
+            if(qty > 0) productList += `\n- ${name} (x${qty})`;
+        });
+
+        const qrText = `SMART COMPUTER\nNo: ${invId}\nCust: ${customer}\nMob: ${phone}\nProducts:${productList}\nTotal: ${grand} TK\nDue: ${due} TK`;
+        
+        document.getElementById('qrcode').innerHTML = "";
+        new QRCode(document.getElementById("qrcode"), { 
+            text: qrText, 
+            width: 80, height: 80 
+        });
     }
 
     function numberToWords(num) {
@@ -387,8 +414,6 @@
         } else invoices.push(inv);
         
         localStorage.setItem('sm_invoices', JSON.stringify(invoices));
-        
-        // Cloud Sync
         db.ref('smart_erp/invoices/' + inv.id).set(inv).then(() => {
             window.print();
         });
@@ -421,10 +446,12 @@
         const rows = document.querySelectorAll('#billBody tr');
         rows.forEach(r => { r.querySelector('.it-c').value = ""; r.querySelector('.it-q').value = 0; });
         inv.items.forEach((item, i) => {
-            rows[i].querySelector('.it-c').value = item.c;
-            rows[i].querySelector('.it-n').value = item.n;
-            rows[i].querySelector('.it-q').value = item.q;
-            rows[i].querySelector('.it-p').value = item.p;
+            if(rows[i]) {
+                rows[i].querySelector('.it-c').value = item.c;
+                rows[i].querySelector('.it-n').value = item.n;
+                rows[i].querySelector('.it-q').value = item.q;
+                rows[i].querySelector('.it-p').value = item.p;
+            }
         });
         calc();
         showSec('pos');
@@ -434,7 +461,7 @@
         if(confirm("Are you sure to delete this record?")) {
             invoices = invoices.filter(x => x.id !== id);
             localStorage.setItem('sm_invoices', JSON.stringify(invoices));
-            db.ref('smart_erp/invoices/' + id).remove(); // Cloud Delete
+            db.ref('smart_erp/invoices/' + id).remove();
             renderHistory();
         }
     }
@@ -464,7 +491,7 @@
             users.push({id, pass});
         }
         localStorage.setItem('sm_users', JSON.stringify(users));
-        db.ref('smart_erp/users').set(users); // Cloud Save
+        db.ref('smart_erp/users').set(users);
         resetUserForm();
         renderUsers();
     }
@@ -492,7 +519,7 @@
         if(confirm("Permanently delete this user?")) {
             users.splice(idx, 1);
             localStorage.setItem('sm_users', JSON.stringify(users));
-            db.ref('smart_erp/users').set(users); // Cloud Sync
+            db.ref('smart_erp/users').set(users);
             renderUsers();
         }
     }
@@ -504,7 +531,7 @@
         if(c && n) {
             stock.push({code:c, name:n, price:p});
             localStorage.setItem('sm_stock', JSON.stringify(stock));
-            db.ref('smart_erp/stock').set(stock); // Cloud Save
+            db.ref('smart_erp/stock').set(stock);
             renderStock();
             document.getElementById('sCode').value = ''; document.getElementById('sName').value = ''; document.getElementById('sPrice').value = '';
             document.getElementById('sCode').focus();
@@ -522,7 +549,7 @@
     function delStock(idx) { 
         stock.splice(idx, 1); 
         localStorage.setItem('sm_stock', JSON.stringify(stock)); 
-        db.ref('smart_erp/stock').set(stock); // Cloud Sync
+        db.ref('smart_erp/stock').set(stock);
         renderStock(); 
     }
 
@@ -543,7 +570,7 @@
                         localStorage.setItem('sm_users', JSON.stringify(data.users));
                         localStorage.setItem('sm_stock', JSON.stringify(data.stock));
                         localStorage.setItem('sm_invoices', JSON.stringify(data.invoices));
-                        db.ref('smart_erp/').set(data); // Cloud Restore
+                        db.ref('smart_erp/').set(data);
                         alert("Data Restored Successfully! সিস্টেম রিলোড হচ্ছে...");
                         location.reload();
                     }
