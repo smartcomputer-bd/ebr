@@ -322,6 +322,7 @@
         const p = stock.find(x => x.code === code);
         const row = input.parentElement.parentElement;
         if(p) {
+            // Check if Stock is available
             if(parseInt(p.qty) <= 0) {
                 alert("Out of Stock!");
                 input.value = "";
@@ -385,6 +386,8 @@
 
             if(code && q > 0) {
                 billItems.push({code, name, war, q, p, t});
+                
+                // Inventory Deduction Logic
                 const product = stock.find(s => s.code === code);
                 if(product && parseInt(product.qty) >= q) {
                     itemsToProcess.push({code, q});
@@ -417,12 +420,13 @@
         };
 
         db.ref('smart_erp/invoices/' + invId).set(inv).then(() => {
+            // Subtract Qty from Stock in Firebase
             itemsToProcess.forEach(item => {
                 const product = stock.find(s => s.code === item.code);
                 db.ref('smart_erp/stock/' + item.code + '/qty').set(parseInt(product.qty) - item.q);
             });
             
-            // Set Dynamic Filename for PDF
+            // PDF Filename Adjustment
             const fileName = `${inv.id}-${inv.customer}-${inv.phone}-${inv.date.replace(/\//g, '-')}`;
             document.title = fileName;
             window.print();
@@ -443,8 +447,6 @@
                 ['sCode','sName','sPrice','sQty'].forEach(id => document.getElementById(id).value = "");
                 document.getElementById('stockBtn').innerText = "Add Item";
             });
-        } else {
-            alert("Please enter both Code and Product Details!");
         }
     }
 
