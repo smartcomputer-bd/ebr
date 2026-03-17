@@ -11,7 +11,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
     <script>
-        // Firebase কনফিগারেশন
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyAsosjugcKHhR6-M_AurTrxIe2SV0pIBpE",
             authDomain: "smart-erp-175cf.firebaseapp.com",
@@ -23,11 +23,11 @@
             measurementId: "G-8VE4ZEP3JG"
         };
 
-        // Firebase ইনিশিয়ালাইজেশন
+        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // ক্লাউড থেকে ডাটা অটো-সিঙ্ক (এটি ফাইলের সবার উপরে থাকবে)
+        // Cloud Data Synchronization
         db.ref('smart_erp/').on('value', (snapshot) => {
             const data = snapshot.val();
             if (data) {
@@ -35,14 +35,14 @@
                 window.stock = data.stock || window.stock;
                 window.invoices = data.invoices ? Object.values(data.invoices) : window.invoices;
                 
-                // স্ক্রিন আপডেট করার ফাংশনগুলো কল করা
+                // স্ক্রিন রিফ্রেশ ফাংশনসমূহ
                 if(typeof renderHistory === 'function') renderHistory();
                 if(typeof renderStock === 'function') renderStock();
                 if(typeof renderUsers === 'function') renderUsers();
             }
         });
     </script>
-
+    
     <style>
         :root { --primary: #1e40af; --secondary: #3b82f6; --dark: #0f172a; --bg: #e2e8f0; --text: #1e293b; --success: #059669; --danger: #dc2626; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; }
@@ -156,7 +156,6 @@
                 <div style="width: 150px; border-top: 1px solid #000;"><p>Customer Signature</p></div>
                 <div style="width: 150px; border-top: 1px solid #000;"><p>Authorized Signature</p></div>
             </div>
-            
             <p style="text-align: center; font-size: 10px; margin-top: 30px; color: #666; border-top: 1px solid #eee; padding-top: 10px;">Software Developed by Smart Computer | smartcomputer-bd.github.io/com</p>
         </div>
     </div>
@@ -195,7 +194,7 @@
             </div>
             <div style="background: white; padding: 20px; border-radius: 10px;">
                 <h4>Database & Security</h4>
-                <p style="font-size: 14px; color: #666;">Backup your data regularly to prevent data loss. You can restore the data anytime from the backup file.</p>
+                <p style="font-size: 14px; color: #666;">Backup your data regularly. You can restore data anytime from a backup file.</p>
                 <input type="file" id="importFile" onchange="importData(event)" style="display: none;">
                 <button onclick="document.getElementById('importFile').click()" style="padding: 10px; background: var(--danger); color: white; border: none; border-radius: 5px; cursor: pointer; width: 100%;"><i class="fa-solid fa-file-import"></i> Restore Data from Backup</button>
             </div>
@@ -250,7 +249,6 @@
         document.getElementById('billBody').innerHTML = rows;
         updateStockDatalist();
         calc();
-        generateQR();
     }
 
     function updateStockDatalist() {
@@ -312,7 +310,7 @@
         invoices.push(inv);
         localStorage.setItem('sm_invoices', JSON.stringify(invoices));
         
-        // Firebase এ ডাটা সেভ
+        // Save to Firebase
         db.ref('smart_erp/invoices/' + inv.id).set(inv).then(() => {
             window.print();
         });
@@ -325,10 +323,8 @@
         if(c && n) {
             stock.push({code:c, name:n, price:p});
             localStorage.setItem('sm_stock', JSON.stringify(stock));
-            
-            // Firebase এ ডাটা সেভ
+            // Save to Firebase
             db.ref('smart_erp/stock').set(stock);
-            
             renderStock();
             document.getElementById('sCode').value = ''; 
             document.getElementById('sName').value = ''; 
@@ -420,7 +416,7 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `Smart_ERP_Backup_${new Date().toLocaleDateString()}.json`;
+        a.download = `Smart_ERP_Backup.json`;
         a.click();
     }
 
@@ -437,7 +433,7 @@
                         localStorage.setItem('sm_stock', JSON.stringify(data.stock));
                         localStorage.setItem('sm_invoices', JSON.stringify(data.invoices));
                         db.ref('smart_erp/').set(data);
-                        alert("Data Restored Successfully!");
+                        alert("Data Restored!");
                         location.reload();
                     }
                 }
