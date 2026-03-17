@@ -53,10 +53,10 @@
         .icon-box i { font-size: 16px; }
         .icon-box span { display: block; font-size: 8px; font-weight: bold; color: #334155; margin-top: 3px; text-transform: uppercase; }
 
-        /* Digital Signature & Seal Style */
-        .signature-font { font-family: 'Brush Script MT', cursive; font-size: 24px; color: #00008b; margin-bottom: -10px; display: block; }
-        .digital-seal { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); border: 3px double var(--primary); border-radius: 50%; width: 100px; height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0.8; color: var(--primary); font-weight: bold; text-align: center; line-height: 1; }
-        .seal-inner { font-size: 12px; border-top: 1px solid var(--primary); border-bottom: 1px solid var(--primary); padding: 2px 0; margin: 2px 0; }
+        /* Signature & Seal Styling */
+        .signature-img { width: 1in; height: 0.5in; object-fit: contain; display: block; margin: 0 auto -5px auto; }
+        .seal-container { position: absolute; bottom: 85px; left: 40%; transform: translateX(-50%); }
+        .seal-img { width: 1in; height: 1in; object-fit: contain; }
 
         .panel { padding: 30px; max-width: 1100px; margin: 20px auto; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px; }
@@ -184,10 +184,8 @@
                 </div>
             </div>
 
-            <div class="digital-seal">
-                <span style="font-size: 8px;">OFFICIAL</span>
-                <div class="seal-inner">SMART<br>COMPUTER</div>
-                <span style="font-size: 8px;">VERIFIED</span>
+            <div class="seal-container">
+                <img src="https://via.placeholder.com/96x96?text=SEAL" class="seal-img" alt="Digital Seal">
             </div>
 
             <div class="footer-icons">
@@ -204,7 +202,7 @@
                 <div style="border-top:1.5px solid #000; width:140px; text-align:center; font-size:11px; font-weight:bold;">Customer Signature</div>
                 <div style="font-size:10px;">Sold By: <span id="soldBy"></span></div>
                 <div style="width:140px; text-align:center;">
-                    <span class="signature-font">Smart Computer</span>
+                    <img src="https://via.placeholder.com/96x48?text=SIGNATURE" class="signature-img" alt="Signature">
                     <div style="border-top:1.5px solid #000; font-size:11px; font-weight:bold;">Authorized Sign</div>
                 </div>
             </div>
