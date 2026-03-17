@@ -408,16 +408,19 @@
             soldBy: currentUser
         };
         
+        let stockUpdated = false;
+
         document.querySelectorAll('#billBody tr').forEach(r => {
             const qty = parseFloat(r.querySelector('.it-q').value) || 0;
             if(qty > 0) {
-                const code = r.querySelector('.it-c').value;
+                const code = r.querySelector('.it-c').value.trim();
                 inv.items.push({ c: code, n: r.querySelector('.it-n').value, q: qty, p: r.querySelector('.it-p').value });
                 
-                // Update Stock Quantity
+                // --- INVENTORY DEDUCTION LOGIC ---
                 const stockIdx = stock.findIndex(x => x.code === code);
                 if(stockIdx !== -1) {
                     stock[stockIdx].qty = (parseInt(stock[stockIdx].qty) - qty);
+                    stockUpdated = true;
                 }
             }
         });
@@ -428,10 +431,13 @@
         } else invoices.push(inv);
         
         localStorage.setItem('sm_invoices', JSON.stringify(invoices));
-        localStorage.setItem('sm_stock', JSON.stringify(stock));
         
-        db.ref('smart_erp/invoices/' + inv.id).set(inv);
-        db.ref('smart_erp/stock').set(stock).then(() => {
+        if(stockUpdated) {
+            localStorage.setItem('sm_stock', JSON.stringify(stock));
+            db.ref('smart_erp/stock').set(stock);
+        }
+        
+        db.ref('smart_erp/invoices/' + inv.id).set(inv).then(() => {
             window.print();
         });
     }
@@ -544,7 +550,7 @@
     }
 
     function addStock() {
-        const c = document.getElementById('sCode').value;
+        const c = document.getElementById('sCode').value.trim();
         const n = document.getElementById('sName').value;
         const p = document.getElementById('sPrice').value;
         const q = document.getElementById('sQty').value || 1;
