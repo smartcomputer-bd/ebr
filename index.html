@@ -187,14 +187,15 @@
 
     <div id="stockSec" class="hidden panel">
         <h3>Inventory Control (Scan Enabled)</h3>
-        <div style="display:grid; grid-template-columns: 1fr 2fr 1fr auto; gap:10px; margin-bottom:20px; background:#f8fafc; padding:15px; border-radius:10px;">
+        <div style="display:grid; grid-template-columns: 1fr 1.5fr 1fr 1fr auto; gap:10px; margin-bottom:20px; background:#f8fafc; padding:15px; border-radius:10px;">
             <input type="text" id="sCode" placeholder="Scan Barcode" autofocus onkeypress="if(event.key==='Enter') document.getElementById('sName').focus()">
             <input type="text" id="sName" placeholder="Product Details">
             <input type="number" id="sPrice" placeholder="Price">
+            <input type="number" id="sQty" placeholder="Qty" value="1">
             <button onclick="addStock()" class="btn btn-success">Add Item</button>
         </div>
         <table style="width:100%">
-            <thead><tr><th>Code</th><th>Name</th><th>Price</th><th>Action</th></tr></thead>
+            <thead><tr><th>Code</th><th>Name</th><th>Price</th><th>Stock Qty</th><th>Action</th></tr></thead>
             <tbody id="stockBody"></tbody>
         </table>
     </div>
@@ -298,7 +299,6 @@
         });
 
         let rows = "";
-        // Updated to 12 Rows as requested
         for(let i=1; i<=12; i++) {
             rows += `<tr><td>${i}</td><td><input type="text" class="it-c" onchange="fetchItem(this)"></td><td><input type="text" class="it-n" style="width:95%"></td><td><input type="number" class="it-q" value="0" oninput="calc()" style="width:50px"></td><td><input type="number" class="it-p" value="0" oninput="calc()" style="width:80px"></td><td class="it-t">0.00</td></tr>`;
         }
@@ -314,9 +314,16 @@
     }
 
     function fetchItem(input) {
-        const p = stock.find(x => x.code === input.value.trim());
+        const code = input.value.trim();
+        const p = stock.find(x => x.code === code);
         const row = input.parentElement.parentElement;
+        
         if(p) {
+            if(parseInt(p.qty) <= 0) {
+                alert("Out of stock!");
+                input.value = "";
+                return;
+            }
             row.querySelector('.it-n').value = p.name;
             row.querySelector('.it-p').value = p.price;
             row.querySelector('.it-q').value = 1;
@@ -350,7 +357,6 @@
         document.getElementById('pDue').innerText = due.toFixed(2);
         document.getElementById('inWords').innerText = numberToWords(grand) + " Taka Only";
 
-        // Updated QR Code Logic (Date & Time included, product list removed)
         updateQRCode(grand, due);
     }
 
@@ -401,9 +407,18 @@
             grand: document.getElementById('grandT').innerText,
             soldBy: currentUser
         };
+        
         document.querySelectorAll('#billBody tr').forEach(r => {
-            if(parseFloat(r.querySelector('.it-q').value) > 0) {
-                inv.items.push({ c: r.querySelector('.it-c').value, n: r.querySelector('.it-n').value, q: r.querySelector('.it-q').value, p: r.querySelector('.it-p').value });
+            const qty = parseFloat(r.querySelector('.it-q').value) || 0;
+            if(qty > 0) {
+                const code = r.querySelector('.it-c').value;
+                inv.items.push({ c: code, n: r.querySelector('.it-n').value, q: qty, p: r.querySelector('.it-p').value });
+                
+                // Update Stock Quantity
+                const stockIdx = stock.findIndex(x => x.code === code);
+                if(stockIdx !== -1) {
+                    stock[stockIdx].qty = (parseInt(stock[stockIdx].qty) - qty);
+                }
             }
         });
         
@@ -413,7 +428,10 @@
         } else invoices.push(inv);
         
         localStorage.setItem('sm_invoices', JSON.stringify(invoices));
-        db.ref('smart_erp/invoices/' + inv.id).set(inv).then(() => {
+        localStorage.setItem('sm_stock', JSON.stringify(stock));
+        
+        db.ref('smart_erp/invoices/' + inv.id).set(inv);
+        db.ref('smart_erp/stock').set(stock).then(() => {
             window.print();
         });
     }
@@ -529,29 +547,53 @@
         const c = document.getElementById('sCode').value;
         const n = document.getElementById('sName').value;
         const p = document.getElementById('sPrice').value;
+        const q = document.getElementById('sQty').value || 1;
         if(c && n) {
-            stock.push({code:c, name:n, price:p});
+            const existingIdx = stock.findIndex(x => x.code === c);
+            if(existingIdx !== -1) {
+                stock[existingIdx].qty = parseInt(stock[existingIdx].qty) + parseInt(q);
+                stock[existingIdx].price = p;
+                stock[existingIdx].name = n;
+            } else {
+                stock.push({code:c, name:n, price:p, qty:q});
+            }
             localStorage.setItem('sm_stock', JSON.stringify(stock));
             db.ref('smart_erp/stock').set(stock);
             renderStock();
-            document.getElementById('sCode').value = ''; document.getElementById('sName').value = ''; document.getElementById('sPrice').value = '';
+            document.getElementById('sCode').value = ''; document.getElementById('sName').value = ''; 
+            document.getElementById('sPrice').value = ''; document.getElementById('sQty').value = '1';
             document.getElementById('sCode').focus();
         }
+    }
+
+    function updateStockQty(idx, newQty) {
+        stock[idx].qty = parseInt(newQty) || 0;
+        localStorage.setItem('sm_stock', JSON.stringify(stock));
+        db.ref('smart_erp/stock').set(stock);
     }
 
     function renderStock() {
         let h = "";
         stock.slice().reverse().forEach((x, i) => {
-            h += `<tr><td>${x.code}</td><td>${x.name}</td><td>${x.price}</td><td><button onclick="delStock(${stock.length-1-i})" class="btn-danger" style="padding:2px 5px; border:none; border-radius:4px; cursor:pointer;">Del</button></td></tr>`;
+            const actualIdx = stock.length - 1 - i;
+            h += `<tr>
+                <td>${x.code}</td>
+                <td>${x.name}</td>
+                <td>${x.price}</td>
+                <td><input type="number" value="${x.qty}" style="width:60px; text-align:center;" onchange="updateStockQty(${actualIdx}, this.value)"></td>
+                <td><button onclick="delStock(${actualIdx})" class="btn-danger" style="padding:2px 5px; border:none; border-radius:4px; cursor:pointer;">Del</button></td>
+            </tr>`;
         });
         document.getElementById('stockBody').innerHTML = h;
     }
 
     function delStock(idx) { 
-        stock.splice(idx, 1); 
-        localStorage.setItem('sm_stock', JSON.stringify(stock)); 
-        db.ref('smart_erp/stock').set(stock);
-        renderStock(); 
+        if(confirm("Delete this item from inventory?")) {
+            stock.splice(idx, 1); 
+            localStorage.setItem('sm_stock', JSON.stringify(stock)); 
+            db.ref('smart_erp/stock').set(stock);
+            renderStock(); 
+        }
     }
 
     function exportData() {
