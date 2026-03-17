@@ -322,8 +322,7 @@
         const p = stock.find(x => x.code === code);
         const row = input.parentElement.parentElement;
         if(p) {
-            // Check if Stock is available
-            if(parseInt(p.qty) <= 0) {
+            if (parseInt(p.qty) <= 0) {
                 alert("Out of Stock!");
                 input.value = "";
                 return;
@@ -372,33 +371,29 @@
 
     function saveAndPrint() {
         const invId = document.getElementById('invId').innerText;
-        const itemsToProcess = [];
-        let canSave = true;
-
         const billItems = [];
+        let stockUpdateReady = true;
+
         document.querySelectorAll('#billBody tr').forEach(r => {
             const code = r.querySelector('.it-c').value;
             const name = r.querySelector('.it-n').value;
             const war = r.querySelector('.it-w').value;
-            const q = parseInt(r.querySelector('.it-q').value);
+            const q = parseInt(r.querySelector('.it-q').value) || 0;
             const p = r.querySelector('.it-p').value;
             const t = r.querySelector('.it-t').innerText;
 
             if(code && q > 0) {
-                billItems.push({code, name, war, q, p, t});
-                
-                // Inventory Deduction Logic
-                const product = stock.find(s => s.code === code);
-                if(product && parseInt(product.qty) >= q) {
-                    itemsToProcess.push({code, q});
+                const sItem = stock.find(s => s.code === code);
+                if (sItem && parseInt(sItem.qty) >= q) {
+                    billItems.push({code, name, war, q, p, t});
                 } else {
-                    alert(`${product ? product.name : code} Out of Stock!`);
-                    canSave = false;
+                    alert(`${name || code} - পর্যাপ্ত স্টক নেই বা Out of Stock!`);
+                    stockUpdateReady = false;
                 }
             }
         });
 
-        if(!canSave || billItems.length === 0) return;
+        if(!stockUpdateReady || billItems.length === 0) return;
 
         const inv = {
             id: invId,
@@ -420,13 +415,13 @@
         };
 
         db.ref('smart_erp/invoices/' + invId).set(inv).then(() => {
-            // Subtract Qty from Stock in Firebase
-            itemsToProcess.forEach(item => {
-                const product = stock.find(s => s.code === item.code);
-                db.ref('smart_erp/stock/' + item.code + '/qty').set(parseInt(product.qty) - item.q);
+            // Automatic Stock Deduction
+            billItems.forEach(item => {
+                const sItem = stock.find(s => s.code === item.code);
+                const newQty = parseInt(sItem.qty) - item.q;
+                db.ref('smart_erp/stock/' + item.code).update({ qty: newQty });
             });
-            
-            // PDF Filename Adjustment
+
             const fileName = `${inv.id}-${inv.customer}-${inv.phone}-${inv.date.replace(/\//g, '-')}`;
             document.title = fileName;
             window.print();
@@ -443,7 +438,7 @@
         const q = document.getElementById('sQty').value || 0;
         
         if(c && n) {
-            db.ref('smart_erp/stock/' + c).set({code:c, name:n, price:p, qty:q}).then(() => {
+            db.ref('smart_erp/stock/' + c).update({code:c, name:n, price:p, qty:q}).then(() => {
                 ['sCode','sName','sPrice','sQty'].forEach(id => document.getElementById(id).value = "");
                 document.getElementById('stockBtn').innerText = "Add Item";
             });
@@ -492,20 +487,12 @@
 
     function viewInvoice(id) {
         const inv = invoices.find(x => x.id === id);
-        if(inv) {
-            populatePOS(inv);
-            showSec('pos');
-        }
+        if(inv) { populatePOS(inv); showSec('pos'); }
     }
 
     function editInvoice(id) {
         const inv = invoices.find(x => x.id === id);
-        if(inv) {
-            if(confirm("আপনি কি এই ইনভয়েসটি এডিট করতে চান?")) {
-                populatePOS(inv);
-                showSec('pos');
-            }
-        }
+        if(inv) { if(confirm("আপনি কি এই ইনভয়েসটি এডিট করতে চান?")) { populatePOS(inv); showSec('pos'); } }
     }
 
     function deleteInvoice(id) {
@@ -607,9 +594,7 @@
                 } else {
                     alert("ভুল ফাইল ফরম্যাট! সঠিক ব্যাকআপ ফাইল নির্বাচন করুন।");
                 }
-            } catch (err) {
-                alert("ফাইলটি পড়তে সমস্যা হচ্ছে।");
-            }
+            } catch (err) { alert("ফাইলটি পড়তে সমস্যা হচ্ছে।"); }
         };
         reader.readAsText(file);
     }
