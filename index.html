@@ -282,8 +282,11 @@
         isEditMode = false;
         const d = new Date();
         const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-        document.getElementById('curDate').innerText = String(d.getDate()).padStart(2,'0') + "-" + months[d.getMonth()] + "-" + d.getFullYear();
-        document.getElementById('curTime').innerText = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: true});
+        const dateStr = String(d.getDate()).padStart(2,'0') + "-" + months[d.getMonth()] + "-" + d.getFullYear();
+        const timeStr = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: true});
+        
+        document.getElementById('curDate').innerText = dateStr;
+        document.getElementById('curTime').innerText = timeStr;
         genId();
         document.getElementById('soldBy').innerText = currentUser;
         ['cName','cPhone','cAddr','vP','vatInp','pPaid'].forEach(id => document.getElementById(id).value = (id=='vP'||id=='vatInp'||id=='pPaid') ? 0 : "");
@@ -295,8 +298,8 @@
         });
 
         let rows = "";
-        // Updated to 10 Rows as requested
-        for(let i=1; i<=10; i++) {
+        // Updated to 12 Rows as requested
+        for(let i=1; i<=12; i++) {
             rows += `<tr><td>${i}</td><td><input type="text" class="it-c" onchange="fetchItem(this)"></td><td><input type="text" class="it-n" style="width:95%"></td><td><input type="number" class="it-q" value="0" oninput="calc()" style="width:50px"></td><td><input type="number" class="it-p" value="0" oninput="calc()" style="width:80px"></td><td class="it-t">0.00</td></tr>`;
         }
         document.getElementById('billBody').innerHTML = rows;
@@ -347,7 +350,7 @@
         document.getElementById('pDue').innerText = due.toFixed(2);
         document.getElementById('inWords').innerText = numberToWords(grand) + " Taka Only";
 
-        // Updated QR Code Logic
+        // Updated QR Code Logic (Date & Time included, product list removed)
         updateQRCode(grand, due);
     }
 
@@ -355,15 +358,10 @@
         const invId = document.getElementById('invId').innerText;
         const customer = document.getElementById('cName').value || "Unknown";
         const phone = document.getElementById('cPhone').value || "N/A";
-        
-        let productList = "";
-        document.querySelectorAll('#billBody tr').forEach(r => {
-            const name = r.querySelector('.it-n').value;
-            const qty = r.querySelector('.it-q').value;
-            if(qty > 0) productList += `\n- ${name} (x${qty})`;
-        });
+        const date = document.getElementById('curDate').innerText;
+        const time = document.getElementById('curTime').innerText;
 
-        const qrText = `SMART COMPUTER\nNo: ${invId}\nCust: ${customer}\nMob: ${phone}\nProducts:${productList}\nTotal: ${grand} TK\nDue: ${due} TK`;
+        const qrText = `SMART COMPUTER\nNo: ${invId}\nDate: ${date}\nTime: ${time}\nCust: ${customer}\nMob: ${phone}\nTotal: ${grand} TK\nDue: ${due} TK`;
         
         document.getElementById('qrcode').innerHTML = "";
         new QRCode(document.getElementById("qrcode"), { 
@@ -392,6 +390,7 @@
             id: document.getElementById('invId').innerText,
             type: document.getElementById('docType').value,
             date: document.getElementById('curDate').innerText,
+            time: document.getElementById('curTime').innerText,
             customer: document.getElementById('cName').value,
             phone: document.getElementById('cPhone').value,
             addr: document.getElementById('cAddr').value,
@@ -437,6 +436,8 @@
         isEditMode = true;
         document.getElementById('docType').value = inv.type || "Inv";
         document.getElementById('invId').innerText = inv.id;
+        document.getElementById('curDate').innerText = inv.date || "";
+        document.getElementById('curTime').innerText = inv.time || "";
         document.getElementById('cName').value = inv.customer;
         document.getElementById('cPhone').value = inv.phone;
         document.getElementById('cAddr').value = inv.addr;
