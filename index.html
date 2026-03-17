@@ -207,7 +207,10 @@
     </div>
 
     <div id="stockSec" class="hidden panel">
-        <h3>Inventory Control</h3>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="margin: 0;">Inventory Control</h3>
+            <button onclick="deleteAllProducts()" class="btn btn-danger"><i class="fa-solid fa-trash-can"></i> Delete All</button>
+        </div>
         <div style="display:grid; grid-template-columns: 1fr 1.5fr 1fr 1fr auto; gap:10px; margin-bottom:20px; background:#f8fafc; padding:15px; border-radius:10px;">
             <input type="text" id="sCode" placeholder="Code/Barcode (Scan)" autofocus onkeypress="if(event.key==='Enter') fetchStockItem(this)">
             <input type="text" id="sName" placeholder="Product Details">
@@ -322,11 +325,6 @@
         const p = stock.find(x => x.code === code);
         const row = input.parentElement.parentElement;
         if(p) {
-            if (parseInt(p.qty) <= 0) {
-                alert("Out of Stock!");
-                input.value = "";
-                return;
-            }
             row.querySelector('.it-n').value = p.name;
             row.querySelector('.it-p').value = p.price;
             row.querySelector('.it-q').value = 1;
@@ -372,28 +370,17 @@
     function saveAndPrint() {
         const invId = document.getElementById('invId').innerText;
         const billItems = [];
-        let stockUpdateReady = true;
-
         document.querySelectorAll('#billBody tr').forEach(r => {
             const code = r.querySelector('.it-c').value;
             const name = r.querySelector('.it-n').value;
             const war = r.querySelector('.it-w').value;
-            const q = parseInt(r.querySelector('.it-q').value) || 0;
+            const q = r.querySelector('.it-q').value;
             const p = r.querySelector('.it-p').value;
             const t = r.querySelector('.it-t').innerText;
-
-            if(code && q > 0) {
-                const sItem = stock.find(s => s.code === code);
-                if (sItem && parseInt(sItem.qty) >= q) {
-                    billItems.push({code, name, war, q, p, t});
-                } else {
-                    alert(`${name || code} - পর্যাপ্ত স্টক নেই বা Out of Stock!`);
-                    stockUpdateReady = false;
-                }
-            }
+            if(code && q > 0) billItems.push({code, name, war, q, p, t});
         });
 
-        if(!stockUpdateReady || billItems.length === 0) return;
+        if(billItems.length === 0) return;
 
         const inv = {
             id: invId,
@@ -415,13 +402,6 @@
         };
 
         db.ref('smart_erp/invoices/' + invId).set(inv).then(() => {
-            // Automatic Stock Deduction
-            billItems.forEach(item => {
-                const sItem = stock.find(s => s.code === item.code);
-                const newQty = parseInt(sItem.qty) - item.q;
-                db.ref('smart_erp/stock/' + item.code).update({ qty: newQty });
-            });
-
             const fileName = `${inv.id}-${inv.customer}-${inv.phone}-${inv.date.replace(/\//g, '-')}`;
             document.title = fileName;
             window.print();
@@ -438,7 +418,7 @@
         const q = document.getElementById('sQty').value || 0;
         
         if(c && n) {
-            db.ref('smart_erp/stock/' + c).update({code:c, name:n, price:p, qty:q}).then(() => {
+            db.ref('smart_erp/stock/' + c).set({code:c, name:n, price:p, qty:q}).then(() => {
                 ['sCode','sName','sPrice','sQty'].forEach(id => document.getElementById(id).value = "");
                 document.getElementById('stockBtn').innerText = "Add Item";
             });
@@ -454,6 +434,16 @@
             document.getElementById('sQty').value = p.qty;
             document.getElementById('stockBtn').innerText = "Update Item";
             document.getElementById('sName').focus();
+        }
+    }
+
+    function deleteAllProducts() {
+        if(confirm("আপনি কি নিশ্চিত যে আপনি ইনভেন্টরি থেকে সকল প্রোডাক্ট ডিলিট করতে চান?")) {
+            db.ref('smart_erp/stock').remove().then(() => {
+                alert("সকল প্রোডাক্ট সফলভাবে ডিলিট করা হয়েছে।");
+            }).catch((error) => {
+                alert("ডিলিট করতে সমস্যা হয়েছে: " + error.message);
+            });
         }
     }
 
@@ -487,12 +477,20 @@
 
     function viewInvoice(id) {
         const inv = invoices.find(x => x.id === id);
-        if(inv) { populatePOS(inv); showSec('pos'); }
+        if(inv) {
+            populatePOS(inv);
+            showSec('pos');
+        }
     }
 
     function editInvoice(id) {
         const inv = invoices.find(x => x.id === id);
-        if(inv) { if(confirm("আপনি কি এই ইনভয়েসটি এডিট করতে চান?")) { populatePOS(inv); showSec('pos'); } }
+        if(inv) {
+            if(confirm("আপনি কি এই ইনভয়েসটি এডিট করতে চান?")) {
+                populatePOS(inv);
+                showSec('pos');
+            }
+        }
     }
 
     function deleteInvoice(id) {
@@ -594,7 +592,9 @@
                 } else {
                     alert("ভুল ফাইল ফরম্যাট! সঠিক ব্যাকআপ ফাইল নির্বাচন করুন।");
                 }
-            } catch (err) { alert("ফাইলটি পড়তে সমস্যা হচ্ছে।"); }
+            } catch (err) {
+                alert("ফাইলটি পড়তে সমস্যা হচ্ছে।");
+            }
         };
         reader.readAsText(file);
     }
