@@ -39,7 +39,7 @@
         td { border: 1px solid #000; padding: 3px; text-align: center; }
 
         .col-sl { width: 5%; }
-        .col-code { width: 8%; } 
+        .col-code { width: 15%; } 
         .col-desc { width: auto; }
         .col-war { width: 12%; }
         .col-qty { width: 8%; }
@@ -144,7 +144,7 @@
                 <thead>
                     <tr>
                         <th class="col-sl">SL</th>
-                        <th class="col-code">Code</th>
+                        <th class="col-code">Code/Barcode</th>
                         <th class="col-desc">Description</th>
                         <th class="col-war">Warranty</th>
                         <th class="col-qty">Qty</th>
@@ -209,7 +209,7 @@
     <div id="stockSec" class="hidden panel">
         <h3>Inventory Control</h3>
         <div style="display:grid; grid-template-columns: 1fr 1.5fr 1fr 1fr auto; gap:10px; margin-bottom:20px; background:#f8fafc; padding:15px; border-radius:10px;">
-            <input type="text" id="sCode" placeholder="Item Code" autofocus onkeypress="if(event.key==='Enter') document.getElementById('sName').focus()">
+            <input type="text" id="sCode" placeholder="Code/Barcode (Scan)" autofocus onkeypress="if(event.key==='Enter') fetchStockItem(this)">
             <input type="text" id="sName" placeholder="Product Details">
             <input type="number" id="sPrice" placeholder="Price">
             <input type="number" id="sQty" placeholder="Qty" value="1">
@@ -263,7 +263,6 @@
         const data = snapshot.val();
         if (data) {
             users = data.users || users;
-            // Filter invalid/undefined data from database response
             stock = data.stock ? Object.values(data.stock).filter(item => item && item.code && item.name) : [];
             invoices = data.invoices ? Object.values(data.invoices) : [];
             renderHistory(); renderStock(); renderUsers();
@@ -319,6 +318,7 @@
 
     function fetchItem(input) {
         const code = input.value.trim();
+        if(!code) return;
         const p = stock.find(x => x.code === code);
         const row = input.parentElement.parentElement;
         if(p) {
@@ -332,6 +332,19 @@
             row.querySelector('.it-q').value = 1;
             calc();
         }
+    }
+
+    function fetchStockItem(input) {
+        const code = input.value.trim();
+        if(!code) return;
+        const p = stock.find(x => x.code === code);
+        if(p) {
+            document.getElementById('sName').value = p.name;
+            document.getElementById('sPrice').value = p.price;
+            document.getElementById('sQty').value = p.qty;
+            document.getElementById('stockBtn').innerText = "Update Item";
+        }
+        document.getElementById('sName').focus();
     }
 
     function calc() {
@@ -408,7 +421,12 @@
                 const product = stock.find(s => s.code === item.code);
                 db.ref('smart_erp/stock/' + item.code + '/qty').set(parseInt(product.qty) - item.q);
             });
+            
+            // Set Dynamic Filename for PDF
+            const fileName = `${inv.id}-${inv.customer}-${inv.phone}-${inv.date.replace(/\//g, '-')}`;
+            document.title = fileName;
             window.print();
+            setTimeout(() => { document.title = "Smart Computer | Management System"; }, 1000);
         });
     }
 
@@ -420,7 +438,6 @@
         const p = document.getElementById('sPrice').value || 0;
         const q = document.getElementById('sQty').value || 0;
         
-        // Block empty or invalid data entry
         if(c && n) {
             db.ref('smart_erp/stock/' + c).set({code:c, name:n, price:p, qty:q}).then(() => {
                 ['sCode','sName','sPrice','sQty'].forEach(id => document.getElementById(id).value = "");
@@ -439,14 +456,13 @@
             document.getElementById('sPrice').value = p.price;
             document.getElementById('sQty').value = p.qty;
             document.getElementById('stockBtn').innerText = "Update Item";
-            document.getElementById('sCode').focus();
+            document.getElementById('sName').focus();
         }
     }
 
     function renderStock() {
         let h = "";
         stock.forEach(x => {
-            // Only render valid items to prevent undefined rows
             if(x && x.code && x.name) {
                 h += `<tr><td>${x.code}</td><td>${x.name}</td><td>${x.price}</td><td>${x.qty}</td>
                 <td>
@@ -461,11 +477,70 @@
     function renderHistory() {
         const q = document.getElementById('searchInv').value.toLowerCase();
         let h = "";
-        invoices.slice().reverse().filter(x => x.id.toLowerCase().includes(q) || x.customer.toLowerCase().includes(q)).forEach(x => {
+        invoices.slice().reverse().filter(x => x.id.toLowerCase().includes(q) || x.customer.toLowerCase().includes(q) || x.phone.includes(q)).forEach(x => {
             h += `<tr><td>${x.date}</td><td>${x.id}</td><td>${x.customer}</td><td>${x.phone}</td><td>${x.grand}</td>
-            <td><button onclick="alert('Functionality to be added')" style="background:gray; color:white; border:none; padding:4px; cursor:pointer;">View</button></td></tr>`;
+            <td>
+                <button onclick="viewInvoice('${x.id}')" style="background:var(--secondary); color:white; border:none; padding:4px 8px; cursor:pointer; border-radius:3px;">View</button>
+                <button onclick="editInvoice('${x.id}')" style="background:blue; color:white; border:none; padding:4px 8px; cursor:pointer; border-radius:3px;">Edit</button>
+                <button onclick="deleteInvoice('${x.id}')" style="background:red; color:white; border:none; padding:4px 8px; cursor:pointer; border-radius:3px;">Del</button>
+            </td></tr>`;
         });
         document.getElementById('historyBody').innerHTML = h;
+    }
+
+    function viewInvoice(id) {
+        const inv = invoices.find(x => x.id === id);
+        if(inv) {
+            populatePOS(inv);
+            showSec('pos');
+        }
+    }
+
+    function editInvoice(id) {
+        const inv = invoices.find(x => x.id === id);
+        if(inv) {
+            if(confirm("আপনি কি এই ইনভয়েসটি এডিট করতে চান?")) {
+                populatePOS(inv);
+                showSec('pos');
+            }
+        }
+    }
+
+    function deleteInvoice(id) {
+        if(confirm(`Are you sure you want to delete Invoice: ${id}?`)) {
+            db.ref('smart_erp/invoices/' + id).remove().then(() => alert("Deleted successfully!"));
+        }
+    }
+
+    function populatePOS(inv) {
+        document.getElementById('docType').value = inv.type || "Inv";
+        document.getElementById('invId').innerText = inv.id;
+        document.getElementById('curDate').innerText = inv.date;
+        document.getElementById('curTime').innerText = inv.time;
+        document.getElementById('cName').value = inv.customer;
+        document.getElementById('cPhone').value = inv.phone;
+        document.getElementById('cAddr').value = inv.address;
+        document.getElementById('cEmail').value = inv.email;
+        document.getElementById('vP').value = inv.discount;
+        document.getElementById('vatInp').value = inv.vat;
+        document.getElementById('pPaid').value = inv.paid;
+        document.getElementById('soldBy').innerText = inv.soldBy;
+
+        let rows = "";
+        for(let i=1; i<=13; i++) {
+            const item = inv.items[i-1] || {code:'', name:'', war:'', q:0, p:0, t:'0.00'};
+            rows += `<tr>
+                <td>${i}</td>
+                <td><input type="text" class="it-c" value="${item.code}" style="width:90%" onchange="fetchItem(this)"></td>
+                <td><input type="text" class="it-n" value="${item.name}" style="width:95%"></td>
+                <td><input type="text" class="it-w" value="${item.war}" style="width:90%"></td>
+                <td><input type="number" class="it-q" value="${item.q}" oninput="calc()" style="width:40px"></td>
+                <td><input type="number" class="it-p" value="${item.p}" oninput="calc()" style="width:60px"></td>
+                <td class="it-t">${item.t}</td>
+            </tr>`;
+        }
+        document.getElementById('billBody').innerHTML = rows;
+        calc();
     }
 
     function saveUser() {
