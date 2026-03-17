@@ -41,7 +41,6 @@
         .col-sl { width: 5%; }
         .col-code { width: 15%; } 
         .col-desc { width: auto; }
-        .col-war { width: 12%; }
         .col-qty { width: 8%; }
         .col-price { width: 14%; }
         .col-total { width: 15%; }
@@ -58,7 +57,6 @@
         .btn-primary { background: var(--primary); color: white; }
         .btn-success { background: var(--success); color: white; }
         .btn-danger { background: var(--danger); color: white; }
-        .btn-secondary { background: #64748b; color: white; }
 
         @media print {
             @page { size: A4; margin: 0; }
@@ -85,7 +83,6 @@
         <div class="nav-links">
             <button onclick="showSec('pos')">Invoice</button>
             <button onclick="showSec('stock')">Inventory</button>
-            <button onclick="showSec('history')">History</button>
             <button onclick="location.reload()" style="background:var(--danger)">Logout</button>
         </div>
     </nav>
@@ -93,7 +90,7 @@
     <div id="posSec">
         <div class="external-actions no-print">
             <button onclick="saveAndPrint()" class="btn btn-primary"><i class="fa-solid fa-save"></i> Save & Print</button>
-            <button onclick="resetPOS()" class="btn btn-success"><i class="fa-solid fa-plus"></i> New</button>
+            <button onclick="resetPOS()" class="btn btn-success"><i class="fa-solid fa-plus"></i> New Invoice</button>
         </div>
 
         <div class="invoice-sheet" id="invoice">
@@ -146,8 +143,8 @@
     <div id="stockSec" class="hidden panel">
         <h3>Inventory Management</h3>
         <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap:10px; margin-bottom:10px;">
-            <input type="text" id="sCode" placeholder="Code">
-            <input type="text" id="sName" placeholder="Name">
+            <input type="text" id="sCode" placeholder="Product Code">
+            <input type="text" id="sName" placeholder="Product Name">
             <input type="number" id="sPrice" placeholder="Price">
             <input type="number" id="sQty" placeholder="Stock Qty">
             <button onclick="addStock()" id="stockBtn" class="btn btn-success">Add Item</button>
@@ -157,15 +154,10 @@
             <tbody id="stockBody"></tbody>
         </table>
     </div>
-
-    <div id="historySec" class="hidden panel">
-        <h3>Sales History</h3>
-        <tbody id="historyBody"></tbody>
-    </div>
 </div>
 
 <script>
-    let db = { stock: [], history: [] };
+    let db = { stock: [] };
     let editIndex = -1;
 
     function initApp() {
@@ -199,7 +191,7 @@
         const item = db.stock.find(s => s.code === input.value);
         const row = input.parentElement.parentElement;
         if(item) {
-            if(item.qty <= 0) {
+            if(parseInt(item.qty) <= 0) {
                 alert("Out of Stock!");
                 input.value = "";
                 return;
@@ -217,8 +209,11 @@
             const q = row.querySelector('.row-qty').value;
             const p = row.querySelector('.row-price').value;
             const total = q * p;
-            row.querySelector('.row-total').innerText = total.toFixed(2);
-            grand += total;
+            const totalCell = row.querySelector('.row-total');
+            if(totalCell) {
+                totalCell.innerText = total.toFixed(2);
+                grand += total;
+            }
         });
         document.getElementById('grandT').innerText = grand.toFixed(2);
     }
@@ -263,26 +258,39 @@
     }
 
     function saveAndPrint() {
-        // স্টক কমানো
+        // ১. স্টক থেকে বিয়োগ করা
         document.querySelectorAll('#billBody tr').forEach(row => {
             const code = row.querySelector('.row-code').value;
             const qty = parseInt(row.querySelector('.row-qty').value);
-            const item = db.stock.find(s => s.code === code);
-            if(item) item.qty -= qty;
+            if(code && qty) {
+                const item = db.stock.find(s => s.code === code);
+                if(item) item.qty = parseInt(item.qty) - qty;
+            }
         });
-
         saveDB();
-        
-        // ফাইল নেম তৈরি
-        const name = document.getElementById('cName').value || 'Customer';
-        const phone = document.getElementById('cPhone').value || 'NoPhone';
-        const id = document.getElementById('invId').innerText;
+        renderStock();
+
+        // ২. ফাইল নেম আপডেট করা
+        const cName = document.getElementById('cName').value || "Customer";
+        const cPhone = document.getElementById('cPhone').value || "NoMobile";
+        const invId = document.getElementById('invId').innerText;
         const date = new Date().toLocaleDateString().replace(/\//g, '-');
         
-        document.title = `${id}_${name}_${phone}_${date}`;
+        const originalTitle = document.title;
+        document.title = `${invId}_${cName}_${cPhone}_${date}`;
         
         window.print();
-        setTimeout(() => { document.title = "Smart Computer | Management System"; }, 1000);
+        
+        // প্রিন্ট শেষে টাইটেল আগের মতো করা
+        setTimeout(() => { document.title = originalTitle; }, 1000);
+    }
+
+    function resetPOS() {
+        document.getElementById('billBody').innerHTML = '';
+        document.getElementById('cName').value = '';
+        document.getElementById('cPhone').value = '';
+        document.getElementById('grandT').innerText = '0.00';
+        genId();
     }
 
     function saveDB() {
@@ -290,7 +298,7 @@
     }
 
     function showSec(id) {
-        ['posSec','stockSec','historySec'].forEach(s => document.getElementById(s).classList.add('hidden'));
+        ['posSec','stockSec'].forEach(s => document.getElementById(s).classList.add('hidden'));
         document.getElementById(id + 'Sec').classList.remove('hidden');
     }
 
