@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Computer | Management System</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
@@ -50,9 +51,14 @@
         .btn-primary { background: var(--primary); color: white; }
         .btn-success { background: var(--success); color: white; }
         .btn-danger { background: var(--danger); color: white; }
+        .btn-secondary { background: #64748b; color: white; }
 
         .pass-container { position: relative; width: 90%; margin: 10px auto; }
         .toggle-password { position: absolute; right: 10px; top: 12px; cursor: pointer; color: #666; }
+
+        /* Barcode Print Style */
+        .barcode-item { display: inline-block; padding: 10px; border: 1px solid #ddd; margin: 5px; text-align: center; background: white; }
+        .barcode-item canvas { max-width: 150px; }
 
         @media print {
             .no-print, .external-actions, .navbar { display: none !important; }
@@ -84,7 +90,6 @@
             <button onclick="showSec('pos')">Invoice</button>
             <button onclick="showSec('history')">History</button>
             <button onclick="showSec('stock')">Inventory</button>
-            <button onclick="showSec('suppliers')">Suppliers</button>
             <button id="navSettings" onclick="showSec('settings')">Admin</button>
             <button onclick="exportData()" style="background:var(--success)">Backup</button>
             <button onclick="document.getElementById('restoreInput').click()" style="background:var(--secondary)">Restore</button>
@@ -95,9 +100,11 @@
 
     <div id="posSec">
         <div class="external-actions no-print">
-            <button onclick="saveAndPrint()" class="btn btn-primary"><i class="fa-solid fa-print"></i> Save & Print</button>
+            <button onclick="saveAndPrint()" class="btn btn-primary"><i class="fa-solid fa-save"></i> Save & Print</button>
+            <button onclick="window.print()" class="btn btn-secondary"><i class="fa-solid fa-print"></i> Print (No Save)</button>
+            <button onclick="sendWhatsApp()" class="btn" style="background: #25D366; color: white;"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
+            <button onclick="sendEmail()" class="btn" style="background: #EA4335; color: white;"><i class="fa-solid fa-envelope"></i> Email</button>
             <button onclick="resetPOS()" class="btn btn-success"><i class="fa-solid fa-file-circle-plus"></i> New Record</button>
-            <button onclick="window.print()" class="btn btn-danger"><i class="fa-solid fa-barcode"></i> Print Barcode Only</button>
         </div>
 
         <div class="invoice-sheet" id="invoice">
@@ -124,16 +131,14 @@
             </div>
 
             <div class="cust-box">
-                <div class="field"><b>Customer Name:</b> <input type="text" id="cName" style="flex:1" oninput="showCustHistory()"></div>
-                <div class="field"><b>Mobile:</b> <input type="text" id="cPhone" style="flex:1" oninput="showCustHistory()"></div>
+                <div class="field"><b>Customer Name:</b> <input type="text" id="cName" style="flex:1"></div>
+                <div class="field"><b>Mobile:</b> <input type="text" id="cPhone" style="flex:1"></div>
                 <div class="field" style="grid-column: span 2;"><b>Address:</b> <input type="text" id="cAddr" style="flex:1"></div>
             </div>
-            
-            <div id="custHistoryTips" class="no-print" style="font-size: 11px; color: var(--primary); margin-bottom: 10px; font-style: italic;"></div>
 
             <table>
                 <thead>
-                    <tr><th width="5%">SL</th><th width="20%">Code (Scan)</th><th>Description</th><th width="10%">Qty</th><th width="15%">Price</th><th width="15%">Warranty (Days)</th><th width="15%">Total</th></tr>
+                    <tr><th width="5%">SL</th><th width="15%">Code (Scan)</th><th>Description</th><th width="12%">Warranty</th><th width="8%">Qty</th><th width="15%">Price</th><th width="15%">Total</th></tr>
                 </thead>
                 <tbody id="billBody"></tbody>
             </table>
@@ -190,35 +195,21 @@
     </div>
 
     <div id="stockSec" class="hidden panel">
-        <h3>Inventory Control (Scan & Label)</h3>
-        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr auto; gap:10px; margin-bottom:20px; background:#f8fafc; padding:15px; border-radius:10px;">
-            <input type="text" id="sCode" placeholder="Scan/Code" autofocus>
-            <input type="text" id="sName" placeholder="Product Details">
-            <input type="number" id="sPrice" placeholder="Sale Price">
-            <input type="number" id="sQty" placeholder="Qty" value="1">
-            <select id="sSupp">
-                <option value="">Select Supplier</option>
-            </select>
-            <button onclick="addStock()" class="btn btn-success">Add Item</button>
+        <div class="no-print">
+            <h3>Inventory Control (Scan & Barcode)</h3>
+            <div style="display:grid; grid-template-columns: 1fr 1.5fr 1fr 1fr auto; gap:10px; margin-bottom:20px; background:#f8fafc; padding:15px; border-radius:10px;">
+                <input type="text" id="sCode" placeholder="Scan/Enter Code" autofocus onkeypress="if(event.key==='Enter') document.getElementById('sName').focus()">
+                <input type="text" id="sName" placeholder="Product Details">
+                <input type="number" id="sPrice" placeholder="Price">
+                <input type="number" id="sQty" placeholder="Qty" value="1">
+                <button onclick="addStock()" class="btn btn-success">Add Item</button>
+            </div>
+            <table style="width:100%">
+                <thead><tr><th>Code</th><th>Name</th><th>Price</th><th>Stock Qty</th><th>Barcode</th><th>Action</th></tr></thead>
+                <tbody id="stockBody"></tbody>
+            </table>
         </div>
-        <table style="width:100%">
-            <thead><tr><th>Code</th><th>Name</th><th>Sale Price</th><th>Stock</th><th>Supplier</th><th>Action</th></tr></thead>
-            <tbody id="stockBody"></tbody>
-        </table>
-    </div>
-
-    <div id="suppliersSec" class="hidden panel">
-        <h3>Supplier Management</h3>
-        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr auto; gap:10px; margin-bottom:20px;">
-            <input type="text" id="suppName" placeholder="Supplier Name">
-            <input type="text" id="suppPhone" placeholder="Phone">
-            <input type="text" id="suppAddr" placeholder="Address">
-            <button onclick="addSupplier()" class="btn btn-primary">Save Supplier</button>
-        </div>
-        <table style="width:100%">
-            <thead><tr><th>Name</th><th>Phone</th><th>Address</th><th>Action</th></tr></thead>
-            <tbody id="supplierBody"></tbody>
-        </table>
+        <div id="barcodePrintArea" class="hidden"></div>
     </div>
 
     <div id="settingsSec" class="hidden panel">
@@ -258,7 +249,6 @@
     let users = JSON.parse(localStorage.getItem('sm_users')) || [{id:'admin', pass:'724672'}];
     let stock = JSON.parse(localStorage.getItem('sm_stock')) || [];
     let invoices = JSON.parse(localStorage.getItem('sm_invoices')) || [];
-    let suppliers = JSON.parse(localStorage.getItem('sm_suppliers')) || [];
     let currentUser = "";
     let isEditMode = false;
 
@@ -267,9 +257,10 @@
         if (data) {
             users = data.users || users;
             stock = data.stock || stock;
-            suppliers = data.suppliers || suppliers;
             invoices = data.invoices ? Object.values(data.invoices) : invoices;
-            renderAll();
+            if(typeof renderHistory === 'function') renderHistory();
+            if(typeof renderStock === 'function') renderStock();
+            if(typeof renderUsers === 'function') renderUsers();
         }
     });
 
@@ -277,9 +268,11 @@
         const passInput = document.getElementById('uPass');
         const icon = document.querySelector('.toggle-password');
         if(passInput.type === "password") {
-            passInput.type = "text"; icon.classList.replace('fa-eye', 'fa-eye-slash');
+            passInput.type = "text";
+            icon.classList.replace('fa-eye', 'fa-eye-slash');
         } else {
-            passInput.type = "password"; icon.classList.replace('fa-eye-slash', 'fa-eye');
+            passInput.type = "password";
+            icon.classList.replace('fa-eye-slash', 'fa-eye');
         }
     }
 
@@ -293,33 +286,52 @@
             document.getElementById('app').classList.remove('hidden');
             id === 'admin' ? document.getElementById('navSettings').classList.remove('hidden') : document.getElementById('navSettings').classList.add('hidden');
             resetPOS();
-            renderAll();
+            renderUsers();
         } else alert("Invalid ID or Password!");
     }
 
     function resetPOS() {
         isEditMode = false;
         const d = new Date();
-        const dateStr = String(d.getDate()).padStart(2,'0') + "-" + (d.getMonth()+1) + "-" + d.getFullYear();
+        const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+        const dateStr = String(d.getDate()).padStart(2,'0') + "-" + months[d.getMonth()] + "-" + d.getFullYear();
+        const timeStr = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: true});
+        
         document.getElementById('curDate').innerText = dateStr;
-        document.getElementById('curTime').innerText = d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        document.getElementById('curTime').innerText = timeStr;
         genId();
         document.getElementById('soldBy').innerText = currentUser;
-        document.getElementById('custHistoryTips').innerText = "";
         ['cName','cPhone','cAddr','vP','vatInp','pPaid'].forEach(id => document.getElementById(id).value = (id=='vP'||id=='vatInp'||id=='pPaid') ? 0 : "");
         
+        document.getElementById('qrcode').innerHTML = "";
+        new QRCode(document.getElementById("qrcode"), { text: "SMART COMPUTER", width: 80, height: 80 });
+
         let rows = "";
         for(let i=1; i<=12; i++) {
-            rows += `<tr><td>${i}</td><td><input type="text" class="it-c" onchange="fetchItem(this)"></td><td><input type="text" class="it-n" style="width:95%"></td><td><input type="number" class="it-q" value="0" oninput="calc()" style="width:50px"></td><td><input type="number" class="it-p" value="0" oninput="calc()" style="width:80px"></td><td><input type="number" class="it-w" value="0" style="width:60px"></td><td class="it-t">0.00</td></tr>`;
+            rows += `<tr>
+                <td>${i}</td>
+                <td><input type="text" class="it-c" style="width:90%" onchange="fetchItem(this)"></td>
+                <td><input type="text" class="it-n" style="width:95%"></td>
+                <td><input type="text" class="it-w" style="width:90%" placeholder="e.g. 1 Year"></td>
+                <td><input type="number" class="it-q" value="0" oninput="calc()" style="width:45px"></td>
+                <td><input type="number" class="it-p" value="0" oninput="calc()" style="width:75px"></td>
+                <td class="it-t">0.00</td>
+            </tr>`;
         }
         document.getElementById('billBody').innerHTML = rows;
         calc();
     }
 
-    function genId() { if(!isEditMode) document.getElementById('invId').innerText = document.getElementById('docType').value + "-" + Math.floor(100000 + Math.random() * 900000); }
+    function genId() {
+        if(!isEditMode) {
+            const type = document.getElementById('docType').value;
+            document.getElementById('invId').innerText = type + "-" + Math.floor(100000 + Math.random() * 900000);
+        }
+    }
 
     function fetchItem(input) {
-        const p = stock.find(x => x.code === input.value.trim());
+        const code = input.value.trim();
+        const p = stock.find(x => x.code === code);
         const row = input.parentElement.parentElement;
         if(p) {
             if(parseInt(p.qty) <= 0) { alert("Out of stock!"); input.value = ""; return; }
@@ -327,44 +339,45 @@
             row.querySelector('.it-p').value = p.price;
             row.querySelector('.it-q').value = 1;
             calc();
-            if(row.nextElementSibling) row.nextElementSibling.querySelector('.it-c').focus();
-        }
-    }
-
-    function showCustHistory() {
-        const phone = document.getElementById('cPhone').value;
-        const name = document.getElementById('cName').value.toLowerCase();
-        const history = invoices.filter(x => (phone && x.phone === phone) || (name && x.customer.toLowerCase().includes(name)));
-        if(history.length > 0) {
-            document.getElementById('custHistoryTips').innerText = `Recent Activity: This customer has ${history.length} previous records. Last visit: ${history[history.length-1].date}`;
+            const next = row.nextElementSibling;
+            if(next) next.querySelector('.it-c').focus();
         }
     }
 
     function calc() {
         let sub = 0;
         document.querySelectorAll('#billBody tr').forEach(r => {
-            const t = (parseFloat(r.querySelector('.it-q').value) || 0) * (parseFloat(r.querySelector('.it-p').value) || 0);
-            r.querySelector('.it-t').innerText = t.toFixed(2); sub += t;
+            const q = parseFloat(r.querySelector('.it-q').value) || 0;
+            const p = parseFloat(r.querySelector('.it-p').value) || 0;
+            const t = q * p;
+            r.querySelector('.it-t').innerText = t.toFixed(2);
+            sub += t;
         });
-        const grand = Math.round(sub - (sub * (parseFloat(document.getElementById('vP').value)||0)/100) + (sub * (parseFloat(document.getElementById('vatInp').value)||0)/100));
-        const due = grand - (parseFloat(document.getElementById('pPaid').value) || 0);
+        const discRate = parseFloat(document.getElementById('vP').value) || 0;
+        const vatRate = parseFloat(document.getElementById('vatInp').value) || 0;
+        const grand = Math.round(sub - (sub * discRate / 100) + (sub * vatRate / 100));
+        const paid = parseFloat(document.getElementById('pPaid').value) || 0;
         document.getElementById('subT').innerText = sub.toFixed(2);
         document.getElementById('grandT').innerText = grand.toFixed(2);
-        document.getElementById('pDue').innerText = due.toFixed(2);
+        document.getElementById('pDue').innerText = (grand - paid).toFixed(2);
         document.getElementById('inWords').innerText = numberToWords(grand) + " Taka Only";
-        updateQRCode(grand, due);
+        updateQRCode(grand, grand - paid);
     }
 
     function updateQRCode(grand, due) {
+        const invId = document.getElementById('invId').innerText;
+        const qrText = `SMART COMPUTER\nNo: ${invId}\nTotal: ${grand} TK\nDue: ${due} TK`;
         document.getElementById('qrcode').innerHTML = "";
-        new QRCode(document.getElementById("qrcode"), { text: `SMART COMPUTER\nNo: ${document.getElementById('invId').innerText}\nTotal: ${grand}\nDue: ${due}`, width: 80, height: 80 });
+        new QRCode(document.getElementById("qrcode"), { text: qrText, width: 80, height: 80 });
     }
 
     function numberToWords(num) {
         const a = ['', 'One ', 'Two ', 'Three ', 'Four ', 'Five ', 'Six ', 'Seven ', 'Eight ', 'Nine ', 'Ten ', 'Eleven ', 'Twelve ', 'Thirteen ', 'Fourteen ', 'Fifteen ', 'Sixteen ', 'Seventeen ', 'Eighteen ', 'Nineteen '];
         const b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+        if ((num = num.toString()).length > 9) return 'Overflow';
         let n = ('000000000' + num).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
-        if (!n) return ''; let str = '';
+        if (!n) return ''; 
+        let str = '';
         str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + 'Crore ' : '';
         str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + 'Lakh ' : '';
         str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + 'Thousand ' : '';
@@ -373,80 +386,159 @@
         return str || 'Zero';
     }
 
+    function sendWhatsApp() {
+        const phone = document.getElementById('cPhone').value;
+        const invId = document.getElementById('invId').innerText;
+        const total = document.getElementById('grandT').innerText;
+        const msg = `Smart Computer Invoice\nNo: ${invId}\nTotal: ${total} TK\nThank you for being with us!`;
+        window.open(`https://wa.me/88${phone}?text=${encodeURIComponent(msg)}`);
+    }
+
+    function sendEmail() {
+        const invId = document.getElementById('invId').innerText;
+        const total = document.getElementById('grandT').innerText;
+        const subject = `Invoice from Smart Computer - ${invId}`;
+        const body = `Dear Customer,\nYour invoice ${invId} total is ${total} TK.\nSmart Computer Khulna.`;
+        window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    }
+
     function saveAndPrint() {
         const inv = {
-            id: document.getElementById('invId').innerText, date: document.getElementById('curDate').innerText,
-            customer: document.getElementById('cName').value, phone: document.getElementById('cPhone').value,
-            items: [], grand: document.getElementById('grandT').innerText, soldBy: currentUser
+            id: document.getElementById('invId').innerText,
+            type: document.getElementById('docType').value,
+            date: document.getElementById('curDate').innerText,
+            time: document.getElementById('curTime').innerText,
+            customer: document.getElementById('cName').value,
+            phone: document.getElementById('cPhone').value,
+            addr: document.getElementById('cAddr').value,
+            items: [],
+            grand: document.getElementById('grandT').innerText,
+            soldBy: currentUser
         };
         document.querySelectorAll('#billBody tr').forEach(r => {
-            const q = parseFloat(r.querySelector('.it-q').value) || 0;
-            if(q > 0) {
-                const c = r.querySelector('.it-c').value.trim();
-                inv.items.push({ c, n: r.querySelector('.it-n').value, q, p: r.querySelector('.it-p').value, w: r.querySelector('.it-w').value });
-                const sIdx = stock.findIndex(x => x.code === c);
-                if(sIdx !== -1) stock[sIdx].qty -= q;
+            const qty = parseFloat(r.querySelector('.it-q').value) || 0;
+            if(qty > 0) {
+                const code = r.querySelector('.it-c').value.trim();
+                inv.items.push({ c: code, n: r.querySelector('.it-n').value, w: r.querySelector('.it-w').value, q: qty, p: r.querySelector('.it-p').value });
+                const stockIdx = stock.findIndex(x => x.code === code);
+                if(stockIdx !== -1) stock[stockIdx].qty -= qty;
             }
         });
-        invoices.push(inv);
+        if(isEditMode) {
+            const idx = invoices.findIndex(x => x.id === inv.id);
+            if(idx !== -1) invoices[idx] = inv;
+        } else invoices.push(inv);
         localStorage.setItem('sm_invoices', JSON.stringify(invoices));
         localStorage.setItem('sm_stock', JSON.stringify(stock));
         db.ref('smart_erp/stock').set(stock);
         db.ref('smart_erp/invoices/' + inv.id).set(inv).then(() => window.print());
     }
 
-    function addSupplier() {
-        const name = document.getElementById('suppName').value;
-        if(name) {
-            suppliers.push({name, phone: document.getElementById('suppPhone').value, addr: document.getElementById('suppAddr').value});
-            localStorage.setItem('sm_suppliers', JSON.stringify(suppliers));
-            db.ref('smart_erp/suppliers').set(suppliers);
-            renderAll();
-            ['suppName','suppPhone','suppAddr'].forEach(id => document.getElementById(id).value = "");
-        }
-    }
-
     function addStock() {
         const c = document.getElementById('sCode').value.trim();
         const n = document.getElementById('sName').value;
-        const q = parseInt(document.getElementById('sQty').value) || 0;
+        const p = document.getElementById('sPrice').value;
+        const q = document.getElementById('sQty').value || 1;
         if(c && n) {
-            const sIdx = stock.findIndex(x => x.code === c);
-            if(sIdx !== -1) { stock[sIdx].qty += q; stock[sIdx].price = document.getElementById('sPrice').value; }
-            else stock.push({code:c, name:n, price:document.getElementById('sPrice').value, qty:q, supp:document.getElementById('sSupp').value});
+            const idx = stock.findIndex(x => x.code === c);
+            if(idx !== -1) { stock[idx].qty = parseInt(stock[idx].qty) + parseInt(q); stock[idx].price = p; stock[idx].name = n; }
+            else { stock.push({code:c, name:n, price:p, qty:q}); }
             localStorage.setItem('sm_stock', JSON.stringify(stock));
             db.ref('smart_erp/stock').set(stock);
-            renderAll();
-            ['sCode','sName','sPrice','sQty'].forEach(id => document.getElementById(id).value = (id=='sQty'?1:""));
+            renderStock();
+            ['sCode','sName','sPrice'].forEach(id => document.getElementById(id).value = "");
+            document.getElementById('sQty').value = "1"; document.getElementById('sCode').focus();
         }
     }
 
-    function renderAll() {
+    function renderStock() {
         let h = "";
-        invoices.slice().reverse().forEach(x => h += `<tr><td>${x.date}</td><td>${x.id}</td><td>${x.customer}</td><td>${x.phone}</td><td>${x.grand}</td><td><button onclick="window.print()">Print</button></td></tr>`);
-        document.getElementById('historyBody').innerHTML = h;
-
-        let s = "";
-        stock.slice().reverse().forEach(x => s += `<tr><td>${x.code}</td><td>${x.name}</td><td>${x.price}</td><td>${x.qty}</td><td>${x.supp||'N/A'}</td><td><button onclick="window.print()">Label</button></td></tr>`);
-        document.getElementById('stockBody').innerHTML = s;
-
-        let sup = ""; let opt = "<option value=''>Select Supplier</option>";
-        suppliers.forEach(x => {
-            sup += `<tr><td>${x.name}</td><td>${x.phone}</td><td>${x.addr}</td><td><button>Del</button></td></tr>`;
-            opt += `<option value="${x.name}">${x.name}</option>`;
+        stock.slice().reverse().forEach((x, i) => {
+            const realIdx = stock.length - 1 - i;
+            h += `<tr>
+                <td>${x.code}</td>
+                <td>${x.name}</td>
+                <td>${x.price}</td>
+                <td><input type="number" value="${x.qty}" style="width:50px" onchange="updateQty(${realIdx}, this.value)"></td>
+                <td><canvas id="bc-${x.code}" style="height:30px"></canvas></td>
+                <td>
+                    <button onclick="printSingleBarcode('${x.code}')" class="btn-primary" style="padding:2px 5px; font-size:10px;">Print</button>
+                    <button onclick="delStock(${realIdx})" class="btn-danger" style="padding:2px 5px; font-size:10px;">Del</button>
+                </td>
+            </tr>`;
         });
-        document.getElementById('supplierBody').innerHTML = sup;
-        document.getElementById('sSupp').innerHTML = opt;
+        document.getElementById('stockBody').innerHTML = h;
+        stock.forEach(x => JsBarcode(`#bc-${x.code}`, x.code, { format: "CODE128", width: 1, height: 30, displayValue: false }));
+    }
+
+    function printSingleBarcode(code) {
+        const area = document.getElementById('barcodePrintArea');
+        area.innerHTML = `<div class="barcode-item"><b>SMART COMPUTER</b><br><canvas id="pbc"></canvas><br>${code}</div>`;
+        JsBarcode("#pbc", code, { format: "CODE128", width: 2, height: 60 });
+        window.print();
+    }
+
+    function updateQty(idx, val) { stock[idx].qty = parseInt(val); localStorage.setItem('sm_stock', JSON.stringify(stock)); db.ref('smart_erp/stock').set(stock); }
+    function delStock(idx) { if(confirm("Delete?")) { stock.splice(idx,1); localStorage.setItem('sm_stock', JSON.stringify(stock)); db.ref('smart_erp/stock').set(stock); renderStock(); } }
+
+    function renderHistory() {
+        const q = document.getElementById('searchInv').value.toLowerCase();
+        let h = "";
+        invoices.slice().reverse().filter(x => x.id.toLowerCase().includes(q) || x.customer.toLowerCase().includes(q) || x.phone.includes(q)).forEach(x => {
+            h += `<tr><td>${x.date}</td><td>${x.id}</td><td>${x.customer}</td><td>${x.phone}</td><td>${x.grand}</td>
+            <td><button onclick="editInv('${x.id}')" class="btn-primary" style="padding:4px">Edit</button></td></tr>`;
+        });
+        document.getElementById('historyBody').innerHTML = h;
+    }
+
+    function editInv(id) {
+        const inv = invoices.find(x => x.id === id);
+        isEditMode = true;
+        document.getElementById('invId').innerText = inv.id;
+        document.getElementById('cName').value = inv.customer;
+        document.getElementById('cPhone').value = inv.phone;
+        document.getElementById('cAddr').value = inv.addr;
+        const rows = document.querySelectorAll('#billBody tr');
+        inv.items.forEach((it, i) => {
+            if(rows[i]) {
+                rows[i].querySelector('.it-c').value = it.c;
+                rows[i].querySelector('.it-n').value = it.n;
+                rows[i].querySelector('.it-w').value = it.w || "";
+                rows[i].querySelector('.it-q').value = it.q;
+                rows[i].querySelector('.it-p').value = it.p;
+            }
+        });
+        calc(); showSec('pos');
+    }
+
+    function renderUsers() {
+        let h = "";
+        users.forEach((u, i) => {
+            h += `<li style="padding:10px; border-bottom:1px solid #ddd; display:flex; justify-content:space-between;">
+                <b>${u.id}</b>
+                <button onclick="delUser(${i})" style="color:red; border:none; background:none;">Del</button>
+            </li>`;
+        });
+        document.getElementById('userList').innerHTML = h;
+    }
+
+    function saveUser() {
+        const id = document.getElementById('newUId').value.trim();
+        const pass = document.getElementById('newUPass').value.trim();
+        if(id && pass) { users.push({id, pass}); localStorage.setItem('sm_users', JSON.stringify(users)); db.ref('smart_erp/users').set(users); resetUserForm(); renderUsers(); }
+    }
+    function resetUserForm() { document.getElementById('newUId').value = ""; document.getElementById('newUPass').value = ""; }
+    function delUser(idx) { if(confirm("Delete?")) { users.splice(idx,1); localStorage.setItem('sm_users', JSON.stringify(users)); db.ref('smart_erp/users').set(users); renderUsers(); } }
+
+    function exportData() {
+        const blob = new Blob([JSON.stringify({users, stock, invoices})], {type: 'application/json'});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'SmartBackup.json'; a.click();
     }
 
     function showSec(id) {
-        ['posSec','historySec','stockSec','suppliersSec','settingsSec'].forEach(s => document.getElementById(s).classList.add('hidden'));
+        ['posSec','historySec','stockSec','settingsSec'].forEach(s => document.getElementById(s).classList.add('hidden'));
         document.getElementById(id + 'Sec').classList.remove('hidden');
-    }
-    
-    function exportData() {
-        const blob = new Blob([JSON.stringify({users, stock, invoices, suppliers})], {type:'application/json'});
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'SmartERP_Backup.json'; a.click();
+        if(id=='history') renderHistory(); if(id=='stock') renderStock(); if(id=='settings') renderUsers();
     }
 </script>
 </body>
