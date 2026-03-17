@@ -59,8 +59,6 @@
         .btn-success { background: var(--success); color: white; }
         .btn-danger { background: var(--danger); color: white; }
         .btn-secondary { background: #64748b; color: white; }
-        .btn-view { background: #0ea5e9; color: white; padding: 5px 10px; font-size: 11px; }
-        .btn-edit { background: #f59e0b; color: white; padding: 5px 10px; font-size: 11px; }
 
         .pass-container { position: relative; width: 90%; margin: 10px auto; }
         .toggle-password { position: absolute; right: 10px; top: 12px; cursor: pointer; color: #666; }
@@ -211,7 +209,7 @@
     <div id="stockSec" class="hidden panel">
         <h3>Inventory Control</h3>
         <div style="display:grid; grid-template-columns: 1fr 1.5fr 1fr 1fr auto; gap:10px; margin-bottom:20px; background:#f8fafc; padding:15px; border-radius:10px;">
-            <input type="text" id="sCode" placeholder="Item Code / Barcode" autofocus onkeypress="if(event.key==='Enter') document.getElementById('sName').focus()">
+            <input type="text" id="sCode" placeholder="Item Code" autofocus onkeypress="if(event.key==='Enter') document.getElementById('sName').focus()">
             <input type="text" id="sName" placeholder="Product Details">
             <input type="number" id="sPrice" placeholder="Price">
             <input type="number" id="sQty" placeholder="Qty" value="1">
@@ -260,13 +258,13 @@
     let stock = [];
     let invoices = [];
     let currentUser = "";
-    let isEditMode = false;
 
     db.ref('smart_erp/').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
             users = data.users || users;
-            stock = data.stock ? Object.values(data.stock) : [];
+            // Filter invalid/undefined data from database response
+            stock = data.stock ? Object.values(data.stock).filter(item => item && item.code && item.name) : [];
             invoices = data.invoices ? Object.values(data.invoices) : [];
             renderHistory(); renderStock(); renderUsers();
         }
@@ -291,7 +289,6 @@
     }
 
     function resetPOS() {
-        isEditMode = false;
         const d = new Date();
         document.getElementById('curDate').innerText = d.toLocaleDateString();
         document.getElementById('curTime').innerText = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
@@ -316,15 +313,12 @@
     }
 
     function genId() {
-        if(!isEditMode) {
-            const type = document.getElementById('docType').value;
-            document.getElementById('invId').innerText = type + "-" + Math.floor(100000 + Math.random() * 900000);
-        }
+        const type = document.getElementById('docType').value;
+        document.getElementById('invId').innerText = type + "-" + Math.floor(100000 + Math.random() * 900000);
     }
 
     function fetchItem(input) {
         const code = input.value.trim();
-        // Updated to support barcode scanning by searching stock
         const p = stock.find(x => x.code === code);
         const row = input.parentElement.parentElement;
         if(p) {
@@ -363,85 +357,77 @@
     }
 
     function saveAndPrint() {
-    const invId = document.getElementById('invId').innerText;
-    const cName = document.getElementById('cName').value || "Customer";
-    const cPhone = document.getElementById('cPhone').value || "NoPhone";
-    const curDate = document.getElementById('curDate').innerText.replace(/\//g, '-');
-    
-    // ফাইলের নাম তৈরি: InvoiceNo-Name-Phone-Date
-    const fileName = `${invId}-${cName}-${cPhone}-${curDate}`;
-    document.title = fileName; // ব্রাউজার প্রিন্ট ডায়ালগে এই নামটি ফাইল নেম হিসেবে ব্যবহার করবে
+        const invId = document.getElementById('invId').innerText;
+        const itemsToProcess = [];
+        let canSave = true;
 
-    const itemsToProcess = [];
-    let canSave = true;
+        const billItems = [];
+        document.querySelectorAll('#billBody tr').forEach(r => {
+            const code = r.querySelector('.it-c').value;
+            const name = r.querySelector('.it-n').value;
+            const war = r.querySelector('.it-w').value;
+            const q = parseInt(r.querySelector('.it-q').value);
+            const p = r.querySelector('.it-p').value;
+            const t = r.querySelector('.it-t').innerText;
 
-    const billItems = [];
-    document.querySelectorAll('#billBody tr').forEach(r => {
-        const code = r.querySelector('.it-c').value;
-        const name = r.querySelector('.it-n').value;
-        const war = r.querySelector('.it-w').value;
-        const q = parseInt(r.querySelector('.it-q').value);
-        const p = r.querySelector('.it-p').value;
-        const t = r.querySelector('.it-t').innerText;
-
-        if(code && q > 0) {
-            billItems.push({code, name, war, q, p, t});
-            const product = stock.find(s => s.code === code);
-            if(product && parseInt(product.qty) >= q) {
-                itemsToProcess.push({code, q});
-            } else if(!isEditMode) {
-                alert(`${product ? product.name : code} Out of Stock!`);
-                canSave = false;
+            if(code && q > 0) {
+                billItems.push({code, name, war, q, p, t});
+                const product = stock.find(s => s.code === code);
+                if(product && parseInt(product.qty) >= q) {
+                    itemsToProcess.push({code, q});
+                } else {
+                    alert(`${product ? product.name : code} Out of Stock!`);
+                    canSave = false;
+                }
             }
-        }
-    });
+        });
 
-    if(!canSave || billItems.length === 0) return;
+        if(!canSave || billItems.length === 0) return;
 
-    const inv = {
-        id: invId,
-        type: document.getElementById('docType').value,
-        date: document.getElementById('curDate').innerText,
-        time: document.getElementById('curTime').innerText,
-        customer: document.getElementById('cName').value,
-        phone: document.getElementById('cPhone').value,
-        address: document.getElementById('cAddr').value,
-        email: document.getElementById('cEmail').value,
-        items: billItems,
-        subTotal: document.getElementById('subT').innerText,
-        discount: document.getElementById('vP').value,
-        vat: document.getElementById('vatInp').value,
-        grand: document.getElementById('grandT').innerText,
-        paid: document.getElementById('pPaid').value,
-        due: document.getElementById('pDue').innerText,
-        soldBy: currentUser
-    };
+        const inv = {
+            id: invId,
+            type: document.getElementById('docType').value,
+            date: document.getElementById('curDate').innerText,
+            time: document.getElementById('curTime').innerText,
+            customer: document.getElementById('cName').value,
+            phone: document.getElementById('cPhone').value,
+            address: document.getElementById('cAddr').value,
+            email: document.getElementById('cEmail').value,
+            items: billItems,
+            subTotal: document.getElementById('subT').innerText,
+            discount: document.getElementById('vP').value,
+            vat: document.getElementById('vatInp').value,
+            grand: document.getElementById('grandT').innerText,
+            paid: document.getElementById('pPaid').value,
+            due: document.getElementById('pDue').innerText,
+            soldBy: currentUser
+        };
 
-    db.ref('smart_erp/invoices/' + invId).set(inv).then(() => {
-        if(!isEditMode) {
+        db.ref('smart_erp/invoices/' + invId).set(inv).then(() => {
             itemsToProcess.forEach(item => {
                 const product = stock.find(s => s.code === item.code);
                 db.ref('smart_erp/stock/' + item.code + '/qty').set(parseInt(product.qty) - item.q);
             });
-        }
-        window.print();
-        // প্রিন্ট শেষে টাইটেল আগের অবস্থায় ফিরিয়ে আনা (ঐচ্ছিক)
-        setTimeout(() => { document.title = "Smart Computer | Management System"; }, 1000);
-    });
-}
+            window.print();
+        });
+    }
 
     function printNoSave() { window.print(); }
 
     function addStock() {
-        const c = document.getElementById('sCode').value;
-        const n = document.getElementById('sName').value;
-        const p = document.getElementById('sPrice').value;
-        const q = document.getElementById('sQty').value;
+        const c = document.getElementById('sCode').value.trim();
+        const n = document.getElementById('sName').value.trim();
+        const p = document.getElementById('sPrice').value || 0;
+        const q = document.getElementById('sQty').value || 0;
+        
+        // Block empty or invalid data entry
         if(c && n) {
             db.ref('smart_erp/stock/' + c).set({code:c, name:n, price:p, qty:q}).then(() => {
                 ['sCode','sName','sPrice','sQty'].forEach(id => document.getElementById(id).value = "");
                 document.getElementById('stockBtn').innerText = "Add Item";
             });
+        } else {
+            alert("Please enter both Code and Product Details!");
         }
     }
 
@@ -460,50 +446,16 @@
     function renderStock() {
         let h = "";
         stock.forEach(x => {
-            h += `<tr><td>${x.code}</td><td>${x.name}</td><td>${x.price}</td><td>${x.qty}</td>
-            <td>
-                <button onclick="editStock('${x.code}')" style="background:blue; color:white; border:none; padding:4px; cursor:pointer;">Edit</button>
-                <button onclick="if(confirm('Delete?')) db.ref('smart_erp/stock/${x.code}').remove()" style="background:red; color:white; border:none; padding:4px; cursor:pointer;">Del</button>
-            </td></tr>`;
+            // Only render valid items to prevent undefined rows
+            if(x && x.code && x.name) {
+                h += `<tr><td>${x.code}</td><td>${x.name}</td><td>${x.price}</td><td>${x.qty}</td>
+                <td>
+                    <button onclick="editStock('${x.code}')" style="background:blue; color:white; border:none; padding:4px; cursor:pointer;">Edit</button>
+                    <button onclick="if(confirm('Delete?')) db.ref('smart_erp/stock/${x.code}').remove()" style="background:red; color:white; border:none; padding:4px; cursor:pointer;">Del</button>
+                </td></tr>`;
+            }
         });
         document.getElementById('stockBody').innerHTML = h;
-    }
-
-    // Updated History management with View, Edit, and Delete
-    function viewInvoice(id) {
-        const inv = invoices.find(x => x.id === id);
-        if(inv) {
-            isEditMode = true;
-            document.getElementById('docType').value = inv.type;
-            document.getElementById('invId').innerText = inv.id;
-            document.getElementById('curDate').innerText = inv.date;
-            document.getElementById('curTime').innerText = inv.time;
-            document.getElementById('cName').value = inv.customer;
-            document.getElementById('cPhone').value = inv.phone;
-            document.getElementById('cAddr').value = inv.address;
-            document.getElementById('cEmail').value = inv.email;
-            document.getElementById('vP').value = inv.discount;
-            document.getElementById('vatInp').value = inv.vat;
-            document.getElementById('pPaid').value = inv.paid;
-            document.getElementById('soldBy').innerText = inv.soldBy;
-
-            let rows = "";
-            for(let i=0; i<13; i++) {
-                const item = inv.items[i] || {code:'', name:'', war:'', q:0, p:0, t:'0.00'};
-                rows += `<tr>
-                    <td>${i+1}</td>
-                    <td><input type="text" class="it-c" value="${item.code}" style="width:90%" onchange="fetchItem(this)"></td>
-                    <td><input type="text" class="it-n" value="${item.name}" style="width:95%"></td>
-                    <td><input type="text" class="it-w" value="${item.war}" style="width:90%"></td>
-                    <td><input type="number" class="it-q" value="${item.q}" oninput="calc()" style="width:40px"></td>
-                    <td><input type="number" class="it-p" value="${item.p}" oninput="calc()" style="width:60px"></td>
-                    <td class="it-t">${item.t}</td>
-                </tr>`;
-            }
-            document.getElementById('billBody').innerHTML = rows;
-            calc();
-            showSec('pos');
-        }
     }
 
     function renderHistory() {
@@ -511,11 +463,7 @@
         let h = "";
         invoices.slice().reverse().filter(x => x.id.toLowerCase().includes(q) || x.customer.toLowerCase().includes(q)).forEach(x => {
             h += `<tr><td>${x.date}</td><td>${x.id}</td><td>${x.customer}</td><td>${x.phone}</td><td>${x.grand}</td>
-            <td>
-                <button onclick="viewInvoice('${x.id}')" class="btn-view">View</button>
-                <button onclick="viewInvoice('${x.id}')" class="btn-edit">Edit</button>
-                <button onclick="if(confirm('Delete?')) db.ref('smart_erp/invoices/${x.id}').remove()" class="btn-danger" style="padding: 5px 10px; font-size: 11px;">Del</button>
-            </td></tr>`;
+            <td><button onclick="alert('Functionality to be added')" style="background:gray; color:white; border:none; padding:4px; cursor:pointer;">View</button></td></tr>`;
         });
         document.getElementById('historyBody').innerHTML = h;
     }
@@ -556,9 +504,45 @@
     function delUser(i) { if(confirm("Delete user?")) { users.splice(i,1); db.ref('smart_erp/users').set(users); } }
     function resetUserForm() { document.getElementById('newUId').value=""; document.getElementById('newUPass').value=""; document.getElementById('editUserIndex').value="-1"; document.getElementById('cancelUserEdit').classList.add('hidden'); }
 
+    function exportData() {
+        const data = { users, stock, invoices };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Smart_ERP_Backup_${new Date().toLocaleDateString().replace(/\//g,'-')}.json`;
+        a.click();
+    }
+
+    function importData(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                if (data.users && data.stock && data.invoices) {
+                    if(confirm("Restore করার ফলে বর্তমান সকল ডাটা মুছে যাবে। আপনি কি নিশ্চিত?")) {
+                        db.ref('smart_erp/').set(data);
+                        alert("Data Restored Successfully! সিস্টেম রিলোড হচ্ছে...");
+                        location.reload();
+                    }
+                } else {
+                    alert("ভুল ফাইল ফরম্যাট! সঠিক ব্যাকআপ ফাইল নির্বাচন করুন।");
+                }
+            } catch (err) {
+                alert("ফাইলটি পড়তে সমস্যা হচ্ছে।");
+            }
+        };
+        reader.readAsText(file);
+    }
+
     function showSec(id) {
         ['posSec','historySec','stockSec','settingsSec'].forEach(s => document.getElementById(s).classList.add('hidden'));
         document.getElementById(id + 'Sec').classList.remove('hidden');
+        if(id=='history') renderHistory();
+        if(id=='stock') renderStock();
+        if(id=='settings') renderUsers();
     }
 
     function numberToWords(num) {
