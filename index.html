@@ -10,39 +10,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
-    <script>
-        // Firebase Configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyAsosjugcKHhR6-M_AurTrxIe2SV0pIBpE",
-            authDomain: "smart-erp-175cf.firebaseapp.com",
-            databaseURL: "https://smart-erp-175cf-default-rtdb.firebaseio.com",
-            projectId: "smart-erp-175cf",
-            storageBucket: "smart-erp-175cf.firebasestorage.app",
-            messagingSenderId: "787232044499",
-            appId: "1:787232044499:web:20c9ac6d80f92ce81c2b26",
-            measurementId: "G-8VE4ZEP3JG"
-        };
-
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-
-        // Cloud Data Synchronization
-        db.ref('smart_erp/').on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                window.users = data.users || window.users;
-                window.stock = data.stock || window.stock;
-                window.invoices = data.invoices ? Object.values(data.invoices) : window.invoices;
-                
-                // স্ক্রিন রিফ্রেশ ফাংশনসমূহ
-                if(typeof renderHistory === 'function') renderHistory();
-                if(typeof renderStock === 'function') renderStock();
-                if(typeof renderUsers === 'function') renderUsers();
-            }
-        });
-    </script>
-    
     <style>
         :root { --primary: #1e40af; --secondary: #3b82f6; --dark: #0f172a; --bg: #e2e8f0; --text: #1e293b; --success: #059669; --danger: #dc2626; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; }
@@ -156,6 +123,7 @@
                 <div style="width: 150px; border-top: 1px solid #000;"><p>Customer Signature</p></div>
                 <div style="width: 150px; border-top: 1px solid #000;"><p>Authorized Signature</p></div>
             </div>
+            
             <p style="text-align: center; font-size: 10px; margin-top: 30px; color: #666; border-top: 1px solid #eee; padding-top: 10px;">Software Developed by Smart Computer | smartcomputer-bd.github.io/com</p>
         </div>
     </div>
@@ -203,10 +171,37 @@
 </div>
 
 <script>
+    // --- Firebase Configuration ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyAsosjugcKHhR6-M_AurTrxIe2SV0pIBpE",
+        authDomain: "smart-erp-175cf.firebaseapp.com",
+        databaseURL: "https://smart-erp-175cf-default-rtdb.firebaseio.com",
+        projectId: "smart-erp-175cf",
+        storageBucket: "smart-erp-175cf.firebasestorage.app",
+        messagingSenderId: "787232044499",
+        appId: "1:787232044499:web:20c9ac6d80f92ce81c2b26",
+        measurementId: "G-8VE4ZEP3JG"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
     let users = JSON.parse(localStorage.getItem('sm_users')) || [{id:'admin', pass:'smart123'}];
     let stock = JSON.parse(localStorage.getItem('sm_stock')) || [];
     let invoices = JSON.parse(localStorage.getItem('sm_invoices')) || [];
     let currentUser = "";
+
+    // Firebase Cloud Sync (ডাটা অটোমেটিক ডাউনলোড করার জন্য)
+    db.ref('smart_erp/').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            users = data.users || users;
+            stock = data.stock || stock;
+            invoices = data.invoices ? Object.values(data.invoices) : invoices;
+            if(typeof renderHistory === 'function') renderHistory();
+            if(typeof renderStock === 'function') renderStock();
+            if(typeof renderUsers === 'function') renderUsers();
+        }
+    });
 
     function togglePass() {
         const p = document.getElementById('uPass');
@@ -304,13 +299,17 @@
             customer: document.getElementById('cName').value,
             phone: document.getElementById('cPhone').value,
             addr: document.getElementById('cAddr').value,
+            items: [],
+            vat: document.getElementById('vatInp').value,
+            disc: document.getElementById('vP').value,
+            paid: document.getElementById('pPaid').value,
             grand: document.getElementById('grandT').innerText,
             soldBy: currentUser
         };
         invoices.push(inv);
         localStorage.setItem('sm_invoices', JSON.stringify(invoices));
         
-        // Save to Firebase
+        // Firebase Cloud Save
         db.ref('smart_erp/invoices/' + inv.id).set(inv).then(() => {
             window.print();
         });
@@ -323,12 +322,13 @@
         if(c && n) {
             stock.push({code:c, name:n, price:p});
             localStorage.setItem('sm_stock', JSON.stringify(stock));
-            // Save to Firebase
+            
+            // Firebase Cloud Save
             db.ref('smart_erp/stock').set(stock);
+            
             renderStock();
-            document.getElementById('sCode').value = ''; 
-            document.getElementById('sName').value = ''; 
-            document.getElementById('sPrice').value = '';
+            document.getElementById('sCode').value = ''; document.getElementById('sName').value = ''; document.getElementById('sPrice').value = '';
+            document.getElementById('sCode').focus();
         }
     }
 
@@ -354,7 +354,6 @@
         const pass = document.getElementById('newUPass').value.trim();
         const editIdx = parseInt(document.getElementById('editUserIndex').value);
         if(!id || !pass) return alert("All fields are required!");
-        
         if(editIdx > -1) {
             users[editIdx] = {id, pass};
             alert("User updated successfully!");
@@ -363,7 +362,10 @@
             alert("New user created!");
         }
         localStorage.setItem('sm_users', JSON.stringify(users));
+        
+        // Firebase Cloud Save
         db.ref('smart_erp/users').set(users);
+        
         resetUserForm();
         renderUsers();
     }
@@ -428,12 +430,12 @@
             try {
                 const data = JSON.parse(e.target.result);
                 if (data.users && data.stock && data.invoices) {
-                    if(confirm("Restore করার ফলে বর্তমান সকল ডাটা মুছে যাবে। নিশ্চিত?")) {
+                    if(confirm("Restore করার ফলে বর্তমান সকল ডাটা মুছে যাবে। আপনি কি নিশ্চিত?")) {
                         localStorage.setItem('sm_users', JSON.stringify(data.users));
                         localStorage.setItem('sm_stock', JSON.stringify(data.stock));
                         localStorage.setItem('sm_invoices', JSON.stringify(data.invoices));
                         db.ref('smart_erp/').set(data);
-                        alert("Data Restored!");
+                        alert("Data Restored Successfully!");
                         location.reload();
                     }
                 }
