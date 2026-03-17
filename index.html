@@ -363,62 +363,72 @@
     }
 
     function saveAndPrint() {
-        const invId = document.getElementById('invId').innerText;
-        const itemsToProcess = [];
-        let canSave = true;
+    const invId = document.getElementById('invId').innerText;
+    const cName = document.getElementById('cName').value || "Customer";
+    const cPhone = document.getElementById('cPhone').value || "NoPhone";
+    const curDate = document.getElementById('curDate').innerText.replace(/\//g, '-');
+    
+    // ফাইলের নাম তৈরি: InvoiceNo-Name-Phone-Date
+    const fileName = `${invId}-${cName}-${cPhone}-${curDate}`;
+    document.title = fileName; // ব্রাউজার প্রিন্ট ডায়ালগে এই নামটি ফাইল নেম হিসেবে ব্যবহার করবে
 
-        const billItems = [];
-        document.querySelectorAll('#billBody tr').forEach(r => {
-            const code = r.querySelector('.it-c').value;
-            const name = r.querySelector('.it-n').value;
-            const war = r.querySelector('.it-w').value;
-            const q = parseInt(r.querySelector('.it-q').value);
-            const p = r.querySelector('.it-p').value;
-            const t = r.querySelector('.it-t').innerText;
+    const itemsToProcess = [];
+    let canSave = true;
 
-            if(code && q > 0) {
-                billItems.push({code, name, war, q, p, t});
-                const product = stock.find(s => s.code === code);
-                if(product && parseInt(product.qty) >= q) {
-                    itemsToProcess.push({code, q});
-                } else if(!isEditMode) {
-                    alert(`${product ? product.name : code} Out of Stock!`);
-                    canSave = false;
-                }
+    const billItems = [];
+    document.querySelectorAll('#billBody tr').forEach(r => {
+        const code = r.querySelector('.it-c').value;
+        const name = r.querySelector('.it-n').value;
+        const war = r.querySelector('.it-w').value;
+        const q = parseInt(r.querySelector('.it-q').value);
+        const p = r.querySelector('.it-p').value;
+        const t = r.querySelector('.it-t').innerText;
+
+        if(code && q > 0) {
+            billItems.push({code, name, war, q, p, t});
+            const product = stock.find(s => s.code === code);
+            if(product && parseInt(product.qty) >= q) {
+                itemsToProcess.push({code, q});
+            } else if(!isEditMode) {
+                alert(`${product ? product.name : code} Out of Stock!`);
+                canSave = false;
             }
-        });
+        }
+    });
 
-        if(!canSave || billItems.length === 0) return;
+    if(!canSave || billItems.length === 0) return;
 
-        const inv = {
-            id: invId,
-            type: document.getElementById('docType').value,
-            date: document.getElementById('curDate').innerText,
-            time: document.getElementById('curTime').innerText,
-            customer: document.getElementById('cName').value,
-            phone: document.getElementById('cPhone').value,
-            address: document.getElementById('cAddr').value,
-            email: document.getElementById('cEmail').value,
-            items: billItems,
-            subTotal: document.getElementById('subT').innerText,
-            discount: document.getElementById('vP').value,
-            vat: document.getElementById('vatInp').value,
-            grand: document.getElementById('grandT').innerText,
-            paid: document.getElementById('pPaid').value,
-            due: document.getElementById('pDue').innerText,
-            soldBy: currentUser
-        };
+    const inv = {
+        id: invId,
+        type: document.getElementById('docType').value,
+        date: document.getElementById('curDate').innerText,
+        time: document.getElementById('curTime').innerText,
+        customer: document.getElementById('cName').value,
+        phone: document.getElementById('cPhone').value,
+        address: document.getElementById('cAddr').value,
+        email: document.getElementById('cEmail').value,
+        items: billItems,
+        subTotal: document.getElementById('subT').innerText,
+        discount: document.getElementById('vP').value,
+        vat: document.getElementById('vatInp').value,
+        grand: document.getElementById('grandT').innerText,
+        paid: document.getElementById('pPaid').value,
+        due: document.getElementById('pDue').innerText,
+        soldBy: currentUser
+    };
 
-        db.ref('smart_erp/invoices/' + invId).set(inv).then(() => {
-            if(!isEditMode) {
-                itemsToProcess.forEach(item => {
-                    const product = stock.find(s => s.code === item.code);
-                    db.ref('smart_erp/stock/' + item.code + '/qty').set(parseInt(product.qty) - item.q);
-                });
-            }
-            window.print();
-        });
-    }
+    db.ref('smart_erp/invoices/' + invId).set(inv).then(() => {
+        if(!isEditMode) {
+            itemsToProcess.forEach(item => {
+                const product = stock.find(s => s.code === item.code);
+                db.ref('smart_erp/stock/' + item.code + '/qty').set(parseInt(product.qty) - item.q);
+            });
+        }
+        window.print();
+        // প্রিন্ট শেষে টাইটেল আগের অবস্থায় ফিরিয়ে আনা (ঐচ্ছিক)
+        setTimeout(() => { document.title = "Smart Computer | Management System"; }, 1000);
+    });
+}
 
     function printNoSave() { window.print(); }
 
