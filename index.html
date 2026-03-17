@@ -26,7 +26,6 @@
         .header { display: flex; justify-content: space-between; border-bottom: 4px solid var(--primary); padding-bottom: 10px; margin-bottom: 10px; }
         .header h1 { margin: 0; font-size: 36px; color: var(--primary); font-weight: 900; }
         .slogan { font-size: 13px; color: #444; font-weight: 600; font-style: italic; margin-top: -5px; margin-bottom: 5px; }
-        
         .header-info p { margin: 2px 0; font-size: 12px; display: flex; align-items: center; gap: 8px; }
 
         .cust-box { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; background: #f8fafc; padding: 10px; border-radius: 5px; border: 1px solid #e2e8f0; }
@@ -38,8 +37,10 @@
         th { background: #e2e8f0; color: #000; padding: 6px; border: 1px solid #000; font-size: 11px; text-transform: uppercase; }
         td { border: 1px solid #000; padding: 3px; text-align: center; }
 
-        .col-sl { width: 5%; }
-        .col-code { width: 18%; }
+        /* Adjusted Column Widths */
+        .col-sl { width: 4%; }
+        .col-code { width: 12%; } /* Smaller size as requested */
+        .col-desc { width: auto; }
         .col-war { width: 12%; }
         .col-qty { width: 8%; }
         .col-price { width: 14%; }
@@ -73,7 +74,7 @@
 
 <div id="loginPage" style="position:fixed; inset:0; background:var(--dark); display:flex; align-items:center; justify-content:center; z-index:9999;">
     <div style="background:white; padding:40px; border-radius:15px; width:350px; text-align:center;">
-        <h2 style="color:var(--primary)">Smart Computer EBR System</h2>
+        <h2 style="color:var(--primary)">Smart Computer System</h2>
         <input type="text" id="uId" placeholder="User ID" style="width:90%; padding:12px; margin:10px 0;">
         <input type="password" id="uPass" placeholder="Password" style="width:90%; padding:12px; margin:10px 0;">
         <button onclick="login()" class="btn btn-primary" style="width:100%; justify-content:center; margin-top: 10px;">LOGIN</button>
@@ -111,7 +112,7 @@
                     </div>
                 </div>
                 <div style="text-align:right">
-                    <select id="docType" onchange="genId()">
+                    <select id="docType" onchange="genId()" style="font-weight:bold; color:var(--primary)">
                         <option value="Inv">INVOICE</option>
                         <option value="Req">REQUISITION</option>
                         <option value="Cha">CHALAN</option>
@@ -133,8 +134,8 @@
                 <thead>
                     <tr>
                         <th class="col-sl">SL</th>
-                        <th class="col-code">Code (Scan)</th>
-                        <th>Description</th>
+                        <th class="col-code">Code</th>
+                        <th class="col-desc">Description</th>
                         <th class="col-war">Warranty</th>
                         <th class="col-qty">Qty</th>
                         <th class="col-price">Price</th>
@@ -174,7 +175,7 @@
     </div>
 
     <div id="historySec" class="hidden panel">
-        <h3>Records History</h3>
+        <h3>Invoice History</h3>
         <table style="width:100%">
             <thead><tr><th>Date</th><th>ID</th><th>Customer</th><th>Total</th><th>Action</th></tr></thead>
             <tbody id="historyBody"></tbody>
@@ -184,7 +185,7 @@
     <div id="stockSec" class="hidden panel">
         <h3>Inventory Control</h3>
         <div style="display:grid; grid-template-columns: 1fr 1.5fr 1fr 1fr auto; gap:10px; margin-bottom:20px; background:#f8fafc; padding:15px; border-radius:10px;">
-            <input type="text" id="sCode" placeholder="Scan Barcode / Code" autofocus onkeypress="if(event.key==='Enter') document.getElementById('sName').focus()">
+            <input type="text" id="sCode" placeholder="Code / Barcode" autofocus onkeypress="if(event.key==='Enter') document.getElementById('sName').focus()">
             <input type="text" id="sName" placeholder="Product Details">
             <input type="number" id="sPrice" placeholder="Price">
             <input type="number" id="sQty" placeholder="Qty">
@@ -229,7 +230,6 @@
     let invoices = [];
     let currentUser = "";
     let isEditMode = false;
-    let editStockCode = null;
 
     db.ref('smart_erp/').on('value', (snapshot) => {
         const data = snapshot.val();
@@ -250,7 +250,7 @@
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('app').classList.remove('hidden');
             resetPOS();
-        } else alert("Login Failed!");
+        } else alert("Invalid ID or Password");
     }
 
     function resetPOS() {
@@ -263,7 +263,7 @@
         ['cName','cPhone','cAddr','cEmail','pPaid'].forEach(id => document.getElementById(id).value = id==='pPaid'?0:"");
         
         let rows = "";
-        for(let i=1; i<=15; i++) {
+        for(let i=1; i<=13; i++) { // Row reduced to 13
             rows += `<tr>
                 <td>${i}</td>
                 <td><input type="text" class="it-c" style="width:90%" onchange="fetchItem(this)"></td>
@@ -290,6 +290,11 @@
         const p = stock.find(x => x.code === code);
         const row = input.parentElement.parentElement;
         if(p) {
+            if(parseInt(p.qty) <= 0) {
+                alert("Out of Stock!");
+                input.value = "";
+                return;
+            }
             row.querySelector('.it-n').value = p.name;
             row.querySelector('.it-p').value = p.price;
             row.querySelector('.it-q').value = 1;
@@ -314,19 +319,45 @@
         document.getElementById('pDue').innerText = due.toFixed(2);
         document.getElementById('inWords').innerText = numberToWords(grand) + " Taka Only";
         
-        const qrContent = `Customer: ${document.getElementById('cName').value}\nInv No: ${document.getElementById('invId').innerText}\nDate: ${document.getElementById('curDate').innerText}\nTime: ${document.getElementById('curTime').innerText}\nTotal: ${grand.toFixed(2)}\nDue: ${due.toFixed(2)}`;
+        const qrContent = `Name: ${document.getElementById('cName').value}\nInv: ${document.getElementById('invId').innerText}\nDate: ${document.getElementById('curDate').innerText} ${document.getElementById('curTime').innerText}\nTotal: ${grand}\nDue: ${due}`;
         document.getElementById('qrcode').innerHTML = "";
         new QRCode(document.getElementById("qrcode"), { text: qrContent, width: 80, height: 80 });
     }
 
     function saveAndPrint() {
+        const invId = document.getElementById('invId').innerText;
+        const itemsToProcess = [];
+        let canSave = true;
+
+        document.querySelectorAll('#billBody tr').forEach(r => {
+            const code = r.querySelector('.it-c').value;
+            const q = parseInt(r.querySelector('.it-q').value);
+            if(code && q > 0) {
+                const product = stock.find(s => s.code === code);
+                if(product && parseInt(product.qty) >= q) {
+                    itemsToProcess.push({code, q});
+                } else {
+                    alert(`${product ? product.name : code} Out of Stock!`);
+                    canSave = false;
+                }
+            }
+        });
+
+        if(!canSave) return;
+
         const inv = {
-            id: document.getElementById('invId').innerText,
+            id: invId,
             customer: document.getElementById('cName').value,
             date: document.getElementById('curDate').innerText,
             grand: document.getElementById('grandT').innerText
         };
-        db.ref('smart_erp/invoices/' + inv.id).set(inv).then(() => {
+
+        db.ref('smart_erp/invoices/' + invId).set(inv).then(() => {
+            // Update Stock
+            itemsToProcess.forEach(item => {
+                const product = stock.find(s => s.code === item.code);
+                db.ref('smart_erp/stock/' + item.code + '/qty').set(parseInt(product.qty) - item.q);
+            });
             window.print();
         });
     }
@@ -340,10 +371,8 @@
         const qty = document.getElementById('sQty').value;
         if(code && name) {
             db.ref('smart_erp/stock/' + code).set({code, name, price, qty}).then(() => {
-                alert("Stock Updated!");
                 ['sCode','sName','sPrice','sQty'].forEach(id => document.getElementById(id).value = "");
                 document.getElementById('stockBtn').innerText = "Add Item";
-                editStockCode = null;
             });
         }
     }
@@ -356,7 +385,6 @@
             document.getElementById('sPrice').value = p.price;
             document.getElementById('sQty').value = p.qty;
             document.getElementById('stockBtn').innerText = "Update Item";
-            editStockCode = code;
             document.getElementById('sCode').focus();
         }
     }
