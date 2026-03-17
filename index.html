@@ -21,7 +21,6 @@
 
         .external-actions { position: fixed; top: 80px; left: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 500; }
         
-        /* A4 Layout Optimization */
         .invoice-sheet { width: 210mm; min-height: 297mm; background: white; padding: 10mm; margin: 10px auto; position: relative; color: #000; box-sizing: border-box; display: flex; flex-direction: column; border: 1px solid #d1d5db; }
         
         .header { display: flex; justify-content: space-between; border-bottom: 4px solid var(--primary); padding-bottom: 10px; margin-bottom: 10px; }
@@ -39,10 +38,8 @@
         th { background: #e2e8f0; color: #000; padding: 6px; border: 1px solid #000; font-size: 11px; text-transform: uppercase; }
         td { border: 1px solid #000; padding: 3px; text-align: center; }
 
-        /* Adjusted Column Widths */
         .col-sl { width: 5%; }
         .col-code { width: 18%; }
-        .col-desc { width: auto; }
         .col-war { width: 12%; }
         .col-qty { width: 8%; }
         .col-price { width: 14%; }
@@ -62,9 +59,6 @@
         .btn-danger { background: var(--danger); color: white; }
         .btn-secondary { background: #64748b; color: white; }
 
-        .pass-container { position: relative; width: 90%; margin: 10px auto; }
-        .toggle-password { position: absolute; right: 10px; top: 12px; cursor: pointer; color: #666; }
-
         @media print {
             @page { size: A4; margin: 0; }
             .no-print, .external-actions, .navbar { display: none !important; }
@@ -75,16 +69,13 @@
         }
     </style>
 </head>
-<body onload="document.getElementById('uId').focus()">
+<body>
 
 <div id="loginPage" style="position:fixed; inset:0; background:var(--dark); display:flex; align-items:center; justify-content:center; z-index:9999;">
     <div style="background:white; padding:40px; border-radius:15px; width:350px; text-align:center;">
         <h2 style="color:var(--primary)">Smart Computer EBR System</h2>
         <input type="text" id="uId" placeholder="User ID" style="width:90%; padding:12px; margin:10px 0;">
-        <div class="pass-container">
-            <input type="password" id="uPass" placeholder="Password" style="width:100%; padding:12px; margin:0;" onkeypress="if(event.key === 'Enter') login()">
-            <i class="fa-solid fa-eye toggle-password" onclick="togglePass()"></i>
-        </div>
+        <input type="password" id="uPass" placeholder="Password" style="width:90%; padding:12px; margin:10px 0;">
         <button onclick="login()" class="btn btn-primary" style="width:100%; justify-content:center; margin-top: 10px;">LOGIN</button>
     </div>
 </div>
@@ -97,9 +88,6 @@
             <button onclick="showSec('history')">History</button>
             <button onclick="showSec('stock')">Inventory</button>
             <button id="navSettings" onclick="showSec('settings')">Admin</button>
-            <button onclick="exportData()" style="background:var(--success)">Backup</button>
-            <button onclick="document.getElementById('restoreInput').click()" style="background:var(--secondary)">Restore</button>
-            <input type="file" id="restoreInput" accept=".json" style="display:none" onchange="importData(event)">
             <button onclick="location.reload()" style="background:var(--danger)">Logout</button>
         </div>
     </nav>
@@ -119,17 +107,16 @@
                     <div class="header-info">
                         <p><i class="fa-solid fa-phone"></i> 01614-398989</p>
                         <p><i class="fa-solid fa-envelope"></i> smartcomputer660@gmail.com</p>
-                        <p><i class="fa-solid fa-location-dot"></i> 1 No Camp, Housing Bajar Road, Ward No-12, Khalishpur, Khulna</p>
-                        <p><i class="fa-solid fa-globe"></i> smartcomputer-bd.github.io/com</p>
+                        <p><i class="fa-solid fa-location-dot"></i> Khalishpur, Khulna</p>
                     </div>
                 </div>
                 <div style="text-align:right">
-                    <select id="docType" onchange="genId()" style="font-size:16px; font-weight:bold; color:var(--primary);">
+                    <select id="docType" onchange="genId()">
                         <option value="Inv">INVOICE</option>
                         <option value="Req">REQUISITION</option>
                         <option value="Cha">CHALAN</option>
                     </select>
-                    <p><b>No:</b> <span id="invId" style="font-weight:bold; color:var(--danger)"></span></p>
+                    <p><b>No:</b> <span id="invId"></span></p>
                     <p><b>Date:</b> <span id="curDate"></span></p>
                     <p><b>Time:</b> <span id="curTime"></span></p>
                 </div>
@@ -147,7 +134,7 @@
                     <tr>
                         <th class="col-sl">SL</th>
                         <th class="col-code">Code (Scan)</th>
-                        <th class="col-desc">Description</th>
+                        <th>Description</th>
                         <th class="col-war">Warranty</th>
                         <th class="col-qty">Qty</th>
                         <th class="col-price">Price</th>
@@ -159,22 +146,13 @@
 
             <div style="display:flex; justify-content:space-between; margin-top:10px;">
                 <div style="width:50%">
-                    <p style="font-size:11px; font-weight:bold; text-decoration:underline;">Terms & Conditions:</p>
-                    <p style="font-size:9px; line-height:1.4;">
-                        1. Warranty covers manufacturing defects only.<br>
-                        2. Physical damage, burn, or liquid damage voids warranty.<br>
-                        3. Product must be returned with original invoice and packaging.<br>
-                        4. Warranty period starts from the date of purchase.
-                    </p>
                     <div id="qrcode"></div> 
                 </div>
                 <div style="width:280px; text-align:right;">
-                    <div style="display:flex; justify-content:space-between; padding:3px 0; font-size:13px;"><span>Sub Total:</span> <span id="subT">0.00</span></div>
-                    <div style="display:flex; justify-content:space-between; padding:3px 0; font-size:13px;"><span>Discount (%):</span> <input type="number" id="vP" value="0" style="width:50px; text-align:center" oninput="calc()"></div>
-                    <div style="display:flex; justify-content:space-between; padding:3px 0; font-size:13px;"><span>VAT (%):</span> <input type="number" id="vatInp" value="0" style="width:50px; text-align:center" oninput="calc()"></div>
+                    <div style="display:flex; justify-content:space-between; padding:3px 0;"><span>Sub Total:</span> <span id="subT">0.00</span></div>
                     <div style="display:flex; justify-content:space-between; padding:6px 0; font-weight:bold; font-size:15px; border-top:2px solid #000;"><span>Grand Total:</span> <span id="grandT">0.00</span></div>
-                    <div style="display:flex; justify-content:space-between; padding:3px 0; font-size:13px;"><span>Paid:</span> <input type="number" id="pPaid" value="0" style="width:70px; text-align:right" oninput="calc()"></div>
-                    <div style="display:flex; justify-content:space-between; padding:3px 0; color:var(--danger); font-weight:bold; font-size:13px;"><span>Due:</span> <span id="pDue">0.00</span></div>
+                    <div style="display:flex; justify-content:space-between; padding:3px 0;"><span>Paid:</span> <input type="number" id="pPaid" value="0" style="width:70px; text-align:right" oninput="calc()"></div>
+                    <div style="display:flex; justify-content:space-between; padding:3px 0; color:var(--danger); font-weight:bold;"><span>Due:</span> <span id="pDue">0.00</span></div>
                     <div style="text-align:left; margin-top:20px; font-size:10px; font-style:italic; border-top:1px dashed #ccc; padding-top:8px;">
                         <b>In Words:</b> <span id="inWords">Zero Taka Only</span>
                     </div>
@@ -184,10 +162,6 @@
             <div class="footer-icons">
                 <div class="icon-box"><i class="fa-solid fa-desktop"></i><span>Desktop</span></div>
                 <div class="icon-box"><i class="fa-solid fa-laptop"></i><span>Laptop</span></div>
-                <div class="icon-box"><i class="fa-solid fa-mouse"></i><span>Mouse</span></div>
-                <div class="icon-box"><i class="fa-solid fa-hard-drive"></i><span>Storage</span></div>
-                <div class="icon-box"><i class="fa-solid fa-headphones"></i><span>Audio</span></div>
-                <div class="icon-box"><i class="fa-solid fa-plug"></i><span>Charger</span></div>
                 <div class="icon-box"><i class="fa-solid fa-print"></i><span>Printer</span></div>
             </div>
 
@@ -201,9 +175,8 @@
 
     <div id="historySec" class="hidden panel">
         <h3>Records History</h3>
-        <input type="text" id="searchInv" placeholder="Search ID, Name or Mobile..." oninput="renderHistory()" style="width:100%; padding:12px; margin-bottom:15px; border:1px solid #ddd; border-radius:8px;">
         <table style="width:100%">
-            <thead><tr><th>Date</th><th>ID</th><th>Customer</th><th>Phone</th><th>Total</th><th>Action</th></tr></thead>
+            <thead><tr><th>Date</th><th>ID</th><th>Customer</th><th>Total</th><th>Action</th></tr></thead>
             <tbody id="historyBody"></tbody>
         </table>
     </div>
@@ -211,11 +184,11 @@
     <div id="stockSec" class="hidden panel">
         <h3>Inventory Control</h3>
         <div style="display:grid; grid-template-columns: 1fr 1.5fr 1fr 1fr auto; gap:10px; margin-bottom:20px; background:#f8fafc; padding:15px; border-radius:10px;">
-            <input type="text" id="sCode" placeholder="Item Code" autofocus onkeypress="if(event.key==='Enter') document.getElementById('sName').focus()">
+            <input type="text" id="sCode" placeholder="Scan Barcode / Code" autofocus onkeypress="if(event.key==='Enter') document.getElementById('sName').focus()">
             <input type="text" id="sName" placeholder="Product Details">
             <input type="number" id="sPrice" placeholder="Price">
-            <input type="number" id="sQty" placeholder="Qty" value="1">
-            <button onclick="addStock()" class="btn btn-success">Add Item</button>
+            <input type="number" id="sQty" placeholder="Qty">
+            <button onclick="addStock()" id="stockBtn" class="btn btn-success">Add Item</button>
         </div>
         <table style="width:100%">
             <thead><tr><th>Code</th><th>Name</th><th>Price</th><th>Stock</th><th>Action</th></tr></thead>
@@ -227,15 +200,11 @@
         <h3>Admin Panel - User Management</h3>
         <div style="display:grid; grid-template-columns: 1fr 1.5fr; gap:20px;">
             <div style="border:1px solid #ddd; padding:20px; border-radius:10px; background:#f9fafb;">
-                <h4 id="userFormTitle">Add/Edit User</h4>
-                <input type="hidden" id="editUserIndex" value="-1">
                 <input type="text" id="newUId" placeholder="Login ID" style="width:94%; padding:10px; margin-bottom:10px;">
                 <input type="password" id="newUPass" placeholder="Password" style="width:94%; padding:10px; margin-bottom:15px;">
-                <button id="userBtn" onclick="saveUser()" class="btn btn-primary" style="width:100%; justify-content:center;">Save User</button>
-                <button id="cancelUserEdit" onclick="resetUserForm()" class="btn btn-danger hidden" style="width:100%; margin-top:5px; justify-content:center;">Cancel</button>
+                <button onclick="saveUser()" class="btn btn-primary" style="width:100%; justify-content:center;">Save User</button>
             </div>
             <div style="border:1px solid #ddd; padding:20px; border-radius:10px;">
-                <h4>User List</h4>
                 <ul id="userList" style="list-style:none; padding:0;"></ul>
             </div>
         </div>
@@ -250,24 +219,24 @@
         projectId: "smart-erp-175cf",
         storageBucket: "smart-erp-175cf.firebasestorage.app",
         messagingSenderId: "787232044499",
-        appId: "1:787232044499:web:20c9ac6d80f92ce81c2b26",
-        measurementId: "G-8VE4ZEP3JG"
+        appId: "1:787232044499:web:20c9ac6d80f92ce81c2b26"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let users = JSON.parse(localStorage.getItem('sm_users')) || [{id:'admin', pass:'724672'}];
-    let stock = JSON.parse(localStorage.getItem('sm_stock')) || [];
-    let invoices = JSON.parse(localStorage.getItem('sm_invoices')) || [];
+    let users = [{id:'admin', pass:'724672'}];
+    let stock = [];
+    let invoices = [];
     let currentUser = "";
     let isEditMode = false;
+    let editStockCode = null;
 
     db.ref('smart_erp/').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
             users = data.users || users;
-            stock = data.stock ? Object.values(data.stock) : stock;
-            invoices = data.invoices ? Object.values(data.invoices) : invoices;
+            stock = data.stock ? Object.values(data.stock) : [];
+            invoices = data.invoices ? Object.values(data.invoices) : [];
             renderHistory(); renderStock(); renderUsers();
         }
     });
@@ -280,14 +249,8 @@
             currentUser = id;
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('app').classList.remove('hidden');
-            id === 'admin' ? document.getElementById('navSettings').classList.remove('hidden') : document.getElementById('navSettings').classList.add('hidden');
             resetPOS();
-        } else alert("Invalid Login!");
-    }
-
-    function togglePass() {
-        const p = document.getElementById('uPass');
-        p.type = p.type === "password" ? "text" : "password";
+        } else alert("Login Failed!");
     }
 
     function resetPOS() {
@@ -297,7 +260,7 @@
         document.getElementById('curTime').innerText = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         genId();
         document.getElementById('soldBy').innerText = currentUser;
-        ['cName','cPhone','cAddr','cEmail','vP','vatInp','pPaid'].forEach(id => document.getElementById(id).value = (id.length > 5) ? 0 : "");
+        ['cName','cPhone','cAddr','cEmail','pPaid'].forEach(id => document.getElementById(id).value = id==='pPaid'?0:"");
         
         let rows = "";
         for(let i=1; i<=15; i++) {
@@ -343,131 +306,98 @@
             r.querySelector('.it-t').innerText = t.toFixed(2);
             sub += t;
         });
-        const grand = Math.round(sub - (sub * (document.getElementById('vP').value/100)) + (sub * (document.getElementById('vatInp').value/100)));
+        const grand = Math.round(sub);
+        const paid = parseFloat(document.getElementById('pPaid').value) || 0;
+        const due = grand - paid;
         document.getElementById('subT').innerText = sub.toFixed(2);
         document.getElementById('grandT').innerText = grand.toFixed(2);
-        document.getElementById('pDue').innerText = (grand - document.getElementById('pPaid').value).toFixed(2);
+        document.getElementById('pDue').innerText = due.toFixed(2);
         document.getElementById('inWords').innerText = numberToWords(grand) + " Taka Only";
         
-        const qrText = `SMART COMPUTER\nID: ${document.getElementById('invId').innerText}\nTotal: ${grand}`;
+        const qrContent = `Customer: ${document.getElementById('cName').value}\nInv No: ${document.getElementById('invId').innerText}\nDate: ${document.getElementById('curDate').innerText}\nTime: ${document.getElementById('curTime').innerText}\nTotal: ${grand.toFixed(2)}\nDue: ${due.toFixed(2)}`;
         document.getElementById('qrcode').innerHTML = "";
-        new QRCode(document.getElementById("qrcode"), { text: qrText, width: 70, height: 70 });
-    }
-
-    function setPrintTitle() {
-        const name = document.getElementById('cName').value || "Customer";
-        const id = document.getElementById('invId').innerText;
-        const date = document.getElementById('curDate').innerText.replace(/\//g, '-');
-        document.title = `${name}_${id}_${date}`;
+        new QRCode(document.getElementById("qrcode"), { text: qrContent, width: 80, height: 80 });
     }
 
     function saveAndPrint() {
         const inv = {
             id: document.getElementById('invId').innerText,
-            type: document.getElementById('docType').value,
-            date: document.getElementById('curDate').innerText,
             customer: document.getElementById('cName').value,
-            phone: document.getElementById('cPhone').value,
-            email: document.getElementById('cEmail').value,
-            addr: document.getElementById('cAddr').value,
-            items: [],
+            date: document.getElementById('curDate').innerText,
             grand: document.getElementById('grandT').innerText
         };
-        document.querySelectorAll('#billBody tr').forEach(r => {
-            const q = parseFloat(r.querySelector('.it-q').value);
-            if(q > 0) inv.items.push({c: r.querySelector('.it-c').value, n: r.querySelector('.it-n').value, w: r.querySelector('.it-w').value, q, p: r.querySelector('.it-p').value});
-        });
         db.ref('smart_erp/invoices/' + inv.id).set(inv).then(() => {
-            setPrintTitle();
             window.print();
-            setTimeout(() => { document.title = "Smart Computer | Management System"; }, 1000);
         });
     }
 
-    function printNoSave() {
-        setPrintTitle();
-        window.print();
-        setTimeout(() => { document.title = "Smart Computer | Management System"; }, 1000);
-    }
-
-    function renderHistory() {
-        const q = document.getElementById('searchInv').value.toLowerCase();
-        let h = "";
-        invoices.slice().reverse().filter(x => x.id.toLowerCase().includes(q) || x.customer.toLowerCase().includes(q)).forEach(x => {
-            h += `<tr><td>${x.date}</td><td>${x.id}</td><td>${x.customer}</td><td>${x.phone}</td><td>${x.grand}</td>
-            <td>
-                <button onclick="editInv('${x.id}')" style="background:blue; color:white; border:none; padding:4px; cursor:pointer;">Edit</button>
-                <button onclick="delInv('${x.id}')" style="background:red; color:white; border:none; padding:4px; cursor:pointer;">Del</button>
-            </td></tr>`;
-        });
-        document.getElementById('historyBody').innerHTML = h;
-    }
-
-    function delInv(id) { if(confirm("Delete this record?")) db.ref('smart_erp/invoices/' + id).remove(); }
-
-    function editInv(id) {
-        const x = invoices.find(i => i.id === id);
-        isEditMode = true;
-        document.getElementById('invId').innerText = x.id;
-        document.getElementById('cName').value = x.customer;
-        document.getElementById('cPhone').value = x.phone;
-        document.getElementById('cEmail').value = x.email || "";
-        document.getElementById('cAddr').value = x.addr;
-        showSec('pos');
-    }
+    function printNoSave() { window.print(); }
 
     function addStock() {
-        const c = document.getElementById('sCode').value;
-        const n = document.getElementById('sName').value;
-        const p = document.getElementById('sPrice').value;
-        const q = document.getElementById('sQty').value;
-        if(c && n) db.ref('smart_erp/stock/' + c).set({code:c, name:n, price:p, qty:q});
+        const code = document.getElementById('sCode').value;
+        const name = document.getElementById('sName').value;
+        const price = document.getElementById('sPrice').value;
+        const qty = document.getElementById('sQty').value;
+        if(code && name) {
+            db.ref('smart_erp/stock/' + code).set({code, name, price, qty}).then(() => {
+                alert("Stock Updated!");
+                ['sCode','sName','sPrice','sQty'].forEach(id => document.getElementById(id).value = "");
+                document.getElementById('stockBtn').innerText = "Add Item";
+                editStockCode = null;
+            });
+        }
+    }
+
+    function editStock(code) {
+        const p = stock.find(x => x.code === code);
+        if(p) {
+            document.getElementById('sCode').value = p.code;
+            document.getElementById('sName').value = p.name;
+            document.getElementById('sPrice').value = p.price;
+            document.getElementById('sQty').value = p.qty;
+            document.getElementById('stockBtn').innerText = "Update Item";
+            editStockCode = code;
+            document.getElementById('sCode').focus();
+        }
     }
 
     function renderStock() {
         let h = "";
         stock.forEach(x => {
             h += `<tr><td>${x.code}</td><td>${x.name}</td><td>${x.price}</td><td>${x.qty}</td>
-            <td><button onclick="db.ref('smart_erp/stock/${x.code}').remove()" class="btn-danger" style="padding:2px 5px">Del</button></td></tr>`;
+            <td>
+                <button onclick="editStock('${x.code}')" style="background:blue; color:white; border:none; padding:4px; cursor:pointer;">Edit</button>
+                <button onclick="db.ref('smart_erp/stock/${x.code}').remove()" style="background:red; color:white; border:none; padding:4px; cursor:pointer;">Del</button>
+            </td></tr>`;
         });
         document.getElementById('stockBody').innerHTML = h;
+    }
+
+    function renderHistory() {
+        let h = "";
+        invoices.slice().reverse().forEach(x => {
+            h += `<tr><td>${x.date}</td><td>${x.id}</td><td>${x.customer}</td><td>${x.grand}</td>
+            <td><button onclick="db.ref('smart_erp/invoices/${x.id}').remove()" class="btn-danger">Del</button></td></tr>`;
+        });
+        document.getElementById('historyBody').innerHTML = h;
     }
 
     function saveUser() {
         const id = document.getElementById('newUId').value;
         const pass = document.getElementById('newUPass').value;
-        const editIdx = document.getElementById('editUserIndex').value;
         if(id && pass) {
-            if(editIdx == -1) users.push({id, pass});
-            else users[editIdx] = {id, pass};
+            users.push({id, pass});
             db.ref('smart_erp/users').set(users);
-            resetUserForm();
         }
     }
 
     function renderUsers() {
         let h = "";
         users.forEach((u, i) => {
-            h += `<li style="padding:10px; border-bottom:1px solid #ddd; display:flex; justify-content:space-between;">
-                <b>${u.id}</b>
-                <span>
-                    <button onclick="editUser(${i})" style="color:blue; border:none; background:none; cursor:pointer;">Edit</button> | 
-                    <button onclick="delUser(${i})" style="color:red; border:none; background:none; cursor:pointer;">Del</button>
-                </span>
-            </li>`;
+            h += `<li style="padding:10px; border-bottom:1px solid #ddd;"><b>${u.id}</b> <button onclick="users.splice(${i},1); db.ref('smart_erp/users').set(users)" style="float:right; color:red; border:none; background:none; cursor:pointer;">Delete</button></li>`;
         });
         document.getElementById('userList').innerHTML = h;
     }
-
-    function editUser(i) {
-        document.getElementById('newUId').value = users[i].id;
-        document.getElementById('newUPass').value = users[i].pass;
-        document.getElementById('editUserIndex').value = i;
-        document.getElementById('cancelUserEdit').classList.remove('hidden');
-    }
-
-    function delUser(i) { if(confirm("Delete user?")) { users.splice(i,1); db.ref('smart_erp/users').set(users); } }
-    function resetUserForm() { document.getElementById('newUId').value=""; document.getElementById('newUPass').value=""; document.getElementById('editUserIndex').value="-1"; document.getElementById('cancelUserEdit').classList.add('hidden'); }
 
     function showSec(id) {
         ['posSec','historySec','stockSec','settingsSec'].forEach(s => document.getElementById(s).classList.add('hidden'));
