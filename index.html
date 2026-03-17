@@ -53,6 +53,11 @@
         .icon-box i { font-size: 16px; }
         .icon-box span { display: block; font-size: 8px; font-weight: bold; color: #334155; margin-top: 3px; text-transform: uppercase; }
 
+        /* Digital Signature & Seal Style */
+        .signature-font { font-family: 'Brush Script MT', cursive; font-size: 24px; color: #00008b; margin-bottom: -10px; display: block; }
+        .digital-seal { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); border: 3px double var(--primary); border-radius: 50%; width: 100px; height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0.8; color: var(--primary); font-weight: bold; text-align: center; line-height: 1; }
+        .seal-inner { font-size: 12px; border-top: 1px solid var(--primary); border-bottom: 1px solid var(--primary); padding: 2px 0; margin: 2px 0; }
+
         .panel { padding: 30px; max-width: 1100px; margin: 20px auto; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px; }
         .btn-primary { background: var(--primary); color: white; }
@@ -179,6 +184,12 @@
                 </div>
             </div>
 
+            <div class="digital-seal">
+                <span style="font-size: 8px;">OFFICIAL</span>
+                <div class="seal-inner">SMART<br>COMPUTER</div>
+                <span style="font-size: 8px;">VERIFIED</span>
+            </div>
+
             <div class="footer-icons">
                 <div class="icon-box"><i class="fa-solid fa-desktop"></i><span>Desktop</span></div>
                 <div class="icon-box"><i class="fa-solid fa-laptop"></i><span>Laptop</span></div>
@@ -192,7 +203,10 @@
             <div style="display:flex; justify-content:space-between; margin-top:10px; border-top:1px solid #eee; padding-top:8px;">
                 <div style="border-top:1.5px solid #000; width:140px; text-align:center; font-size:11px; font-weight:bold;">Customer Signature</div>
                 <div style="font-size:10px;">Sold By: <span id="soldBy"></span></div>
-                <div style="border-top:1.5px solid #000; width:140px; text-align:center; font-size:11px; font-weight:bold;">Authorized Sign</div>
+                <div style="width:140px; text-align:center;">
+                    <span class="signature-font">Smart Computer</span>
+                    <div style="border-top:1.5px solid #000; font-size:11px; font-weight:bold;">Authorized Sign</div>
+                </div>
             </div>
         </div>
     </div>
