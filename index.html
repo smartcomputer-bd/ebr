@@ -38,7 +38,6 @@
         th { background: #e2e8f0; color: #000; padding: 6px; border: 1px solid #000; font-size: 11px; text-transform: uppercase; }
         td { border: 1px solid #000; padding: 3px; text-align: center; }
 
-        /* Adjusted Column Widths - Code column made smaller */
         .col-sl { width: 5%; }
         .col-code { width: 8%; } 
         .col-desc { width: auto; }
@@ -60,6 +59,8 @@
         .btn-success { background: var(--success); color: white; }
         .btn-danger { background: var(--danger); color: white; }
         .btn-secondary { background: #64748b; color: white; }
+        .btn-view { background: #0ea5e9; color: white; padding: 5px 10px; font-size: 11px; }
+        .btn-edit { background: #f59e0b; color: white; padding: 5px 10px; font-size: 11px; }
 
         .pass-container { position: relative; width: 90%; margin: 10px auto; }
         .toggle-password { position: absolute; right: 10px; top: 12px; cursor: pointer; color: #666; }
@@ -299,7 +300,7 @@
         ['cName','cPhone','cAddr','cEmail','vP','vatInp','pPaid'].forEach(id => document.getElementById(id).value = (id.length > 5) ? 0 : "");
         
         let rows = "";
-        for(let i=1; i<=13; i++) { // Changed to 13 Rows
+        for(let i=1; i<=13; i++) {
             rows += `<tr>
                 <td>${i}</td>
                 <td><input type="text" class="it-c" style="width:90%" onchange="fetchItem(this)"></td>
@@ -323,11 +324,12 @@
 
     function fetchItem(input) {
         const code = input.value.trim();
+        // Updated to support barcode scanning by searching stock
         const p = stock.find(x => x.code === code);
         const row = input.parentElement.parentElement;
         if(p) {
             if(parseInt(p.qty) <= 0) {
-                alert("Out of Stock!"); // Stock validation check
+                alert("Out of Stock!");
                 input.value = "";
                 return;
             }
@@ -355,7 +357,6 @@
         document.getElementById('pDue').innerText = due.toFixed(2);
         document.getElementById('inWords').innerText = numberToWords(grand) + " Taka Only";
         
-        // QR Code with specific limited data
         const qrText = `Name: ${document.getElementById('cName').value}\nInv: ${document.getElementById('invId').innerText}\nDate: ${document.getElementById('curDate').innerText} ${document.getElementById('curTime').innerText}\nTotal: ${grand}\nDue: ${due}`;
         document.getElementById('qrcode').innerHTML = "";
         new QRCode(document.getElementById("qrcode"), { text: qrText, width: 70, height: 70 });
@@ -366,38 +367,55 @@
         const itemsToProcess = [];
         let canSave = true;
 
-        // Inventory Deduction Logic during save
+        const billItems = [];
         document.querySelectorAll('#billBody tr').forEach(r => {
             const code = r.querySelector('.it-c').value;
+            const name = r.querySelector('.it-n').value;
+            const war = r.querySelector('.it-w').value;
             const q = parseInt(r.querySelector('.it-q').value);
+            const p = r.querySelector('.it-p').value;
+            const t = r.querySelector('.it-t').innerText;
+
             if(code && q > 0) {
+                billItems.push({code, name, war, q, p, t});
                 const product = stock.find(s => s.code === code);
                 if(product && parseInt(product.qty) >= q) {
                     itemsToProcess.push({code, q});
-                } else {
+                } else if(!isEditMode) {
                     alert(`${product ? product.name : code} Out of Stock!`);
                     canSave = false;
                 }
             }
         });
 
-        if(!canSave) return;
+        if(!canSave || billItems.length === 0) return;
 
         const inv = {
             id: invId,
             type: document.getElementById('docType').value,
             date: document.getElementById('curDate').innerText,
+            time: document.getElementById('curTime').innerText,
             customer: document.getElementById('cName').value,
             phone: document.getElementById('cPhone').value,
-            grand: document.getElementById('grandT').innerText
+            address: document.getElementById('cAddr').value,
+            email: document.getElementById('cEmail').value,
+            items: billItems,
+            subTotal: document.getElementById('subT').innerText,
+            discount: document.getElementById('vP').value,
+            vat: document.getElementById('vatInp').value,
+            grand: document.getElementById('grandT').innerText,
+            paid: document.getElementById('pPaid').value,
+            due: document.getElementById('pDue').innerText,
+            soldBy: currentUser
         };
 
         db.ref('smart_erp/invoices/' + invId).set(inv).then(() => {
-            // Deduct stock in database
-            itemsToProcess.forEach(item => {
-                const product = stock.find(s => s.code === item.code);
-                db.ref('smart_erp/stock/' + item.code + '/qty').set(parseInt(product.qty) - item.q);
-            });
+            if(!isEditMode) {
+                itemsToProcess.forEach(item => {
+                    const product = stock.find(s => s.code === item.code);
+                    db.ref('smart_erp/stock/' + item.code + '/qty').set(parseInt(product.qty) - item.q);
+                });
+            }
             window.print();
         });
     }
@@ -441,12 +459,53 @@
         document.getElementById('stockBody').innerHTML = h;
     }
 
+    // Updated History management with View, Edit, and Delete
+    function viewInvoice(id) {
+        const inv = invoices.find(x => x.id === id);
+        if(inv) {
+            isEditMode = true;
+            document.getElementById('docType').value = inv.type;
+            document.getElementById('invId').innerText = inv.id;
+            document.getElementById('curDate').innerText = inv.date;
+            document.getElementById('curTime').innerText = inv.time;
+            document.getElementById('cName').value = inv.customer;
+            document.getElementById('cPhone').value = inv.phone;
+            document.getElementById('cAddr').value = inv.address;
+            document.getElementById('cEmail').value = inv.email;
+            document.getElementById('vP').value = inv.discount;
+            document.getElementById('vatInp').value = inv.vat;
+            document.getElementById('pPaid').value = inv.paid;
+            document.getElementById('soldBy').innerText = inv.soldBy;
+
+            let rows = "";
+            for(let i=0; i<13; i++) {
+                const item = inv.items[i] || {code:'', name:'', war:'', q:0, p:0, t:'0.00'};
+                rows += `<tr>
+                    <td>${i+1}</td>
+                    <td><input type="text" class="it-c" value="${item.code}" style="width:90%" onchange="fetchItem(this)"></td>
+                    <td><input type="text" class="it-n" value="${item.name}" style="width:95%"></td>
+                    <td><input type="text" class="it-w" value="${item.war}" style="width:90%"></td>
+                    <td><input type="number" class="it-q" value="${item.q}" oninput="calc()" style="width:40px"></td>
+                    <td><input type="number" class="it-p" value="${item.p}" oninput="calc()" style="width:60px"></td>
+                    <td class="it-t">${item.t}</td>
+                </tr>`;
+            }
+            document.getElementById('billBody').innerHTML = rows;
+            calc();
+            showSec('pos');
+        }
+    }
+
     function renderHistory() {
         const q = document.getElementById('searchInv').value.toLowerCase();
         let h = "";
         invoices.slice().reverse().filter(x => x.id.toLowerCase().includes(q) || x.customer.toLowerCase().includes(q)).forEach(x => {
             h += `<tr><td>${x.date}</td><td>${x.id}</td><td>${x.customer}</td><td>${x.phone}</td><td>${x.grand}</td>
-            <td><button onclick="if(confirm('Delete?')) db.ref('smart_erp/invoices/${x.id}').remove()" class="btn-danger">Del</button></td></tr>`;
+            <td>
+                <button onclick="viewInvoice('${x.id}')" class="btn-view">View</button>
+                <button onclick="viewInvoice('${x.id}')" class="btn-edit">Edit</button>
+                <button onclick="if(confirm('Delete?')) db.ref('smart_erp/invoices/${x.id}').remove()" class="btn-danger" style="padding: 5px 10px; font-size: 11px;">Del</button>
+            </td></tr>`;
         });
         document.getElementById('historyBody').innerHTML = h;
     }
