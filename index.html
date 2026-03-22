@@ -431,17 +431,28 @@
         new QRCode(document.getElementById("qrcode"), { text: qrText, width: 70, height: 70 });
     }
 
-    function saveAndPrint() {
+    async function saveAndPrint() {
         const invId = document.getElementById('invId').innerText;
         const billItems = [];
+        const updates = {};
+        
         document.querySelectorAll('#billBody tr').forEach(r => {
             const code = r.querySelector('.it-c').value;
             const name = r.querySelector('.it-n').value;
             const war = r.querySelector('.it-w').value;
-            const q = r.querySelector('.it-q').value;
+            const q = parseInt(r.querySelector('.it-q').value) || 0;
             const p = r.querySelector('.it-p').value;
             const t = r.querySelector('.it-t').innerText;
-            if(code && q > 0) billItems.push({code, name, war, q, p, t});
+            if(code && q > 0) {
+                billItems.push({code, name, war, q, p, t});
+                
+                // স্টক বিয়োগের লজিক
+                const product = stock.find(x => x.code === code);
+                if(product) {
+                    const newQty = parseInt(product.qty) - q;
+                    updates['smart_erp/stock/' + code + '/qty'] = newQty;
+                }
+            }
         });
 
         if(billItems.length === 0) return;
@@ -465,7 +476,10 @@
             soldBy: currentUser
         };
 
-        db.ref('smart_erp/invoices/' + invId).set(inv).then(() => {
+        // ডাটাবেসে ইনভয়েস সেভ এবং স্টক আপডেট
+        updates['smart_erp/invoices/' + invId] = inv;
+        
+        db.ref().update(updates).then(() => {
             const fileName = `${inv.id}-${inv.customer}-${inv.phone}-${inv.date.replace(/\//g, '-')}`;
             document.title = fileName;
             window.print();
@@ -478,7 +492,7 @@
     function addStock() {
         const c = document.getElementById('sCode').value.trim();
         const n = document.getElementById('sName').value.trim();
-        const cost = document.getElementById('sCost').value || 0;
+        const cost = document.getElementById('sCost').value || 0; // ক্রয়মূল্য ইনপুট
         const p = document.getElementById('sPrice').value || 0;
         const q = document.getElementById('sQty').value || 0;
         
