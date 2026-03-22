@@ -11,13 +11,25 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
     <style>
-        :root { --primary: #1e40af; --secondary: #3b82f6; --dark: #0f172a; --bg: #e2e8f0; --text: #1e293b; --success: #059669; --danger: #dc2626; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; }
+        :root { --primary: #1e40af; --secondary: #3b82f6; --dark: #0f172a; --bg: #e2e8f0; --text: #1e293b; --success: #059669; --danger: #dc2626; --card-bg: white; }
+        /* Dark Mode Colors */
+        body.dark-mode { --bg: #0f172a; --text: #f8fafc; --card-bg: #1e293b; }
+        body.dark-mode .panel, body.dark-mode .card { background: var(--card-bg); color: white; }
+        body.dark-mode input { background: #334155; color: white; border-color: #475569; }
+
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; transition: 0.3s; }
         .hidden { display: none !important; }
 
         .navbar { background: var(--dark); color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; }
+        .nav-links { display: flex; align-items: center; }
         .nav-links button { background: #334155; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 6px; margin-left: 5px; transition: 0.3s; }
         .nav-links button:hover { background: var(--primary); }
+
+        /* Dashboard Styles */
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; border-bottom: 4px solid var(--primary); }
+        .card h4 { margin: 0; color: #64748b; font-size: 13px; text-transform: uppercase; }
+        .card h2 { margin: 10px 0 0 0; font-size: 24px; }
 
         .external-actions { position: fixed; top: 80px; left: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 500; }
         
@@ -65,8 +77,8 @@
 
         @media print {
             @page { size: A4; margin: 0; }
-            .no-print, .external-actions, .navbar { display: none !important; }
-            body { background: white; }
+            .no-print, .external-actions, .navbar, .dashboard-grid { display: none !important; }
+            body { background: white !important; color: black !important; }
             .invoice-sheet { box-shadow: none; margin: 0; width: 210mm; height: 297mm; border: none; padding: 10mm; }
             input { border: none !important; }
             select { border: none !important; appearance: none; color: black !important; font-weight: bold; font-size: 18px; }
@@ -95,12 +107,34 @@
             <button onclick="showSec('history')">History</button>
             <button onclick="showSec('stock')">Inventory</button>
             <button id="navSettings" onclick="showSec('settings')">Admin</button>
+            <button onclick="toggleDarkMode()"><i class="fa-solid fa-moon"></i></button>
             <button onclick="exportData()" style="background:var(--success)">Backup</button>
             <button onclick="document.getElementById('restoreInput').click()" style="background:var(--secondary)">Restore</button>
             <input type="file" id="restoreInput" accept=".json" style="display:none" onchange="importData(event)">
             <button onclick="location.reload()" style="background:var(--danger)">Logout</button>
         </div>
     </nav>
+
+    <div id="dashSec" class="panel no-print">
+        <div class="dashboard-grid">
+            <div class="card">
+                <h4>Today's Sales</h4>
+                <h2 id="todaySales">৳ 0.00</h2>
+            </div>
+            <div class="card" style="border-bottom-color: var(--success);">
+                <h4>Total Invoices</h4>
+                <h2 id="totalInvCount">0</h2>
+            </div>
+            <div class="card" style="border-bottom-color: orange;">
+                <h4>Total Stock Value</h4>
+                <h2 id="totalStockVal">৳ 0.00</h2>
+            </div>
+            <div class="card" style="border-bottom-color: var(--danger);">
+                <h4>Low Stock Alert</h4>
+                <h2 id="lowStockCount">0</h2>
+            </div>
+        </div>
+    </div>
 
     <div id="posSec">
         <div class="external-actions no-print">
@@ -211,15 +245,16 @@
             <h3 style="margin: 0;">Inventory Control</h3>
             <button onclick="deleteAllProducts()" class="btn btn-danger"><i class="fa-solid fa-trash-can"></i> Delete All</button>
         </div>
-        <div style="display:grid; grid-template-columns: 1fr 1.5fr 1fr 1fr auto; gap:10px; margin-bottom:20px; background:#f8fafc; padding:15px; border-radius:10px;">
-            <input type="text" id="sCode" placeholder="Code/Barcode (Scan)" autofocus onkeypress="if(event.key==='Enter') fetchStockItem(this)">
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr auto; gap:10px; margin-bottom:20px; background:#f8fafc; padding:15px; border-radius:10px;">
+            <input type="text" id="sCode" placeholder="Code/Barcode" onkeypress="if(event.key==='Enter') fetchStockItem(this)">
             <input type="text" id="sName" placeholder="Product Details">
-            <input type="number" id="sPrice" placeholder="Price">
+            <input type="number" id="sCost" placeholder="Buy Price">
+            <input type="number" id="sPrice" placeholder="Sale Price">
             <input type="number" id="sQty" placeholder="Qty" value="1">
             <button id="stockBtn" onclick="addStock()" class="btn btn-success">Add Item</button>
         </div>
         <table style="width:100%">
-            <thead><tr><th>Code</th><th>Name</th><th>Price</th><th>Stock</th><th>Action</th></tr></thead>
+            <thead><tr><th>Code</th><th>Name</th><th>Buy Price</th><th>Sale Price</th><th>Stock</th><th>Action</th></tr></thead>
             <tbody id="stockBody"></tbody>
         </table>
     </div>
@@ -269,8 +304,36 @@
             stock = data.stock ? Object.values(data.stock).filter(item => item && item.code && item.name) : [];
             invoices = data.invoices ? Object.values(data.invoices) : [];
             renderHistory(); renderStock(); renderUsers();
+            updateDashboard(); // New Function
         }
     });
+
+    // Dark Mode Toggle
+    function toggleDarkMode() {
+        document.body.classList.toggle('dark-mode');
+    }
+
+    // New Dashboard Logic
+    function updateDashboard() {
+        const today = new Date().toLocaleDateString();
+        let salesToday = 0;
+        let totalVal = 0;
+        let lowStock = 0;
+
+        invoices.forEach(inv => {
+            if(inv.date === today) salesToday += parseFloat(inv.grand) || 0;
+        });
+
+        stock.forEach(item => {
+            totalVal += (parseFloat(item.price) * parseInt(item.qty));
+            if(parseInt(item.qty) < 5) lowStock++;
+        });
+
+        document.getElementById('todaySales').innerText = "৳ " + salesToday.toFixed(2);
+        document.getElementById('totalInvCount').innerText = invoices.length;
+        document.getElementById('totalStockVal').innerText = "৳ " + totalVal.toLocaleString();
+        document.getElementById('lowStockCount').innerText = lowStock;
+    }
 
     function login() {
         const id = document.getElementById('uId').value.trim();
@@ -338,6 +401,7 @@
         const p = stock.find(x => x.code === code);
         if(p) {
             document.getElementById('sName').value = p.name;
+            document.getElementById('sCost').value = p.cost || 0;
             document.getElementById('sPrice').value = p.price;
             document.getElementById('sQty').value = p.qty;
             document.getElementById('stockBtn').innerText = "Update Item";
@@ -414,12 +478,13 @@
     function addStock() {
         const c = document.getElementById('sCode').value.trim();
         const n = document.getElementById('sName').value.trim();
+        const cost = document.getElementById('sCost').value || 0;
         const p = document.getElementById('sPrice').value || 0;
         const q = document.getElementById('sQty').value || 0;
         
         if(c && n) {
-            db.ref('smart_erp/stock/' + c).set({code:c, name:n, price:p, qty:q}).then(() => {
-                ['sCode','sName','sPrice','sQty'].forEach(id => document.getElementById(id).value = "");
+            db.ref('smart_erp/stock/' + c).set({code:c, name:n, cost:cost, price:p, qty:q}).then(() => {
+                ['sCode','sName','sCost','sPrice','sQty'].forEach(id => document.getElementById(id).value = "");
                 document.getElementById('stockBtn').innerText = "Add Item";
             });
         }
@@ -430,6 +495,7 @@
         if(p) {
             document.getElementById('sCode').value = p.code;
             document.getElementById('sName').value = p.name;
+            document.getElementById('sCost').value = p.cost || 0;
             document.getElementById('sPrice').value = p.price;
             document.getElementById('sQty').value = p.qty;
             document.getElementById('stockBtn').innerText = "Update Item";
@@ -451,7 +517,7 @@
         let h = "";
         stock.forEach(x => {
             if(x && x.code && x.name) {
-                h += `<tr><td>${x.code}</td><td>${x.name}</td><td>${x.price}</td><td>${x.qty}</td>
+                h += `<tr><td>${x.code}</td><td>${x.name}</td><td>${x.cost || 0}</td><td>${x.price}</td><td>${x.qty}</td>
                 <td>
                     <button onclick="editStock('${x.code}')" style="background:blue; color:white; border:none; padding:4px; cursor:pointer;">Edit</button>
                     <button onclick="if(confirm('Delete?')) db.ref('smart_erp/stock/${x.code}').remove()" style="background:red; color:white; border:none; padding:4px; cursor:pointer;">Del</button>
