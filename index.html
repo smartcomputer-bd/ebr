@@ -236,7 +236,7 @@
         <h3>Records History</h3>
         <input type="text" id="searchInv" placeholder="Search ID, Name or Mobile..." oninput="renderHistory()" style="width:100%; padding:12px; margin-bottom:15px; border:1px solid #ddd; border-radius:8px;">
         <table style="width:100%">
-            <thead><tr><th>Date</th><th>ID</th><th>Customer</th><th>Phone</th><th>Total</th><th>Action</th></tr></thead>
+            <thead><tr><th>Date</th><th>ID</th><th>Customer</th><th>Phone</th><th>Total</th><th>Sold By</th><th>Action</th></tr></thead>
             <tbody id="historyBody"></tbody>
         </table>
     </div>
@@ -248,7 +248,7 @@
         </div>
         <input type="text" id="searchLedger" placeholder="Search Customer Mobile..." oninput="renderLedger()" style="width:100%; padding:12px; margin-bottom:15px; border:1px solid #ddd; border-radius:8px;">
         <table style="width:100%">
-            <thead><tr><th>Customer</th><th>Mobile</th><th>Total Bill</th><th>Total Paid</th><th>Balance Due</th><th class="admin-only">Action</th></tr></thead>
+            <thead><tr><th>Customer</th><th>Mobile</th><th>Total Bill</th><th>Total Paid</th><th>Balance Due</th><th>Sold By</th><th class="admin-only">Action</th></tr></thead>
             <tbody id="ledgerBody"></tbody>
         </table>
     </div>
@@ -368,7 +368,6 @@
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('app').classList.remove('hidden');
             
-            // এক্সেস কন্ট্রোল লজিক
             if(id === 'admin') {
                 document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
                 document.getElementById('navHistory').classList.remove('hidden');
@@ -539,15 +538,17 @@
         invoices.forEach(inv => {
             if (!inv.hidden_from_ledger) {
                 const key = inv.phone || 'Unknown';
-                if(!custData[key]) custData[key] = {name: inv.customer, phone: key, total: 0, paid: 0, due: 0, date: inv.date};
+                if(!custData[key]) custData[key] = {name: inv.customer, phone: key, total: 0, paid: 0, due: 0, date: inv.date, soldBy: inv.soldBy || 'N/A'};
                 custData[key].total += parseFloat(inv.grand) || 0;
                 custData[key].paid += parseFloat(inv.paid) || 0;
                 custData[key].due += parseFloat(inv.due) || 0;
+                // If there are multiple invoices, it will show the latest soldBy name
+                custData[key].soldBy = inv.soldBy || 'N/A';
             }
         });
         let h = "";
         Object.values(custData).filter(c => c.phone.includes(q) || c.name.toLowerCase().includes(q.toLowerCase())).forEach(c => {
-            h += `<tr><td>${c.name}</td><td>${c.phone}</td><td>${c.total.toFixed(2)}</td><td>${c.paid.toFixed(2)}</td><td style="color:red; font-weight:bold;">${c.due.toFixed(2)}</td><td>
+            h += `<tr><td>${c.name}</td><td>${c.phone}</td><td>${c.total.toFixed(2)}</td><td>${c.paid.toFixed(2)}</td><td style="color:red; font-weight:bold;">${c.due.toFixed(2)}</td><td>${c.soldBy}</td><td>
                 <button onclick="sendNotif('${c.phone}', '${c.due.toFixed(2)}', '${c.name}', '${c.date}')" style="background:var(--success); color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;"><i class="fa-brands fa-whatsapp"></i> Notify</button>
                 <button onclick="editLedgerDue('${c.phone}')" style="background:blue; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;"><i class="fa-solid fa-edit"></i> Edit</button>
                 <button onclick="deleteCustomerInvoices('${c.phone}')" style="background:var(--danger); color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;"><i class="fa-solid fa-trash"></i> Del</button>
@@ -571,106 +572,142 @@
 
     function deleteCustomerInvoices(phone) {
         if(currentUser !== 'admin') return;
-        if(confirm("এই কাস্টমারকে লেজার বুক থেকে সরিয়ে ফেলতে চান? (হিস্ট্রি ডিলিট হবে না)")) {
-            const updates = {};
+        if(confirm("এই কাস্টমারের সকল রেকর্ড লেজার থেকে মুছে ফেলতে চান? (এটি ইনভয়েস হিস্ট্রি থেকে মুছবে না)")) {
             invoices.forEach(inv => {
-                if(inv.phone === phone) updates['smart_erp/invoices/' + inv.id + '/hidden_from_ledger'] = true;
+                if(inv.phone === phone) {
+                    db.ref('smart_erp/invoices/' + inv.id).update({ hidden_from_ledger: true });
+                }
             });
-            db.ref().update(updates);
-        }
-    }
-
-    function deleteAllLedger() {
-        if(currentUser !== 'admin') return;
-        if(confirm("Are you sure you want to hide ALL records from Ledger? (History will be safe)")) {
-            const updates = {};
-            invoices.forEach(inv => { updates['smart_erp/invoices/' + inv.id + '/hidden_from_ledger'] = true; });
-            db.ref().update(updates);
         }
     }
 
     function sendNotif(phone, due, name, date) {
-        const diffDays = Math.floor((new Date() - new Date(date)) / (1000 * 60 * 60 * 24)) || 1;
-        const msg = `Dear ${name}. Your deu balance on Smart Computer is BDT ${due} which is outstanding for ${diffDays} days. Please pay it soon. Thank you. Bkash payment = 01614398989`;
+        const msg = `Dear ${name}, this is a reminder regarding your outstanding balance of TK ${due} at SMART COMPUTER from your purchase on ${date}. Please settle it soon. Thank you!`;
         window.open(`https://wa.me/88${phone}?text=${encodeURIComponent(msg)}`);
     }
 
     function renderHistory() {
-        if(currentUser !== 'admin') return;
         const q = document.getElementById('searchInv').value.toLowerCase();
         let h = "";
-        invoices.slice().reverse().filter(x => x.id.toLowerCase().includes(q) || x.customer.toLowerCase().includes(q) || x.phone.includes(q)).forEach(x => {
-            h += `<tr><td>${x.date}</td><td>${x.id}</td><td>${x.customer}</td><td>${x.phone}</td><td>${x.grand}</td><td><button onclick="viewInvoice('${x.id}')" style="background:var(--secondary); color:white; border:none; padding:4px 8px; cursor:pointer; border-radius:3px;">View</button> <button onclick="editInvoice('${x.id}')" style="background:blue; color:white; border:none; padding:4px 8px; cursor:pointer; border-radius:3px;">Edit</button> <button onclick="deleteInvoice('${x.id}')" style="background:red; color:white; border:none; padding:4px 8px; cursor:pointer; border-radius:3px;">Del</button></td></tr>`;
+        invoices.filter(x => x.id.toLowerCase().includes(q) || x.customer.toLowerCase().includes(q) || x.phone.includes(q)).reverse().forEach(x => {
+            h += `<tr><td>${x.date}</td><td>${x.id}</td><td>${x.customer}</td><td>${x.phone}</td><td>${x.grand}</td><td>${x.soldBy || 'N/A'}</td><td>
+                <button onclick="viewInv('${x.id}')" style="background:var(--primary); color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;"><i class="fa-solid fa-eye"></i></button>
+                <button onclick="if(confirm('Delete?')) db.ref('smart_erp/invoices/${x.id}').remove()" class="admin-only" style="background:var(--danger); color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;"><i class="fa-solid fa-trash"></i></button>
+            </td></tr>`;
         });
         document.getElementById('historyBody').innerHTML = h;
+        if(currentUser !== 'admin') document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
     }
 
-    function viewInvoice(id) { 
-        const inv = invoices.find(x => x.id === id); 
-        if(inv) { populatePOS(inv); showSec('pos'); } 
-    }
-    
-    function editInvoice(id) { 
-        if(currentUser !== 'admin') return;
-        const inv = invoices.find(x => x.id === id); 
-        if(inv && confirm("Edit this invoice?")) { populatePOS(inv); showSec('pos'); } 
-    }
-    
-    function deleteInvoice(id) { 
-        if(currentUser !== 'admin') return;
-        if(confirm(`Delete Invoice ${id}?`)) db.ref('smart_erp/invoices/' + id).remove(); 
-    }
+    function viewInv(id) {
+        const inv = invoices.find(x => x.id === id);
+        if(!inv) return;
+        document.getElementById('docType').value = inv.type;
+        document.getElementById('invId').innerText = inv.id;
+        document.getElementById('curDate').innerText = inv.date;
+        document.getElementById('curTime').innerText = inv.time;
+        document.getElementById('cName').value = inv.customer;
+        document.getElementById('cPhone').value = inv.phone;
+        document.getElementById('cAddr').value = inv.address;
+        document.getElementById('cEmail').value = inv.email;
+        document.getElementById('vP').value = inv.discount;
+        document.getElementById('vatInp').value = inv.vat;
+        document.getElementById('pPaid').value = inv.paid;
+        document.getElementById('soldBy').innerText = inv.soldBy || 'N/A';
 
-    function populatePOS(inv) {
-        document.getElementById('docType').value = inv.type || "Inv"; document.getElementById('invId').innerText = inv.id;
-        document.getElementById('curDate').innerText = inv.date; document.getElementById('curTime').innerText = inv.time;
-        document.getElementById('cName').value = inv.customer; document.getElementById('cPhone').value = inv.phone;
-        document.getElementById('cAddr').value = inv.address; document.getElementById('cEmail').value = inv.email;
-        document.getElementById('vP').value = inv.discount; document.getElementById('vatInp').value = inv.vat;
-        document.getElementById('pPaid').value = inv.paid; document.getElementById('soldBy').innerText = inv.soldBy;
         let rows = "";
-        for(let i=1; i<=13; i++) {
-            const item = inv.items[i-1] || {code:'', name:'', war:'', q:0, p:0, t:'0.00'};
-            rows += `<tr><td>${i}</td><td><input type="text" class="it-c" value="${item.code}" style="width:90%" onchange="fetchItem(this)"></td><td><input type="text" class="it-n" value="${item.name}" style="width:95%"></td><td><input type="text" class="it-w" value="${item.war}" style="width:90%"></td><td><input type="number" class="it-q" value="${item.q}" oninput="calc()" style="width:40px"></td><td><input type="number" class="it-p" value="${item.p}" oninput="calc()" style="width:60px"></td><td class="it-t">${item.t}</td></tr>`;
+        inv.items.forEach((it, i) => {
+            rows += `<tr><td>${i+1}</td><td><input type="text" class="it-c" value="${it.code}" style="width:90%"></td><td><input type="text" class="it-n" value="${it.name}" style="width:95%"></td><td><input type="text" class="it-w" value="${it.war || ''}" style="width:90%"></td><td><input type="number" class="it-q" value="${it.q}" oninput="calc()" style="width:40px"></td><td><input type="number" class="it-p" value="${it.p}" oninput="calc()" style="width:60px"></td><td class="it-t">${it.t}</td></tr>`;
+        });
+        for(let i=inv.items.length+1; i<=13; i++) {
+            rows += `<tr><td>${i}</td><td><input type="text" class="it-c" style="width:90%"></td><td><input type="text" class="it-n" style="width:95%"></td><td><input type="text" class="it-w" style="width:90%"></td><td><input type="number" class="it-q" value="0" style="width:40px"></td><td><input type="number" class="it-p" value="0" style="width:60px"></td><td class="it-t">0.00</td></tr>`;
         }
-        document.getElementById('billBody').innerHTML = rows; calc();
+        document.getElementById('billBody').innerHTML = rows;
+        calc();
+        showSec('pos');
     }
 
     function saveUser() {
         if(currentUser !== 'admin') return;
-        const id = document.getElementById('newUId').value; const pass = document.getElementById('newUPass').value; const editIdx = document.getElementById('editUserIndex').value;
-        if(id && pass) { if(editIdx == -1) users.push({id, pass}); else users[editIdx] = {id, pass}; db.ref('smart_erp/users').set(users); resetUserForm(); }
+        const id = document.getElementById('newUId').value.trim();
+        const pass = document.getElementById('newUPass').value.trim();
+        const index = parseInt(document.getElementById('editUserIndex').value);
+        if(id && pass) {
+            if (index > -1) users[index] = {id, pass};
+            else users.push({id, pass});
+            db.ref('smart_erp/users').set(users).then(() => resetUserForm());
+        }
     }
-    
+
     function renderUsers() {
-        if(currentUser !== 'admin') return;
-        let h = ""; users.forEach((u, i) => { h += `<li style="padding:10px; border-bottom:1px solid #ddd; display:flex; justify-content:space-between;"><b>${u.id}</b><span><button onclick="editUser(${i})" style="color:blue; border:none; background:none; cursor:pointer;">Edit</button> | <button onclick="delUser(${i})" style="color:red; border:none; background:none; cursor:pointer;">Del</button></span></li>`; });
+        let h = "";
+        users.forEach((u, i) => {
+            h += `<li style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #eee;">
+                <span><b>${u.id}</b> (Pass: ${u.pass})</span>
+                <div>
+                    <button onclick="editUser(${i})" style="background:blue; color:white; border:none; padding:3px 8px; border-radius:3px; cursor:pointer; margin-right:5px;">Edit</button>
+                    <button onclick="if(confirm('Delete user?')) { users.splice(${i},1); db.ref('smart_erp/users').set(users); }" style="background:red; color:white; border:none; padding:3px 8px; border-radius:3px; cursor:pointer;">Del</button>
+                </div>
+            </li>`;
+        });
         document.getElementById('userList').innerHTML = h;
     }
-    
-    function editUser(i) { document.getElementById('newUId').value = users[i].id; document.getElementById('newUPass').value = users[i].pass; document.getElementById('editUserIndex').value = i; document.getElementById('cancelUserEdit').classList.remove('hidden'); }
-    function delUser(i) { if(confirm("Delete user?")) { users.splice(i,1); db.ref('smart_erp/users').set(users); } }
-    function resetUserForm() { document.getElementById('newUId').value=""; document.getElementById('newUPass').value=""; document.getElementById('editUserIndex').value="-1"; document.getElementById('cancelUserEdit').classList.add('hidden'); }
 
-    function exportData() { if(currentUser !== 'admin') return; const data = { users, stock, invoices }; const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `Smart_ERP_Backup.json`; a.click(); }
-    
+    function editUser(i) {
+        const u = users[i];
+        document.getElementById('newUId').value = u.id;
+        document.getElementById('newUPass').value = u.pass;
+        document.getElementById('editUserIndex').value = i;
+        document.getElementById('userFormTitle').innerText = "Edit User";
+        document.getElementById('userBtn').innerText = "Update User";
+        document.getElementById('cancelUserEdit').classList.remove('hidden');
+    }
+
+    function resetUserForm() {
+        document.getElementById('newUId').value = "";
+        document.getElementById('newUPass').value = "";
+        document.getElementById('editUserIndex').value = "-1";
+        document.getElementById('userFormTitle').innerText = "Add User";
+        document.getElementById('userBtn').innerText = "Save User";
+        document.getElementById('cancelUserEdit').classList.add('hidden');
+    }
+
+    function exportData() {
+        const data = { stock, invoices, users };
+        const blob = new Blob([JSON.stringify(data)], {type: "application/json"});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `Smart_ERP_Backup_${new Date().toLocaleDateString()}.json`;
+        a.click();
+    }
+
     function importData(event) {
-        if(currentUser !== 'admin') return;
-        const file = event.target.files[0]; if (!file) return;
-        const reader = new FileReader(); reader.onload = function(e) {
-            try { const data = JSON.parse(e.target.result); if (data.users && data.stock && data.invoices) { if(confirm("Restore data?")) { db.ref('smart_erp/').set(data); location.reload(); } } } catch (err) { alert("Error reading file."); }
-        }; reader.readAsText(file);
+        const file = event.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const data = JSON.parse(e.target.result);
+            if(data.stock || data.invoices || data.users) {
+                if(confirm("This will overwrite current data. Continue?")) {
+                    db.ref('smart_erp').set(data).then(() => alert("Data Restored!"));
+                }
+            }
+        };
+        reader.readAsText(file);
     }
 
     function showSec(id) {
-        // এক্সেস রেস্ট্রিকশন লজিক
-        if(currentUser !== 'admin' && (id === 'history' || id === 'ledger' || id === 'settings')) {
-            alert("আপনার এই সেকশনে প্রবেশের অনুমতি নেই!");
-            return;
+        ['posSec','historySec','stockSec','settingsSec','ledgerSec','dashSec'].forEach(s => document.getElementById(s).classList.add('hidden'));
+        if(id === 'pos') {
+            document.getElementById('posSec').classList.remove('hidden');
+            document.getElementById('dashSec').classList.remove('hidden');
+        } else {
+            document.getElementById(id + 'Sec').classList.remove('hidden');
         }
-        ['posSec','historySec','stockSec','settingsSec','ledgerSec'].forEach(s => document.getElementById(s).classList.add('hidden'));
-        document.getElementById(id + 'Sec').classList.remove('hidden');
-        if(id=='history') renderHistory(); if(id=='stock') renderStock(); if(id=='settings') renderUsers(); if(id=='ledger') renderLedger();
+        if(id=='history') renderHistory();
+        if(id=='stock') renderStock();
+        if(id=='settings') renderUsers();
+        if(id=='ledger') renderLedger();
     }
 
     function numberToWords(num) {
@@ -686,17 +723,32 @@
         str += (n[5] != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) : '';
         return str;
     }
+
     function deleteAllProducts() { if(currentUser === 'admin' && confirm("Delete all products?")) db.ref('smart_erp/stock').remove(); }
     
     function editStock(code) {
         if(currentUser !== 'admin') return;
         const p = stock.find(x => x.code === code);
         if(p) {
-            document.getElementById('sCode').value = p.code; document.getElementById('sName').value = p.name;
-            document.getElementById('sCat').value = p.cat || ""; document.getElementById('sWar').value = p.war || "";
-            document.getElementById('sCost').value = p.cost || 0; document.getElementById('sPrice').value = p.price;
-            document.getElementById('sQty').value = p.qty; document.getElementById('sAlert').value = p.alert || 5;
-            document.getElementById('stockBtn').innerText = "Update Product"; document.getElementById('sName').focus();
+            document.getElementById('sCode').value = p.code;
+            document.getElementById('sName').value = p.name;
+            document.getElementById('sCat').value = p.cat || "";
+            document.getElementById('sWar').value = p.war || "";
+            document.getElementById('sCost').value = p.cost || 0;
+            document.getElementById('sPrice').value = p.price;
+            document.getElementById('sQty').value = p.qty;
+            document.getElementById('sAlert').value = p.alert || 5;
+            document.getElementById('stockBtn').innerText = "Update Product";
+            showSec('stock');
+            document.getElementById('sName').focus();
+        }
+    }
+
+    function deleteAllLedger() {
+        if(currentUser === 'admin' && confirm("সব লেজার ডাটা মুছে ফেলতে চান? এটি পারমানেন্টলি লেজার ক্লিন করবে।")) {
+            invoices.forEach(inv => {
+                db.ref('smart_erp/invoices/' + inv.id).update({ hidden_from_ledger: true });
+            });
         }
     }
 </script>
