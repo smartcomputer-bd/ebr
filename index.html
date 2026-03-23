@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Computer | Management System</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
@@ -13,6 +12,7 @@
 
     <style>
         :root { --primary: #1e40af; --secondary: #3b82f6; --dark: #0f172a; --bg: #e2e8f0; --text: #1e293b; --success: #059669; --danger: #dc2626; --card-bg: white; }
+        /* Dark Mode Colors */
         body.dark-mode { --bg: #0f172a; --text: #f8fafc; --card-bg: #1e293b; }
         body.dark-mode .panel, body.dark-mode .card { background: var(--card-bg); color: white; }
         body.dark-mode input { background: #334155; color: white; border-color: #475569; }
@@ -25,6 +25,7 @@
         .nav-links button { background: #334155; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 6px; margin-left: 5px; transition: 0.3s; }
         .nav-links button:hover { background: var(--primary); }
 
+        /* Dashboard Styles */
         .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; border-bottom: 4px solid var(--primary); }
         .card h4 { margin: 0; color: #64748b; font-size: 13px; text-transform: uppercase; }
@@ -49,6 +50,21 @@
         th { background: #e2e8f0; color: #000; padding: 6px; border: 1px solid #000; font-size: 11px; text-transform: uppercase; }
         td { border: 1px solid #000; padding: 3px; text-align: center; }
 
+        .col-sl { width: 5%; }
+        .col-code { width: 15%; } 
+        .col-desc { width: auto; }
+        .col-war { width: 12%; }
+        .col-qty { width: 8%; }
+        .col-price { width: 14%; }
+        .col-total { width: 15%; }
+
+        #qrcode { margin-top: 10px; display: inline-block; padding: 3px; border: 1px solid #000; border-radius: 4px; }
+
+        .footer-icons { display: flex; justify-content: center; gap: 15px; margin-top: auto; padding: 10px 0; border-top: 2px solid var(--primary); }
+        .icon-box { text-align: center; width: 55px; color: var(--primary); }
+        .icon-box i { font-size: 16px; }
+        .icon-box span { display: block; font-size: 8px; font-weight: bold; color: #334155; margin-top: 3px; text-transform: uppercase; }
+
         .panel { padding: 30px; max-width: 1100px; margin: 20px auto; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px; }
         .btn-primary { background: var(--primary); color: white; }
@@ -56,11 +72,16 @@
         .btn-danger { background: var(--danger); color: white; }
         .btn-secondary { background: #64748b; color: white; }
 
+        .pass-container { position: relative; width: 90%; margin: 10px auto; }
+        .toggle-password { position: absolute; right: 10px; top: 12px; cursor: pointer; color: #666; }
+
         @media print {
             @page { size: A4; margin: 0; }
             .no-print, .external-actions, .navbar, .dashboard-grid { display: none !important; }
+            body { background: white !important; color: black !important; }
             .invoice-sheet { box-shadow: none; margin: 0; width: 210mm; height: 297mm; border: none; padding: 10mm; }
-            #barcodePrintArea { display: block !important; }
+            input { border: none !important; }
+            select { border: none !important; appearance: none; color: black !important; font-weight: bold; font-size: 18px; }
         }
     </style>
 </head>
@@ -68,9 +89,12 @@
 
 <div id="loginPage" style="position:fixed; inset:0; background:var(--dark); display:flex; align-items:center; justify-content:center; z-index:9999;">
     <div style="background:white; padding:40px; border-radius:15px; width:350px; text-align:center;">
-        <h2 style="color:var(--primary)">Smart Computer System</h2>
+        <h2 style="color:var(--primary)">Smart Computer EBR System</h2>
         <input type="text" id="uId" placeholder="User ID" style="width:90%; padding:12px; margin:10px 0;">
-        <input type="password" id="uPass" placeholder="Password" style="width:90%; padding:12px; margin:10px 0;" onkeypress="if(event.key === 'Enter') login()">
+        <div class="pass-container">
+            <input type="password" id="uPass" placeholder="Password" style="width:100%; padding:12px; margin:0;" onkeypress="if(event.key === 'Enter') login()">
+            <i class="fa-solid fa-eye toggle-password" onclick="togglePass()"></i>
+        </div>
         <button onclick="login()" class="btn btn-primary" style="width:100%; justify-content:center; margin-top: 10px;">LOGIN</button>
     </div>
 </div>
@@ -80,28 +104,43 @@
         <div style="font-size:20px; font-weight:bold;"><i class="fa-solid fa-laptop-code"></i> SMART COMPUTER</div>
         <div class="nav-links">
             <button onclick="showSec('pos')">Invoice</button>
-            <button id="navHistory" onclick="showSec('history')">History</button>
-            <button id="navLedger" onclick="showSec('ledger')">Ledger</button>
-            <button id="navStock" onclick="showSec('stock')">Inventory</button>
+            <button onclick="showSec('history')">History</button>
+            <button onclick="showSec('stock')">Inventory</button>
             <button id="navSettings" onclick="showSec('settings')">Admin</button>
             <button onclick="toggleDarkMode()"><i class="fa-solid fa-moon"></i></button>
+            <button onclick="exportData()" style="background:var(--success)">Backup</button>
+            <button onclick="document.getElementById('restoreInput').click()" style="background:var(--secondary)">Restore</button>
+            <input type="file" id="restoreInput" accept=".json" style="display:none" onchange="importData(event)">
             <button onclick="location.reload()" style="background:var(--danger)">Logout</button>
         </div>
     </nav>
 
     <div id="dashSec" class="panel no-print">
         <div class="dashboard-grid">
-            <div class="card"><h4>Today's Sales</h4><h2 id="todaySales">৳ 0.00</h2></div>
-            <div class="card" style="border-bottom-color: var(--success);"><h4>Total Invoices</h4><h2 id="totalInvCount">0</h2></div>
-            <div class="card" style="border-bottom-color: orange;"><h4>Stock Value</h4><h2 id="totalStockVal">৳ 0.00</h2></div>
-            <div class="card" style="border-bottom-color: var(--danger);"><h4>Low Stock</h4><h2 id="lowStockCount">0</h2></div>
+            <div class="card">
+                <h4>Today's Sales</h4>
+                <h2 id="todaySales">৳ 0.00</h2>
+            </div>
+            <div class="card" style="border-bottom-color: var(--success);">
+                <h4>Total Invoices</h4>
+                <h2 id="totalInvCount">0</h2>
+            </div>
+            <div class="card" style="border-bottom-color: orange;">
+                <h4>Total Stock Value</h4>
+                <h2 id="totalStockVal">৳ 0.00</h2>
+            </div>
+            <div class="card" style="border-bottom-color: var(--danger);">
+                <h4>Low Stock Alert</h4>
+                <h2 id="lowStockCount">0</h2>
+            </div>
         </div>
     </div>
 
     <div id="posSec">
         <div class="external-actions no-print">
             <button onclick="saveAndPrint()" class="btn btn-primary"><i class="fa-solid fa-save"></i> Save & Print</button>
-            <button onclick="resetPOS()" class="btn btn-success"><i class="fa-solid fa-plus"></i> New Record</button>
+            <button onclick="printNoSave()" class="btn btn-secondary"><i class="fa-solid fa-print"></i> Print (No Save)</button>
+            <button onclick="resetPOS()" class="btn btn-success"><i class="fa-solid fa-file-circle-plus"></i> New Record</button>
         </div>
 
         <div class="invoice-sheet" id="invoice">
@@ -111,244 +150,555 @@
                     <div class="slogan">Quality Service, Smart Solution, Your Digital Service Partner.</div>
                     <div class="header-info">
                         <p><i class="fa-solid fa-phone"></i> 01614-398989</p>
-                        <p><i class="fa-solid fa-location-dot"></i> Khalishpur, Khulna</p>
+                        <p><i class="fa-solid fa-envelope"></i> smartcomputer660@gmail.com</p>
+                        <p><i class="fa-solid fa-location-dot"></i> 1 No Camp, Housing Bajar Road, Ward No-12, Khalishpur, Khulna</p>
+                        <p><i class="fa-solid fa-globe"></i> smartcomputer-bd.github.io/com</p>
                     </div>
                 </div>
                 <div style="text-align:right">
-                    <select id="docType" onchange="genId()"><option value="Inv">INVOICE</option><option value="Req">REQ</option></select>
-                    <p><b>No:</b> <span id="invId" style="font-weight:bold; color:red"></span></p>
+                    <select id="docType" onchange="genId()" style="font-size:16px; font-weight:bold; color:var(--primary);">
+                        <option value="Inv">INVOICE</option>
+                        <option value="Req">REQUISITION</option>
+                        <option value="Cha">CHALAN</option>
+                    </select>
+                    <p><b>No:</b> <span id="invId" style="font-weight:bold; color:var(--danger)"></span></p>
                     <p><b>Date:</b> <span id="curDate"></span></p>
+                    <p><b>Time:</b> <span id="curTime"></span></p>
                 </div>
             </div>
 
             <div class="cust-box">
-                <div class="field"><b>Customer:</b> <input type="text" id="cName" style="flex:1"></div>
+                <div class="field"><b>Customer Name:</b> <input type="text" id="cName" style="flex:1"></div>
                 <div class="field"><b>Mobile:</b> <input type="text" id="cPhone" style="flex:1"></div>
                 <div class="field"><b>Address:</b> <input type="text" id="cAddr" style="flex:1"></div>
                 <div class="field"><b>Email:</b> <input type="text" id="cEmail" style="flex:1"></div>
             </div>
 
             <table>
-                <thead><tr><th>SL</th><th>Code</th><th>Description</th><th>Warranty</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th class="col-sl">SL</th>
+                        <th class="col-code">Code/Barcode</th>
+                        <th class="col-desc">Description</th>
+                        <th class="col-war">Warranty</th>
+                        <th class="col-qty">Qty</th>
+                        <th class="col-price">Price</th>
+                        <th class="col-total">Total</th>
+                    </tr>
+                </thead>
                 <tbody id="billBody"></tbody>
             </table>
 
             <div style="display:flex; justify-content:space-between; margin-top:10px;">
-                <div id="qrcode"></div>
+                <div style="width:50%">
+                    <p style="font-size:11px; font-weight:bold; text-decoration:underline;">Terms & Conditions:</p>
+                    <p style="font-size:9px; line-height:1.4;">
+                        1. Warranty covers manufacturing defects only.<br>
+                        2. Physical damage, burn, or liquid damage voids warranty.<br>
+                        3. Product must be returned with original invoice and packaging.<br>
+                        4. Warranty period starts from the date of purchase.
+                    </p>
+                    <div id="qrcode"></div> 
+                </div>
                 <div style="width:280px; text-align:right;">
-                    <div>Sub Total: <span id="subT">0.00</span></div>
-                    <div>Grand Total: <span id="grandT" style="font-weight:bold">0.00</span></div>
-                    <div>Paid: <input type="number" id="pPaid" value="0" oninput="calc()" style="width:70px"></div>
-                    <div style="color:red">Due: <span id="pDue">0.00</span></div>
+                    <div style="display:flex; justify-content:space-between; padding:3px 0; font-size:13px;"><span>Sub Total:</span> <span id="subT">0.00</span></div>
+                    <div style="display:flex; justify-content:space-between; padding:3px 0; font-size:13px;"><span>Discount (%):</span> <input type="number" id="vP" value="0" style="width:50px; text-align:center" oninput="calc()"></div>
+                    <div style="display:flex; justify-content:space-between; padding:3px 0; font-size:13px;"><span>VAT (%):</span> <input type="number" id="vatInp" value="0" style="width:50px; text-align:center" oninput="calc()"></div>
+                    <div style="display:flex; justify-content:space-between; padding:6px 0; font-weight:bold; font-size:15px; border-top:2px solid #000;"><span>Grand Total:</span> <span id="grandT">0.00</span></div>
+                    <div style="display:flex; justify-content:space-between; padding:3px 0; font-size:13px;"><span>Paid:</span> <input type="number" id="pPaid" value="0" style="width:70px; text-align:right" oninput="calc()"></div>
+                    <div style="display:flex; justify-content:space-between; padding:3px 0; color:var(--danger); font-weight:bold; font-size:13px;"><span>Due:</span> <span id="pDue">0.00</span></div>
+                    <div style="text-align:left; margin-top:20px; font-size:10px; font-style:italic; border-top:1px dashed #ccc; padding-top:8px;">
+                        <b>In Words:</b> <span id="inWords">Zero Taka Only</span>
+                    </div>
                 </div>
             </div>
-            <div style="margin-top:20px; font-size:10px; border-top:1px solid #eee;">Sold By: <span id="soldBy"></span></div>
-        </div>
-    </div>
 
-    <div id="stockSec" class="hidden panel">
-        <h3>Inventory Control</h3>
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap:10px; margin-bottom:20px; background:#f8fafc; padding:15px; border-radius:10px;">
-            <input type="text" id="sCode" placeholder="Code">
-            <input type="text" id="sName" placeholder="Name">
-            <input type="text" id="sCat" placeholder="Category">
-            <input type="text" id="sWar" placeholder="Warranty">
-            <input type="number" id="sCost" placeholder="Buy Price">
-            <input type="number" id="sPrice" placeholder="Sale Price">
-            <input type="number" id="sQty" placeholder="Qty">
-            <input type="number" id="sAlert" placeholder="Alert Limit">
-            <button onclick="addStock()" class="btn btn-success">Save</button>
-        </div>
-        <table style="width:100%">
-            <thead><tr><th>Code</th><th>Name</th><th>Cat</th><th>Stock</th><th>Alert</th><th>Action</th></tr></thead>
-            <tbody id="stockBody"></tbody>
-        </table>
-    </div>
+            <div class="footer-icons">
+                <div class="icon-box"><i class="fa-solid fa-desktop"></i><span>Desktop</span></div>
+                <div class="icon-box"><i class="fa-solid fa-laptop"></i><span>Laptop</span></div>
+                <div class="icon-box"><i class="fa-solid fa-mouse"></i><span>Mouse</span></div>
+                <div class="icon-box"><i class="fa-solid fa-hard-drive"></i><span>Storage</span></div>
+                <div class="icon-box"><i class="fa-solid fa-headphones"></i><span>Audio</span></div>
+                <div class="icon-box"><i class="fa-solid fa-plug"></i><span>Charger</span></div>
+                <div class="icon-box"><i class="fa-solid fa-print"></i><span>Printer</span></div>
+            </div>
 
-    <div id="ledgerSec" class="hidden panel">
-        <h3>Customer Ledger</h3>
-        <table style="width:100%">
-            <thead><tr><th>Customer</th><th>Phone</th><th>Total</th><th>Paid</th><th>Due</th><th>Notice</th></tr></thead>
-            <tbody id="ledgerBody"></tbody>
-        </table>
+            <div style="display:flex; justify-content:space-between; margin-top:10px; border-top:1px solid #eee; padding-top:8px;">
+                <div style="border-top:1.5px solid #000; width:140px; text-align:center; font-size:11px; font-weight:bold;">Customer Signature</div>
+                <div style="font-size:10px;">Sold By: <span id="soldBy"></span></div>
+                <div style="border-top:1.5px solid #000; width:140px; text-align:center; font-size:11px; font-weight:bold;">Authorized Sign</div>
+            </div>
+        </div>
     </div>
 
     <div id="historySec" class="hidden panel">
-        <h3>Sales Records</h3>
+        <h3>Records History</h3>
+        <input type="text" id="searchInv" placeholder="Search ID, Name or Mobile..." oninput="renderHistory()" style="width:100%; padding:12px; margin-bottom:15px; border:1px solid #ddd; border-radius:8px;">
         <table style="width:100%">
-            <thead><tr><th>Date</th><th>ID</th><th>Customer</th><th>Total</th><th>Action</th></tr></thead>
+            <thead><tr><th>Date</th><th>ID</th><th>Customer</th><th>Phone</th><th>Total</th><th>Action</th></tr></thead>
             <tbody id="historyBody"></tbody>
         </table>
     </div>
 
+    <div id="stockSec" class="hidden panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="margin: 0;">Inventory Control</h3>
+            <button onclick="deleteAllProducts()" class="btn btn-danger"><i class="fa-solid fa-trash-can"></i> Delete All</button>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr auto; gap:10px; margin-bottom:20px; background:#f8fafc; padding:15px; border-radius:10px;">
+            <input type="text" id="sCode" placeholder="Code/Barcode" onkeypress="if(event.key==='Enter') fetchStockItem(this)">
+            <input type="text" id="sName" placeholder="Product Details">
+            <input type="number" id="sCost" placeholder="Buy Price">
+            <input type="number" id="sPrice" placeholder="Sale Price">
+            <input type="number" id="sQty" placeholder="Qty" value="1">
+            <button id="stockBtn" onclick="addStock()" class="btn btn-success">Add Item</button>
+        </div>
+        <table style="width:100%">
+            <thead><tr><th>Code</th><th>Name</th><th>Buy Price</th><th>Sale Price</th><th>Stock</th><th>Action</th></tr></thead>
+            <tbody id="stockBody"></tbody>
+        </table>
+    </div>
+
     <div id="settingsSec" class="hidden panel">
-        <h3>User Permissions</h3>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-            <div style="background:#f9fafb; padding:20px; border-radius:10px;">
-                <input type="text" id="newUId" placeholder="User ID" style="width:90%; margin-bottom:10px;"><br>
-                <input type="password" id="newUPass" placeholder="Password" style="width:90%; margin-bottom:10px;"><br>
-                <select id="uRole" style="width:95%; padding:10px; margin-bottom:10px;">
-                    <option value="admin">Admin (Full)</option>
-                    <option value="cashier">Cashier (Sales/Stock)</option>
-                    <option value="salesman">Salesman (Sales Only)</option>
-                </select>
-                <button onclick="saveUser()" class="btn btn-primary" style="width:100%">Add User</button>
+        <h3>Admin Panel - User Management</h3>
+        <div style="display:grid; grid-template-columns: 1fr 1.5fr; gap:20px;">
+            <div style="border:1px solid #ddd; padding:20px; border-radius:10px; background:#f9fafb;">
+                <h4 id="userFormTitle">Add/Edit User</h4>
+                <input type="hidden" id="editUserIndex" value="-1">
+                <input type="text" id="newUId" placeholder="Login ID" style="width:94%; padding:10px; margin-bottom:10px;">
+                <input type="password" id="newUPass" placeholder="Password" style="width:94%; padding:10px; margin-bottom:15px;">
+                <button id="userBtn" onclick="saveUser()" class="btn btn-primary" style="width:100%; justify-content:center;">Save User</button>
+                <button id="cancelUserEdit" onclick="resetUserForm()" class="btn btn-danger hidden" style="width:100%; margin-top:5px; justify-content:center;">Cancel</button>
             </div>
-            <ul id="userList" style="list-style:none; padding:0;"></ul>
+            <div style="border:1px solid #ddd; padding:20px; border-radius:10px;">
+                <h4>User List</h4>
+                <ul id="userList" style="list-style:none; padding:0;"></ul>
+            </div>
         </div>
     </div>
 </div>
 
-<div id="barcodePrintArea" style="display:none; text-align:center;"><svg id="barcodeCanvas"></svg></div>
-
 <script>
-    const firebaseConfig = { databaseURL: "https://smart-erp-175cf-default-rtdb.firebaseio.com" };
+    const firebaseConfig = {
+        apiKey: "AIzaSyAsosjugcKHhR6-M_AurTrxIe2SV0pIBpE",
+        authDomain: "smart-erp-175cf.firebaseapp.com",
+        databaseURL: "https://smart-erp-175cf-default-rtdb.firebaseio.com",
+        projectId: "smart-erp-175cf",
+        storageBucket: "smart-erp-175cf.firebasestorage.app",
+        messagingSenderId: "787232044499",
+        appId: "1:787232044499:web:20c9ac6d80f92ce81c2b26",
+        measurementId: "G-8VE4ZEP3JG"
+    };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let users = [{id:'admin', pass:'724672', role:'admin'}];
-    let stock = []; let invoices = []; let currentUser = null;
+    let users = [{id:'admin', pass:'724672'}];
+    let stock = [];
+    let invoices = [];
+    let currentUser = "";
 
-    db.ref('smart_erp/').on('value', snap => {
-        const data = snap.val() || {};
-        users = data.users || users;
-        stock = data.stock ? Object.values(data.stock) : [];
-        invoices = data.invoices ? Object.values(data.invoices) : [];
-        renderStock(); renderLedger(); renderHistory(); renderUsers(); updateDashboard();
+    db.ref('smart_erp/').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            users = data.users || users;
+            stock = data.stock ? Object.values(data.stock).filter(item => item && item.code && item.name) : [];
+            invoices = data.invoices ? Object.values(data.invoices) : [];
+            renderHistory(); renderStock(); renderUsers();
+            updateDashboard(); // New Function
+        }
     });
 
-    function login() {
-        const id = document.getElementById('uId').value;
-        const pass = document.getElementById('uPass').value;
-        const u = users.find(x => x.id === id && x.pass === pass);
-        if(u) {
-            currentUser = u;
-            document.getElementById('loginPage').classList.add('hidden');
-            document.getElementById('app').classList.remove('hidden');
-            applyPermissions(u.role);
-            resetPOS();
-        } else alert("Invalid!");
+    // Dark Mode Toggle
+    function toggleDarkMode() {
+        document.body.classList.toggle('dark-mode');
     }
 
-    function applyPermissions(role) {
-        const hide = (id) => document.getElementById(id).classList.add('hidden');
-        if(role === 'cashier') hide('navSettings');
-        if(role === 'salesman') { hide('navSettings'); hide('navStock'); }
+    // New Dashboard Logic
+    function updateDashboard() {
+        const today = new Date().toLocaleDateString();
+        let salesToday = 0;
+        let totalVal = 0;
+        let lowStock = 0;
+
+        invoices.forEach(inv => {
+            if(inv.date === today) salesToday += parseFloat(inv.grand) || 0;
+        });
+
+        stock.forEach(item => {
+            totalVal += (parseFloat(item.price) * parseInt(item.qty));
+            if(parseInt(item.qty) < 5) lowStock++;
+        });
+
+        document.getElementById('todaySales').innerText = "৳ " + salesToday.toFixed(2);
+        document.getElementById('totalInvCount').innerText = invoices.length;
+        document.getElementById('totalStockVal').innerText = "৳ " + totalVal.toLocaleString();
+        document.getElementById('lowStockCount').innerText = lowStock;
+    }
+
+    function login() {
+        const id = document.getElementById('uId').value.trim();
+        const pass = document.getElementById('uPass').value.trim();
+        const u = users.find(x => x.id === id && x.pass === pass);
+        if(u) {
+            currentUser = id;
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+            id === 'admin' ? document.getElementById('navSettings').classList.remove('hidden') : document.getElementById('navSettings').classList.add('hidden');
+            resetPOS();
+        } else alert("Invalid Login!");
+    }
+
+    function togglePass() {
+        const p = document.getElementById('uPass');
+        p.type = p.type === "password" ? "text" : "password";
     }
 
     function resetPOS() {
         const d = new Date();
         document.getElementById('curDate').innerText = d.toLocaleDateString();
+        document.getElementById('curTime').innerText = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         genId();
-        document.getElementById('soldBy').innerText = currentUser.id;
+        document.getElementById('soldBy').innerText = currentUser;
+        ['cName','cPhone','cAddr','cEmail','vP','vatInp','pPaid'].forEach(id => document.getElementById(id).value = (id.length > 5) ? 0 : "");
+        
         let rows = "";
         for(let i=1; i<=13; i++) {
-            rows += `<tr><td>${i}</td>
-                <td><input type="text" class="it-c" onchange="fetchItem(this)" style="width:90%"></td>
+            rows += `<tr>
+                <td>${i}</td>
+                <td><input type="text" class="it-c" style="width:90%" onchange="fetchItem(this)"></td>
                 <td><input type="text" class="it-n" style="width:95%"></td>
                 <td><input type="text" class="it-w" style="width:90%"></td>
                 <td><input type="number" class="it-q" value="0" oninput="calc()" style="width:40px"></td>
                 <td><input type="number" class="it-p" value="0" oninput="calc()" style="width:60px"></td>
-                <td class="it-t">0.00</td></tr>`;
+                <td class="it-t">0.00</td>
+            </tr>`;
         }
         document.getElementById('billBody').innerHTML = rows;
         calc();
     }
 
+    function genId() {
+        const type = document.getElementById('docType').value;
+        document.getElementById('invId').innerText = type + "-" + Math.floor(100000 + Math.random() * 900000);
+    }
+
     function fetchItem(input) {
-        const p = stock.find(x => x.code === input.value);
+        const code = input.value.trim();
+        if(!code) return;
+        const p = stock.find(x => x.code === code);
         const row = input.parentElement.parentElement;
         if(p) {
             row.querySelector('.it-n').value = p.name;
             row.querySelector('.it-p').value = p.price;
             row.querySelector('.it-q').value = 1;
-            row.querySelector('.it-w').value = p.war || "";
             calc();
         }
+    }
+
+    function fetchStockItem(input) {
+        const code = input.value.trim();
+        if(!code) return;
+        const p = stock.find(x => x.code === code);
+        if(p) {
+            document.getElementById('sName').value = p.name;
+            document.getElementById('sCost').value = p.cost || 0;
+            document.getElementById('sPrice').value = p.price;
+            document.getElementById('sQty').value = p.qty;
+            document.getElementById('stockBtn').innerText = "Update Item";
+        }
+        document.getElementById('sName').focus();
     }
 
     function calc() {
         let sub = 0;
         document.querySelectorAll('#billBody tr').forEach(r => {
-            const q = r.querySelector('.it-q').value || 0;
-            const p = r.querySelector('.it-p').value || 0;
+            const q = parseFloat(r.querySelector('.it-q').value) || 0;
+            const p = parseFloat(r.querySelector('.it-p').value) || 0;
             const t = q * p;
             r.querySelector('.it-t').innerText = t.toFixed(2);
             sub += t;
         });
-        const paid = document.getElementById('pPaid').value || 0;
+        const grand = Math.round(sub - (sub * (document.getElementById('vP').value/100)) + (sub * (document.getElementById('vatInp').value/100)));
+        const paid = parseFloat(document.getElementById('pPaid').value) || 0;
+        const due = grand - paid;
         document.getElementById('subT').innerText = sub.toFixed(2);
-        document.getElementById('grandT').innerText = sub.toFixed(2);
-        document.getElementById('pDue').innerText = (sub - paid).toFixed(2);
+        document.getElementById('grandT').innerText = grand.toFixed(2);
+        document.getElementById('pDue').innerText = due.toFixed(2);
+        document.getElementById('inWords').innerText = numberToWords(grand) + " Taka Only";
+        
+        const qrText = `Name: ${document.getElementById('cName').value}\nInv: ${document.getElementById('invId').innerText}\nDate: ${document.getElementById('curDate').innerText} ${document.getElementById('curTime').innerText}\nTotal: ${grand}\nDue: ${due}`;
+        document.getElementById('qrcode').innerHTML = "";
+        new QRCode(document.getElementById("qrcode"), { text: qrText, width: 70, height: 70 });
     }
 
-    function saveAndPrint() {
+    async function saveAndPrint() {
         const invId = document.getElementById('invId').innerText;
-        const items = []; const updates = {};
+        const billItems = [];
+        const updates = {};
+        
         document.querySelectorAll('#billBody tr').forEach(r => {
-            const c = r.querySelector('.it-c').value;
-            const q = parseInt(r.querySelector('.it-q').value);
-            if(c && q > 0) {
-                items.push({code:c, q:q, p:r.querySelector('.it-p').value});
-                const prod = stock.find(x => x.code === c);
-                if(prod) updates['smart_erp/stock/' + c + '/qty'] = parseInt(prod.qty) - q;
+            const code = r.querySelector('.it-c').value;
+            const name = r.querySelector('.it-n').value;
+            const war = r.querySelector('.it-w').value;
+            const q = parseInt(r.querySelector('.it-q').value) || 0;
+            const p = r.querySelector('.it-p').value;
+            const t = r.querySelector('.it-t').innerText;
+            if(code && q > 0) {
+                billItems.push({code, name, war, q, p, t});
+                
+                // স্টক বিয়োগের লজিক
+                const product = stock.find(x => x.code === code);
+                if(product) {
+                    const newQty = parseInt(product.qty) - q;
+                    updates['smart_erp/stock/' + code + '/qty'] = newQty;
+                }
             }
         });
-        const inv = { id:invId, customer:document.getElementById('cName').value, phone:document.getElementById('cPhone').value, grand:document.getElementById('grandT').innerText, paid:document.getElementById('pPaid').value, date:document.getElementById('curDate').innerText, items:items, soldBy:currentUser.id };
+
+        if(billItems.length === 0) return;
+
+        const inv = {
+            id: invId,
+            type: document.getElementById('docType').value,
+            date: document.getElementById('curDate').innerText,
+            time: document.getElementById('curTime').innerText,
+            customer: document.getElementById('cName').value,
+            phone: document.getElementById('cPhone').value,
+            address: document.getElementById('cAddr').value,
+            email: document.getElementById('cEmail').value,
+            items: billItems,
+            subTotal: document.getElementById('subT').innerText,
+            discount: document.getElementById('vP').value,
+            vat: document.getElementById('vatInp').value,
+            grand: document.getElementById('grandT').innerText,
+            paid: document.getElementById('pPaid').value,
+            due: document.getElementById('pDue').innerText,
+            soldBy: currentUser
+        };
+
+        // ডাটাবেসে ইনভয়েস সেভ এবং স্টক আপডেট
         updates['smart_erp/invoices/' + invId] = inv;
-        db.ref().update(updates).then(() => window.print());
+        
+        db.ref().update(updates).then(() => {
+            const fileName = `${inv.id}-${inv.customer}-${inv.phone}-${inv.date.replace(/\//g, '-')}`;
+            document.title = fileName;
+            window.print();
+            setTimeout(() => { document.title = "Smart Computer | Management System"; }, 1000);
+        });
     }
+
+    function printNoSave() { window.print(); }
 
     function addStock() {
-        const c = document.getElementById('sCode').value;
-        const item = { code:c, name:document.getElementById('sName').value, cat:document.getElementById('sCat').value, war:document.getElementById('sWar').value, cost:document.getElementById('sCost').value, price:document.getElementById('sPrice').value, qty:document.getElementById('sQty').value, alert:document.getElementById('sAlert').value };
-        db.ref('smart_erp/stock/' + c).set(item);
+        const c = document.getElementById('sCode').value.trim();
+        const n = document.getElementById('sName').value.trim();
+        const cost = document.getElementById('sCost').value || 0; // ক্রয়মূল্য ইনপুট
+        const p = document.getElementById('sPrice').value || 0;
+        const q = document.getElementById('sQty').value || 0;
+        
+        if(c && n) {
+            db.ref('smart_erp/stock/' + c).set({code:c, name:n, cost:cost, price:p, qty:q}).then(() => {
+                ['sCode','sName','sCost','sPrice','sQty'].forEach(id => document.getElementById(id).value = "");
+                document.getElementById('stockBtn').innerText = "Add Item";
+            });
+        }
     }
 
-    function printBC(c) { JsBarcode("#barcodeCanvas", c); window.print(); }
+    function editStock(code) {
+        const p = stock.find(x => x.code === code);
+        if(p) {
+            document.getElementById('sCode').value = p.code;
+            document.getElementById('sName').value = p.name;
+            document.getElementById('sCost').value = p.cost || 0;
+            document.getElementById('sPrice').value = p.price;
+            document.getElementById('sQty').value = p.qty;
+            document.getElementById('stockBtn').innerText = "Update Item";
+            document.getElementById('sName').focus();
+        }
+    }
+
+    function deleteAllProducts() {
+        if(confirm("আপনি কি নিশ্চিত যে আপনি ইনভেন্টরি থেকে সকল প্রোডাক্ট ডিলিট করতে চান?")) {
+            db.ref('smart_erp/stock').remove().then(() => {
+                alert("সকল প্রোডাক্ট সফলভাবে ডিলিট করা হয়েছে।");
+            }).catch((error) => {
+                alert("ডিলিট করতে সমস্যা হয়েছে: " + error.message);
+            });
+        }
+    }
 
     function renderStock() {
-        let h = ""; stock.forEach(x => {
-            h += `<tr><td>${x.code}</td><td>${x.name}</td><td>${x.cat}</td><td style="${x.qty<=x.alert?'color:red':''}">${x.qty}</td><td>${x.alert}</td><td><button onclick="printBC('${x.code}')">BC</button></td></tr>`;
+        let h = "";
+        stock.forEach(x => {
+            if(x && x.code && x.name) {
+                h += `<tr><td>${x.code}</td><td>${x.name}</td><td>${x.cost || 0}</td><td>${x.price}</td><td>${x.qty}</td>
+                <td>
+                    <button onclick="editStock('${x.code}')" style="background:blue; color:white; border:none; padding:4px; cursor:pointer;">Edit</button>
+                    <button onclick="if(confirm('Delete?')) db.ref('smart_erp/stock/${x.code}').remove()" style="background:red; color:white; border:none; padding:4px; cursor:pointer;">Del</button>
+                </td></tr>`;
+            }
         });
         document.getElementById('stockBody').innerHTML = h;
     }
 
-    function renderLedger() {
-        const custs = {}; invoices.forEach(i => {
-            if(!custs[i.phone]) custs[i.phone] = {n:i.customer, p:i.phone, t:0, pd:0};
-            custs[i.phone].t += parseFloat(i.grand); custs[i.phone].pd += parseFloat(i.paid);
-        });
-        let h = ""; Object.values(custs).forEach(c => {
-            const due = c.t - c.pd;
-            h += `<tr><td>${c.n}</td><td>${c.p}</td><td>${c.t}</td><td>${c.pd}</td><td>${due}</td><td><button onclick="window.open('https://wa.me/88${c.p}?text=Due:${due}')">WA</button></td></tr>`;
-        });
-        document.getElementById('ledgerBody').innerHTML = h;
-    }
-
     function renderHistory() {
-        let h = ""; invoices.forEach(i => { h += `<tr><td>${i.date}</td><td>${i.id}</td><td>${i.customer}</td><td>${i.grand}</td><td>View</td></tr>`; });
+        const q = document.getElementById('searchInv').value.toLowerCase();
+        let h = "";
+        invoices.slice().reverse().filter(x => x.id.toLowerCase().includes(q) || x.customer.toLowerCase().includes(q) || x.phone.includes(q)).forEach(x => {
+            h += `<tr><td>${x.date}</td><td>${x.id}</td><td>${x.customer}</td><td>${x.phone}</td><td>${x.grand}</td>
+            <td>
+                <button onclick="viewInvoice('${x.id}')" style="background:var(--secondary); color:white; border:none; padding:4px 8px; cursor:pointer; border-radius:3px;">View</button>
+                <button onclick="editInvoice('${x.id}')" style="background:blue; color:white; border:none; padding:4px 8px; cursor:pointer; border-radius:3px;">Edit</button>
+                <button onclick="deleteInvoice('${x.id}')" style="background:red; color:white; border:none; padding:4px 8px; cursor:pointer; border-radius:3px;">Del</button>
+            </td></tr>`;
+        });
         document.getElementById('historyBody').innerHTML = h;
     }
 
-    function genId() { document.getElementById('invId').innerText = "INV-" + Date.now().toString().slice(-6); }
-    function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
-    function showSec(id) { 
-        ['posSec','historySec','stockSec','ledgerSec','settingsSec'].forEach(s => document.getElementById(s).classList.add('hidden'));
-        document.getElementById(id + 'Sec').classList.remove('hidden');
+    function viewInvoice(id) {
+        const inv = invoices.find(x => x.id === id);
+        if(inv) {
+            populatePOS(inv);
+            showSec('pos');
+        }
     }
-    function updateDashboard() {
-        let v = 0; stock.forEach(s => v += (s.price * s.qty));
-        document.getElementById('totalStockVal').innerText = "৳ " + v;
-        document.getElementById('totalInvCount').innerText = invoices.length;
+
+    function editInvoice(id) {
+        const inv = invoices.find(x => x.id === id);
+        if(inv) {
+            if(confirm("আপনি কি এই ইনভয়েসটি এডিট করতে চান?")) {
+                populatePOS(inv);
+                showSec('pos');
+            }
+        }
     }
+
+    function deleteInvoice(id) {
+        if(confirm(`Are you sure you want to delete Invoice: ${id}?`)) {
+            db.ref('smart_erp/invoices/' + id).remove().then(() => alert("Deleted successfully!"));
+        }
+    }
+
+    function populatePOS(inv) {
+        document.getElementById('docType').value = inv.type || "Inv";
+        document.getElementById('invId').innerText = inv.id;
+        document.getElementById('curDate').innerText = inv.date;
+        document.getElementById('curTime').innerText = inv.time;
+        document.getElementById('cName').value = inv.customer;
+        document.getElementById('cPhone').value = inv.phone;
+        document.getElementById('cAddr').value = inv.address;
+        document.getElementById('cEmail').value = inv.email;
+        document.getElementById('vP').value = inv.discount;
+        document.getElementById('vatInp').value = inv.vat;
+        document.getElementById('pPaid').value = inv.paid;
+        document.getElementById('soldBy').innerText = inv.soldBy;
+
+        let rows = "";
+        for(let i=1; i<=13; i++) {
+            const item = inv.items[i-1] || {code:'', name:'', war:'', q:0, p:0, t:'0.00'};
+            rows += `<tr>
+                <td>${i}</td>
+                <td><input type="text" class="it-c" value="${item.code}" style="width:90%" onchange="fetchItem(this)"></td>
+                <td><input type="text" class="it-n" value="${item.name}" style="width:95%"></td>
+                <td><input type="text" class="it-w" value="${item.war}" style="width:90%"></td>
+                <td><input type="number" class="it-q" value="${item.q}" oninput="calc()" style="width:40px"></td>
+                <td><input type="number" class="it-p" value="${item.p}" oninput="calc()" style="width:60px"></td>
+                <td class="it-t">${item.t}</td>
+            </tr>`;
+        }
+        document.getElementById('billBody').innerHTML = rows;
+        calc();
+    }
+
     function saveUser() {
-        users.push({id:document.getElementById('newUId').value, pass:document.getElementById('newUPass').value, role:document.getElementById('uRole').value});
-        db.ref('smart_erp/users').set(users);
+        const id = document.getElementById('newUId').value;
+        const pass = document.getElementById('newUPass').value;
+        const editIdx = document.getElementById('editUserIndex').value;
+        if(id && pass) {
+            if(editIdx == -1) users.push({id, pass});
+            else users[editIdx] = {id, pass};
+            db.ref('smart_erp/users').set(users);
+            resetUserForm();
+        }
     }
+
     function renderUsers() {
-        let h = ""; users.forEach(u => h += `<li>${u.id} (${u.role})</li>`);
+        let h = "";
+        users.forEach((u, i) => {
+            h += `<li style="padding:10px; border-bottom:1px solid #ddd; display:flex; justify-content:space-between;">
+                <b>${u.id}</b>
+                <span>
+                    <button onclick="editUser(${i})" style="color:blue; border:none; background:none; cursor:pointer;">Edit</button> | 
+                    <button onclick="delUser(${i})" style="color:red; border:none; background:none; cursor:pointer;">Del</button>
+                </span>
+            </li>`;
+        });
         document.getElementById('userList').innerHTML = h;
+    }
+
+    function editUser(i) {
+        document.getElementById('newUId').value = users[i].id;
+        document.getElementById('newUPass').value = users[i].pass;
+        document.getElementById('editUserIndex').value = i;
+        document.getElementById('cancelUserEdit').classList.remove('hidden');
+    }
+
+    function delUser(i) { if(confirm("Delete user?")) { users.splice(i,1); db.ref('smart_erp/users').set(users); } }
+    function resetUserForm() { document.getElementById('newUId').value=""; document.getElementById('newUPass').value=""; document.getElementById('editUserIndex').value="-1"; document.getElementById('cancelUserEdit').classList.add('hidden'); }
+
+    function exportData() {
+        const data = { users, stock, invoices };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Smart_ERP_Backup_${new Date().toLocaleDateString().replace(/\//g,'-')}.json`;
+        a.click();
+    }
+
+    function importData(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                if (data.users && data.stock && data.invoices) {
+                    if(confirm("Restore করার ফলে বর্তমান সকল ডাটা মুছে যাবে। আপনি কি নিশ্চিত?")) {
+                        db.ref('smart_erp/').set(data);
+                        alert("Data Restored Successfully! সিস্টেম রিলোড হচ্ছে...");
+                        location.reload();
+                    }
+                } else {
+                    alert("ভুল ফাইল ফরম্যাট! সঠিক ব্যাকআপ ফাইল নির্বাচন করুন।");
+                }
+            } catch (err) {
+                alert("ফাইলটি পড়তে সমস্যা হচ্ছে।");
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    function showSec(id) {
+        ['posSec','historySec','stockSec','settingsSec'].forEach(s => document.getElementById(s).classList.add('hidden'));
+        document.getElementById(id + 'Sec').classList.remove('hidden');
+        if(id=='history') renderHistory();
+        if(id=='stock') renderStock();
+        if(id=='settings') renderUsers();
+    }
+
+    function numberToWords(num) {
+        const a = ['','One ','Two ','Three ','Four ', 'Five ','Six ','Seven ','Eight ','Nine ','Ten ','Eleven ','Twelve ','Thirteen ','Fourteen ','Fifteen ','Sixteen ','Seventeen ','Eighteen ','Nineteen '];
+        const b = ['', '', 'Twenty','Thirty','Forty','Fifty', 'Sixty','Seventy','Eighty','Ninety'];
+        if ((num = num.toString()).length > 9) return 'overflow';
+        let n = ('000000000' + num).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
+        if (!n) return; let str = '';
+        str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + 'Crore ' : '';
+        str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + 'Lakh ' : '';
+        str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + 'Thousand ' : '';
+        str += (n[4] != 0) ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + 'Hundred ' : '';
+        str += (n[5] != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) : '';
+        return str;
     }
 </script>
 </body>
