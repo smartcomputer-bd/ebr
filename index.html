@@ -287,7 +287,7 @@
             <button id="stockBtn" onclick="addStock()" class="btn btn-success" style="grid-column: span 2;">Save Product</button>
         </div>
         <table style="width:100%">
-            <thead><tr><th>Code</th><th>Name</th><th>Category</th><th>Warranty</th><th>Stock</th><th>Alert</th><th>Action</th></tr></thead>
+            <thead><tr><th>Code</th><th>Name</th><th>Category</th><th>Warranty</th><th>Buy Price</th><th>Sale Price</th><th>Stock</th><th>Alert</th><th>Action</th></tr></thead>
             <tbody id="stockBody"></tbody>
         </table>
     </div>
@@ -439,7 +439,9 @@
         document.getElementById('grandT').innerText = grand.toFixed(2);
         document.getElementById('pDue').innerText = due.toFixed(2);
         document.getElementById('inWords').innerText = numberToWords(grand) + " Taka Only";
-        const qrText = `Name: ${document.getElementById('cName').value}\nInv: ${document.getElementById('invId').innerText}\nTotal: ${grand}\nDue: ${due}`;
+        
+        // Updated QR Code content logic
+        const qrText = `Customer: ${document.getElementById('cName').value || 'N/A'}\nInvoice No: ${document.getElementById('invId').innerText}\nDate & Time: ${document.getElementById('curDate').innerText} ${document.getElementById('curTime').innerText}\nTotal Amount: ${grand.toFixed(2)}\nDue Amount: ${due.toFixed(2)}`;
         document.getElementById('qrcode').innerHTML = "";
         new QRCode(document.getElementById("qrcode"), { text: qrText, width: 70, height: 70 });
     }
@@ -491,7 +493,8 @@
         let h = "";
         stock.filter(x => x.code.toLowerCase().includes(q) || x.name.toLowerCase().includes(q) || (x.cat && x.cat.toLowerCase().includes(q))).forEach(x => {
             const isLow = parseInt(x.qty) <= (parseInt(x.alert) || 5);
-            h += `<tr style="${isLow ? 'background:#fee2e2' : ''}"><td>${x.code}</td><td>${x.name}</td><td>${x.cat || '-'}</td><td>${x.war || '-'}</td><td>${x.qty}</td><td>${x.alert || 5}</td><td><button onclick="editStock('${x.code}')" style="background:blue; color:white; border:none; padding:4px; cursor:pointer;">Edit</button> <button onclick="if(confirm('Delete?')) db.ref('smart_erp/stock/${x.code}').remove()" style="background:red; color:white; border:none; padding:4px; cursor:pointer;">Del</button></td></tr>`;
+            // Updated Table Row to show all information
+            h += `<tr style="${isLow ? 'background:#fee2e2' : ''}"><td>${x.code}</td><td>${x.name}</td><td>${x.cat || '-'}</td><td>${x.war || '-'}</td><td>${x.cost || 0}</td><td>${x.price || 0}</td><td>${x.qty}</td><td>${x.alert || 5}</td><td><button onclick="editStock('${x.code}')" style="background:blue; color:white; border:none; padding:4px; cursor:pointer;">Edit</button> <button onclick="if(confirm('Delete?')) db.ref('smart_erp/stock/${x.code}').remove()" style="background:red; color:white; border:none; padding:4px; cursor:pointer;">Del</button></td></tr>`;
         });
         document.getElementById('stockBody').innerHTML = h;
     }
@@ -597,44 +600,4 @@
     function delUser(i) { if(confirm("Delete user?")) { users.splice(i,1); db.ref('smart_erp/users').set(users); } }
     function resetUserForm() { document.getElementById('newUId').value=""; document.getElementById('newUPass').value=""; document.getElementById('editUserIndex').value="-1"; document.getElementById('cancelUserEdit').classList.add('hidden'); }
 
-    function exportData() { const data = { users, stock, invoices }; const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `Smart_ERP_Backup.json`; a.click(); }
-    function importData(event) {
-        const file = event.target.files[0]; if (!file) return;
-        const reader = new FileReader(); reader.onload = function(e) {
-            try { const data = JSON.parse(e.target.result); if (data.users && data.stock && data.invoices) { if(confirm("Restore data?")) { db.ref('smart_erp/').set(data); location.reload(); } } } catch (err) { alert("Error reading file."); }
-        }; reader.readAsText(file);
-    }
-
-    function showSec(id) {
-        ['posSec','historySec','stockSec','settingsSec','ledgerSec'].forEach(s => document.getElementById(s).classList.add('hidden'));
-        document.getElementById(id + 'Sec').classList.remove('hidden');
-        if(id=='history') renderHistory(); if(id=='stock') renderStock(); if(id=='settings') renderUsers(); if(id=='ledger') renderLedger();
-    }
-
-    function numberToWords(num) {
-        const a = ['','One ','Two ','Three ','Four ', 'Five ','Six ','Seven ','Eight ','Nine ','Ten ','Eleven ','Twelve ','Thirteen ','Fourteen ','Fifteen ','Sixteen ','Seventeen ','Eighteen ','Nineteen '];
-        const b = ['', '', 'Twenty','Thirty','Forty','Fifty', 'Sixty','Seventy','Eighty','Ninety'];
-        if ((num = num.toString()).length > 9) return 'overflow';
-        let n = ('000000000' + num).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
-        if (!n) return; let str = '';
-        str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + 'Crore ' : '';
-        str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + 'Lakh ' : '';
-        str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + 'Thousand ' : '';
-        str += (n[4] != 0) ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + 'Hundred ' : '';
-        str += (n[5] != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) : '';
-        return str;
-    }
-    function deleteAllProducts() { if(confirm("Delete all products?")) db.ref('smart_erp/stock').remove(); }
-    function editStock(code) {
-        const p = stock.find(x => x.code === code);
-        if(p) {
-            document.getElementById('sCode').value = p.code; document.getElementById('sName').value = p.name;
-            document.getElementById('sCat').value = p.cat || ""; document.getElementById('sWar').value = p.war || "";
-            document.getElementById('sCost').value = p.cost || 0; document.getElementById('sPrice').value = p.price;
-            document.getElementById('sQty').value = p.qty; document.getElementById('sAlert').value = p.alert || 5;
-            document.getElementById('stockBtn').innerText = "Update Product"; document.getElementById('sName').focus();
-        }
-    }
-</script>
-</body>
-</html>
+    function exportData() { const data = { users, stock, invoices }; const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `Smart_ERP_Backup.
