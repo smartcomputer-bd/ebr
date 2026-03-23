@@ -105,6 +105,7 @@
         <div class="nav-links">
             <button onclick="showSec('pos')">Invoice</button>
             <button onclick="showSec('history')">History</button>
+            <button onclick="showSec('ledger')">Ledger Book</button>
             <button onclick="showSec('stock')">Inventory</button>
             <button id="navSettings" onclick="showSec('settings')">Admin</button>
             <button onclick="toggleDarkMode()"><i class="fa-solid fa-moon"></i></button>
@@ -240,21 +241,33 @@
         </table>
     </div>
 
+    <div id="ledgerSec" class="hidden panel">
+        <h3>Customer Ledger Book</h3>
+        <input type="text" id="searchLedger" placeholder="Search Customer Mobile..." oninput="renderLedger()" style="width:100%; padding:12px; margin-bottom:15px; border:1px solid #ddd; border-radius:8px;">
+        <table style="width:100%">
+            <thead><tr><th>Customer</th><th>Mobile</th><th>Total Bill</th><th>Total Paid</th><th>Balance Due</th><th>Action</th></tr></thead>
+            <tbody id="ledgerBody"></tbody>
+        </table>
+    </div>
+
     <div id="stockSec" class="hidden panel">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h3 style="margin: 0;">Inventory Control</h3>
             <button onclick="deleteAllProducts()" class="btn btn-danger"><i class="fa-solid fa-trash-can"></i> Delete All</button>
         </div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr auto; gap:10px; margin-bottom:20px; background:#f8fafc; padding:15px; border-radius:10px;">
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-bottom:20px; background:#f8fafc; padding:15px; border-radius:10px;">
             <input type="text" id="sCode" placeholder="Code/Barcode" onkeypress="if(event.key==='Enter') fetchStockItem(this)">
             <input type="text" id="sName" placeholder="Product Details">
+            <input type="text" id="sCat" placeholder="Category">
+            <input type="text" id="sWar" placeholder="Warranty Info">
             <input type="number" id="sCost" placeholder="Buy Price">
             <input type="number" id="sPrice" placeholder="Sale Price">
             <input type="number" id="sQty" placeholder="Qty" value="1">
-            <button id="stockBtn" onclick="addStock()" class="btn btn-success">Add Item</button>
+            <input type="number" id="sAlert" placeholder="Stock Alert">
+            <button id="stockBtn" onclick="addStock()" class="btn btn-success" style="grid-column: span 2;">Save Product</button>
         </div>
         <table style="width:100%">
-            <thead><tr><th>Code</th><th>Name</th><th>Buy Price</th><th>Sale Price</th><th>Stock</th><th>Action</th></tr></thead>
+            <thead><tr><th>Code</th><th>Name</th><th>Category</th><th>Warranty</th><th>Stock</th><th>Alert</th><th>Action</th></tr></thead>
             <tbody id="stockBody"></tbody>
         </table>
     </div>
@@ -303,32 +316,21 @@
             users = data.users || users;
             stock = data.stock ? Object.values(data.stock).filter(item => item && item.code && item.name) : [];
             invoices = data.invoices ? Object.values(data.invoices) : [];
-            renderHistory(); renderStock(); renderUsers();
-            updateDashboard(); // New Function
+            renderHistory(); renderStock(); renderUsers(); renderLedger();
+            updateDashboard();
         }
     });
 
-    // Dark Mode Toggle
-    function toggleDarkMode() {
-        document.body.classList.toggle('dark-mode');
-    }
+    function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
 
-    // New Dashboard Logic
     function updateDashboard() {
         const today = new Date().toLocaleDateString();
-        let salesToday = 0;
-        let totalVal = 0;
-        let lowStock = 0;
-
-        invoices.forEach(inv => {
-            if(inv.date === today) salesToday += parseFloat(inv.grand) || 0;
-        });
-
+        let salesToday = 0; let totalVal = 0; let lowStock = 0;
+        invoices.forEach(inv => { if(inv.date === today) salesToday += parseFloat(inv.grand) || 0; });
         stock.forEach(item => {
             totalVal += (parseFloat(item.price) * parseInt(item.qty));
-            if(parseInt(item.qty) < 5) lowStock++;
+            if(parseInt(item.qty) <= (parseInt(item.alert) || 5)) lowStock++;
         });
-
         document.getElementById('todaySales').innerText = "৳ " + salesToday.toFixed(2);
         document.getElementById('totalInvCount').innerText = invoices.length;
         document.getElementById('totalStockVal').innerText = "৳ " + totalVal.toLocaleString();
@@ -360,18 +362,9 @@
         genId();
         document.getElementById('soldBy').innerText = currentUser;
         ['cName','cPhone','cAddr','cEmail','vP','vatInp','pPaid'].forEach(id => document.getElementById(id).value = (id.length > 5) ? 0 : "");
-        
         let rows = "";
         for(let i=1; i<=13; i++) {
-            rows += `<tr>
-                <td>${i}</td>
-                <td><input type="text" class="it-c" style="width:90%" onchange="fetchItem(this)"></td>
-                <td><input type="text" class="it-n" style="width:95%"></td>
-                <td><input type="text" class="it-w" style="width:90%"></td>
-                <td><input type="number" class="it-q" value="0" oninput="calc()" style="width:40px"></td>
-                <td><input type="number" class="it-p" value="0" oninput="calc()" style="width:60px"></td>
-                <td class="it-t">0.00</td>
-            </tr>`;
+            rows += `<tr><td>${i}</td><td><input type="text" class="it-c" style="width:90%" onchange="fetchItem(this)"></td><td><input type="text" class="it-n" style="width:95%"></td><td><input type="text" class="it-w" style="width:90%"></td><td><input type="number" class="it-q" value="0" oninput="calc()" style="width:40px"></td><td><input type="number" class="it-p" value="0" oninput="calc()" style="width:60px"></td><td class="it-t">0.00</td></tr>`;
         }
         document.getElementById('billBody').innerHTML = rows;
         calc();
@@ -383,28 +376,30 @@
     }
 
     function fetchItem(input) {
-        const code = input.value.trim();
-        if(!code) return;
+        const code = input.value.trim(); if(!code) return;
         const p = stock.find(x => x.code === code);
         const row = input.parentElement.parentElement;
         if(p) {
             row.querySelector('.it-n').value = p.name;
             row.querySelector('.it-p').value = p.price;
+            row.querySelector('.it-w').value = p.war || "";
             row.querySelector('.it-q').value = 1;
             calc();
         }
     }
 
     function fetchStockItem(input) {
-        const code = input.value.trim();
-        if(!code) return;
+        const code = input.value.trim(); if(!code) return;
         const p = stock.find(x => x.code === code);
         if(p) {
             document.getElementById('sName').value = p.name;
+            document.getElementById('sCat').value = p.cat || "";
+            document.getElementById('sWar').value = p.war || "";
             document.getElementById('sCost').value = p.cost || 0;
             document.getElementById('sPrice').value = p.price;
             document.getElementById('sQty').value = p.qty;
-            document.getElementById('stockBtn').innerText = "Update Item";
+            document.getElementById('sAlert').value = p.alert || 5;
+            document.getElementById('stockBtn').innerText = "Update Product";
         }
         document.getElementById('sName').focus();
     }
@@ -414,8 +409,7 @@
         document.querySelectorAll('#billBody tr').forEach(r => {
             const q = parseFloat(r.querySelector('.it-q').value) || 0;
             const p = parseFloat(r.querySelector('.it-p').value) || 0;
-            const t = q * p;
-            r.querySelector('.it-t').innerText = t.toFixed(2);
+            const t = q * p; r.querySelector('.it-t').innerText = t.toFixed(2);
             sub += t;
         });
         const grand = Math.round(sub - (sub * (document.getElementById('vP').value/100)) + (sub * (document.getElementById('vatInp').value/100)));
@@ -425,63 +419,28 @@
         document.getElementById('grandT').innerText = grand.toFixed(2);
         document.getElementById('pDue').innerText = due.toFixed(2);
         document.getElementById('inWords').innerText = numberToWords(grand) + " Taka Only";
-        
-        const qrText = `Name: ${document.getElementById('cName').value}\nInv: ${document.getElementById('invId').innerText}\nDate: ${document.getElementById('curDate').innerText} ${document.getElementById('curTime').innerText}\nTotal: ${grand}\nDue: ${due}`;
+        const qrText = `Name: ${document.getElementById('cName').value}\nInv: ${document.getElementById('invId').innerText}\nTotal: ${grand}\nDue: ${due}`;
         document.getElementById('qrcode').innerHTML = "";
         new QRCode(document.getElementById("qrcode"), { text: qrText, width: 70, height: 70 });
     }
 
     async function saveAndPrint() {
         const invId = document.getElementById('invId').innerText;
-        const billItems = [];
-        const updates = {};
-        
+        const billItems = []; const updates = {};
         document.querySelectorAll('#billBody tr').forEach(r => {
             const code = r.querySelector('.it-c').value;
-            const name = r.querySelector('.it-n').value;
-            const war = r.querySelector('.it-w').value;
             const q = parseInt(r.querySelector('.it-q').value) || 0;
-            const p = r.querySelector('.it-p').value;
-            const t = r.querySelector('.it-t').innerText;
             if(code && q > 0) {
-                billItems.push({code, name, war, q, p, t});
-                
-                // স্টক বিয়োগের লজিক
+                billItems.push({code, name: r.querySelector('.it-n').value, war: r.querySelector('.it-w').value, q, p: r.querySelector('.it-p').value, t: r.querySelector('.it-t').innerText});
                 const product = stock.find(x => x.code === code);
-                if(product) {
-                    const newQty = parseInt(product.qty) - q;
-                    updates['smart_erp/stock/' + code + '/qty'] = newQty;
-                }
+                if(product) updates['smart_erp/stock/' + code + '/qty'] = parseInt(product.qty) - q;
             }
         });
-
         if(billItems.length === 0) return;
-
-        const inv = {
-            id: invId,
-            type: document.getElementById('docType').value,
-            date: document.getElementById('curDate').innerText,
-            time: document.getElementById('curTime').innerText,
-            customer: document.getElementById('cName').value,
-            phone: document.getElementById('cPhone').value,
-            address: document.getElementById('cAddr').value,
-            email: document.getElementById('cEmail').value,
-            items: billItems,
-            subTotal: document.getElementById('subT').innerText,
-            discount: document.getElementById('vP').value,
-            vat: document.getElementById('vatInp').value,
-            grand: document.getElementById('grandT').innerText,
-            paid: document.getElementById('pPaid').value,
-            due: document.getElementById('pDue').innerText,
-            soldBy: currentUser
-        };
-
-        // ডাটাবেসে ইনভয়েস সেভ এবং স্টক আপডেট
+        const inv = { id: invId, type: document.getElementById('docType').value, date: document.getElementById('curDate').innerText, time: document.getElementById('curTime').innerText, customer: document.getElementById('cName').value, phone: document.getElementById('cPhone').value, address: document.getElementById('cAddr').value, email: document.getElementById('cEmail').value, items: billItems, subTotal: document.getElementById('subT').innerText, discount: document.getElementById('vP').value, vat: document.getElementById('vatInp').value, grand: document.getElementById('grandT').innerText, paid: document.getElementById('pPaid').value, due: document.getElementById('pDue').innerText, soldBy: currentUser };
         updates['smart_erp/invoices/' + invId] = inv;
-        
         db.ref().update(updates).then(() => {
-            const fileName = `${inv.id}-${inv.customer}-${inv.phone}-${inv.date.replace(/\//g, '-')}`;
-            document.title = fileName;
+            document.title = `${inv.id}-${inv.customer}`;
             window.print();
             setTimeout(() => { document.title = "Smart Computer | Management System"; }, 1000);
         });
@@ -492,37 +451,16 @@
     function addStock() {
         const c = document.getElementById('sCode').value.trim();
         const n = document.getElementById('sName').value.trim();
-        const cost = document.getElementById('sCost').value || 0; // ক্রয়মূল্য ইনপুট
+        const cat = document.getElementById('sCat').value.trim();
+        const war = document.getElementById('sWar').value.trim();
+        const cost = document.getElementById('sCost').value || 0;
         const p = document.getElementById('sPrice').value || 0;
         const q = document.getElementById('sQty').value || 0;
-        
+        const alertL = document.getElementById('sAlert').value || 5;
         if(c && n) {
-            db.ref('smart_erp/stock/' + c).set({code:c, name:n, cost:cost, price:p, qty:q}).then(() => {
-                ['sCode','sName','sCost','sPrice','sQty'].forEach(id => document.getElementById(id).value = "");
-                document.getElementById('stockBtn').innerText = "Add Item";
-            });
-        }
-    }
-
-    function editStock(code) {
-        const p = stock.find(x => x.code === code);
-        if(p) {
-            document.getElementById('sCode').value = p.code;
-            document.getElementById('sName').value = p.name;
-            document.getElementById('sCost').value = p.cost || 0;
-            document.getElementById('sPrice').value = p.price;
-            document.getElementById('sQty').value = p.qty;
-            document.getElementById('stockBtn').innerText = "Update Item";
-            document.getElementById('sName').focus();
-        }
-    }
-
-    function deleteAllProducts() {
-        if(confirm("আপনি কি নিশ্চিত যে আপনি ইনভেন্টরি থেকে সকল প্রোডাক্ট ডিলিট করতে চান?")) {
-            db.ref('smart_erp/stock').remove().then(() => {
-                alert("সকল প্রোডাক্ট সফলভাবে ডিলিট করা হয়েছে।");
-            }).catch((error) => {
-                alert("ডিলিট করতে সমস্যা হয়েছে: " + error.message);
+            db.ref('smart_erp/stock/' + c).set({code:c, name:n, cat:cat, war:war, cost:cost, price:p, qty:q, alert:alertL}).then(() => {
+                ['sCode','sName','sCat','sWar','sCost','sPrice','sQty','sAlert'].forEach(id => document.getElementById(id).value = "");
+                document.getElementById('stockBtn').innerText = "Save Product";
             });
         }
     }
@@ -530,161 +468,86 @@
     function renderStock() {
         let h = "";
         stock.forEach(x => {
-            if(x && x.code && x.name) {
-                h += `<tr><td>${x.code}</td><td>${x.name}</td><td>${x.cost || 0}</td><td>${x.price}</td><td>${x.qty}</td>
-                <td>
-                    <button onclick="editStock('${x.code}')" style="background:blue; color:white; border:none; padding:4px; cursor:pointer;">Edit</button>
-                    <button onclick="if(confirm('Delete?')) db.ref('smart_erp/stock/${x.code}').remove()" style="background:red; color:white; border:none; padding:4px; cursor:pointer;">Del</button>
-                </td></tr>`;
-            }
+            const isLow = parseInt(x.qty) <= (parseInt(x.alert) || 5);
+            h += `<tr style="${isLow ? 'background:#fee2e2' : ''}"><td>${x.code}</td><td>${x.name}</td><td>${x.cat || '-'}</td><td>${x.war || '-'}</td><td>${x.qty}</td><td>${x.alert || 5}</td><td><button onclick="editStock('${x.code}')" style="background:blue; color:white; border:none; padding:4px; cursor:pointer;">Edit</button> <button onclick="if(confirm('Delete?')) db.ref('smart_erp/stock/${x.code}').remove()" style="background:red; color:white; border:none; padding:4px; cursor:pointer;">Del</button></td></tr>`;
         });
         document.getElementById('stockBody').innerHTML = h;
+    }
+
+    function renderLedger() {
+        const q = document.getElementById('searchLedger').value.trim();
+        const custData = {};
+        invoices.forEach(inv => {
+            const key = inv.phone || 'Unknown';
+            if(!custData[key]) custData[key] = {name: inv.customer, phone: key, total: 0, paid: 0, due: 0};
+            custData[key].total += parseFloat(inv.grand) || 0;
+            custData[key].paid += parseFloat(inv.paid) || 0;
+            custData[key].due += parseFloat(inv.due) || 0;
+        });
+        let h = "";
+        Object.values(custData).filter(c => c.phone.includes(q) || c.name.toLowerCase().includes(q.toLowerCase())).forEach(c => {
+            h += `<tr><td>${c.name}</td><td>${c.phone}</td><td>${c.total.toFixed(2)}</td><td>${c.paid.toFixed(2)}</td><td style="color:red; font-weight:bold;">${c.due.toFixed(2)}</td><td><button onclick="sendNotif('${c.phone}', '${c.due.toFixed(2)}')" style="background:var(--success); color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;"><i class="fa-brands fa-whatsapp"></i> Notify</button></td></tr>`;
+        });
+        document.getElementById('ledgerBody').innerHTML = h;
+    }
+
+    function sendNotif(phone, due) {
+        const msg = `Dear Customer, your total outstanding balance at Smart Computer is BDT ${due}. Please settle it soon. Thank you.`;
+        window.open(`https://wa.me/88${phone}?text=${encodeURIComponent(msg)}`);
     }
 
     function renderHistory() {
         const q = document.getElementById('searchInv').value.toLowerCase();
         let h = "";
         invoices.slice().reverse().filter(x => x.id.toLowerCase().includes(q) || x.customer.toLowerCase().includes(q) || x.phone.includes(q)).forEach(x => {
-            h += `<tr><td>${x.date}</td><td>${x.id}</td><td>${x.customer}</td><td>${x.phone}</td><td>${x.grand}</td>
-            <td>
-                <button onclick="viewInvoice('${x.id}')" style="background:var(--secondary); color:white; border:none; padding:4px 8px; cursor:pointer; border-radius:3px;">View</button>
-                <button onclick="editInvoice('${x.id}')" style="background:blue; color:white; border:none; padding:4px 8px; cursor:pointer; border-radius:3px;">Edit</button>
-                <button onclick="deleteInvoice('${x.id}')" style="background:red; color:white; border:none; padding:4px 8px; cursor:pointer; border-radius:3px;">Del</button>
-            </td></tr>`;
+            h += `<tr><td>${x.date}</td><td>${x.id}</td><td>${x.customer}</td><td>${x.phone}</td><td>${x.grand}</td><td><button onclick="viewInvoice('${x.id}')" style="background:var(--secondary); color:white; border:none; padding:4px 8px; cursor:pointer; border-radius:3px;">View</button> <button onclick="editInvoice('${x.id}')" style="background:blue; color:white; border:none; padding:4px 8px; cursor:pointer; border-radius:3px;">Edit</button> <button onclick="deleteInvoice('${x.id}')" style="background:red; color:white; border:none; padding:4px 8px; cursor:pointer; border-radius:3px;">Del</button></td></tr>`;
         });
         document.getElementById('historyBody').innerHTML = h;
     }
 
-    function viewInvoice(id) {
-        const inv = invoices.find(x => x.id === id);
-        if(inv) {
-            populatePOS(inv);
-            showSec('pos');
-        }
-    }
-
-    function editInvoice(id) {
-        const inv = invoices.find(x => x.id === id);
-        if(inv) {
-            if(confirm("আপনি কি এই ইনভয়েসটি এডিট করতে চান?")) {
-                populatePOS(inv);
-                showSec('pos');
-            }
-        }
-    }
-
-    function deleteInvoice(id) {
-        if(confirm(`Are you sure you want to delete Invoice: ${id}?`)) {
-            db.ref('smart_erp/invoices/' + id).remove().then(() => alert("Deleted successfully!"));
-        }
-    }
+    function viewInvoice(id) { const inv = invoices.find(x => x.id === id); if(inv) { populatePOS(inv); showSec('pos'); } }
+    function editInvoice(id) { const inv = invoices.find(x => x.id === id); if(inv && confirm("Edit this invoice?")) { populatePOS(inv); showSec('pos'); } }
+    function deleteInvoice(id) { if(confirm(`Delete Invoice ${id}?`)) db.ref('smart_erp/invoices/' + id).remove(); }
 
     function populatePOS(inv) {
-        document.getElementById('docType').value = inv.type || "Inv";
-        document.getElementById('invId').innerText = inv.id;
-        document.getElementById('curDate').innerText = inv.date;
-        document.getElementById('curTime').innerText = inv.time;
-        document.getElementById('cName').value = inv.customer;
-        document.getElementById('cPhone').value = inv.phone;
-        document.getElementById('cAddr').value = inv.address;
-        document.getElementById('cEmail').value = inv.email;
-        document.getElementById('vP').value = inv.discount;
-        document.getElementById('vatInp').value = inv.vat;
-        document.getElementById('pPaid').value = inv.paid;
-        document.getElementById('soldBy').innerText = inv.soldBy;
-
+        document.getElementById('docType').value = inv.type || "Inv"; document.getElementById('invId').innerText = inv.id;
+        document.getElementById('curDate').innerText = inv.date; document.getElementById('curTime').innerText = inv.time;
+        document.getElementById('cName').value = inv.customer; document.getElementById('cPhone').value = inv.phone;
+        document.getElementById('cAddr').value = inv.address; document.getElementById('cEmail').value = inv.email;
+        document.getElementById('vP').value = inv.discount; document.getElementById('vatInp').value = inv.vat;
+        document.getElementById('pPaid').value = inv.paid; document.getElementById('soldBy').innerText = inv.soldBy;
         let rows = "";
         for(let i=1; i<=13; i++) {
             const item = inv.items[i-1] || {code:'', name:'', war:'', q:0, p:0, t:'0.00'};
-            rows += `<tr>
-                <td>${i}</td>
-                <td><input type="text" class="it-c" value="${item.code}" style="width:90%" onchange="fetchItem(this)"></td>
-                <td><input type="text" class="it-n" value="${item.name}" style="width:95%"></td>
-                <td><input type="text" class="it-w" value="${item.war}" style="width:90%"></td>
-                <td><input type="number" class="it-q" value="${item.q}" oninput="calc()" style="width:40px"></td>
-                <td><input type="number" class="it-p" value="${item.p}" oninput="calc()" style="width:60px"></td>
-                <td class="it-t">${item.t}</td>
-            </tr>`;
+            rows += `<tr><td>${i}</td><td><input type="text" class="it-c" value="${item.code}" style="width:90%" onchange="fetchItem(this)"></td><td><input type="text" class="it-n" value="${item.name}" style="width:95%"></td><td><input type="text" class="it-w" value="${item.war}" style="width:90%"></td><td><input type="number" class="it-q" value="${item.q}" oninput="calc()" style="width:40px"></td><td><input type="number" class="it-p" value="${item.p}" oninput="calc()" style="width:60px"></td><td class="it-t">${item.t}</td></tr>`;
         }
-        document.getElementById('billBody').innerHTML = rows;
-        calc();
+        document.getElementById('billBody').innerHTML = rows; calc();
     }
 
     function saveUser() {
-        const id = document.getElementById('newUId').value;
-        const pass = document.getElementById('newUPass').value;
-        const editIdx = document.getElementById('editUserIndex').value;
-        if(id && pass) {
-            if(editIdx == -1) users.push({id, pass});
-            else users[editIdx] = {id, pass};
-            db.ref('smart_erp/users').set(users);
-            resetUserForm();
-        }
+        const id = document.getElementById('newUId').value; const pass = document.getElementById('newUPass').value; const editIdx = document.getElementById('editUserIndex').value;
+        if(id && pass) { if(editIdx == -1) users.push({id, pass}); else users[editIdx] = {id, pass}; db.ref('smart_erp/users').set(users); resetUserForm(); }
     }
-
     function renderUsers() {
-        let h = "";
-        users.forEach((u, i) => {
-            h += `<li style="padding:10px; border-bottom:1px solid #ddd; display:flex; justify-content:space-between;">
-                <b>${u.id}</b>
-                <span>
-                    <button onclick="editUser(${i})" style="color:blue; border:none; background:none; cursor:pointer;">Edit</button> | 
-                    <button onclick="delUser(${i})" style="color:red; border:none; background:none; cursor:pointer;">Del</button>
-                </span>
-            </li>`;
-        });
+        let h = ""; users.forEach((u, i) => { h += `<li style="padding:10px; border-bottom:1px solid #ddd; display:flex; justify-content:space-between;"><b>${u.id}</b><span><button onclick="editUser(${i})" style="color:blue; border:none; background:none; cursor:pointer;">Edit</button> | <button onclick="delUser(${i})" style="color:red; border:none; background:none; cursor:pointer;">Del</button></span></li>`; });
         document.getElementById('userList').innerHTML = h;
     }
-
-    function editUser(i) {
-        document.getElementById('newUId').value = users[i].id;
-        document.getElementById('newUPass').value = users[i].pass;
-        document.getElementById('editUserIndex').value = i;
-        document.getElementById('cancelUserEdit').classList.remove('hidden');
-    }
-
+    function editUser(i) { document.getElementById('newUId').value = users[i].id; document.getElementById('newUPass').value = users[i].pass; document.getElementById('editUserIndex').value = i; document.getElementById('cancelUserEdit').classList.remove('hidden'); }
     function delUser(i) { if(confirm("Delete user?")) { users.splice(i,1); db.ref('smart_erp/users').set(users); } }
     function resetUserForm() { document.getElementById('newUId').value=""; document.getElementById('newUPass').value=""; document.getElementById('editUserIndex').value="-1"; document.getElementById('cancelUserEdit').classList.add('hidden'); }
 
-    function exportData() {
-        const data = { users, stock, invoices };
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `Smart_ERP_Backup_${new Date().toLocaleDateString().replace(/\//g,'-')}.json`;
-        a.click();
-    }
-
+    function exportData() { const data = { users, stock, invoices }; const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `Smart_ERP_Backup.json`; a.click(); }
     function importData(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const data = JSON.parse(e.target.result);
-                if (data.users && data.stock && data.invoices) {
-                    if(confirm("Restore করার ফলে বর্তমান সকল ডাটা মুছে যাবে। আপনি কি নিশ্চিত?")) {
-                        db.ref('smart_erp/').set(data);
-                        alert("Data Restored Successfully! সিস্টেম রিলোড হচ্ছে...");
-                        location.reload();
-                    }
-                } else {
-                    alert("ভুল ফাইল ফরম্যাট! সঠিক ব্যাকআপ ফাইল নির্বাচন করুন।");
-                }
-            } catch (err) {
-                alert("ফাইলটি পড়তে সমস্যা হচ্ছে।");
-            }
-        };
-        reader.readAsText(file);
+        const file = event.target.files[0]; if (!file) return;
+        const reader = new FileReader(); reader.onload = function(e) {
+            try { const data = JSON.parse(e.target.result); if (data.users && data.stock && data.invoices) { if(confirm("Restore data?")) { db.ref('smart_erp/').set(data); location.reload(); } } } catch (err) { alert("Error reading file."); }
+        }; reader.readAsText(file);
     }
 
     function showSec(id) {
-        ['posSec','historySec','stockSec','settingsSec'].forEach(s => document.getElementById(s).classList.add('hidden'));
+        ['posSec','historySec','stockSec','settingsSec','ledgerSec'].forEach(s => document.getElementById(s).classList.add('hidden'));
         document.getElementById(id + 'Sec').classList.remove('hidden');
-        if(id=='history') renderHistory();
-        if(id=='stock') renderStock();
-        if(id=='settings') renderUsers();
+        if(id=='history') renderHistory(); if(id=='stock') renderStock(); if(id=='settings') renderUsers(); if(id=='ledger') renderLedger();
     }
 
     function numberToWords(num) {
@@ -699,6 +562,17 @@
         str += (n[4] != 0) ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + 'Hundred ' : '';
         str += (n[5] != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) : '';
         return str;
+    }
+    function deleteAllProducts() { if(confirm("Delete all products?")) db.ref('smart_erp/stock').remove(); }
+    function editStock(code) {
+        const p = stock.find(x => x.code === code);
+        if(p) {
+            document.getElementById('sCode').value = p.code; document.getElementById('sName').value = p.name;
+            document.getElementById('sCat').value = p.cat || ""; document.getElementById('sWar').value = p.war || "";
+            document.getElementById('sCost').value = p.cost || 0; document.getElementById('sPrice').value = p.price;
+            document.getElementById('sQty').value = p.qty; document.getElementById('sAlert').value = p.alert || 5;
+            document.getElementById('stockBtn').innerText = "Update Product"; document.getElementById('sName').focus();
+        }
     }
 </script>
 </body>
