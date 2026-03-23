@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Computer | Management System</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/div/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
@@ -104,13 +104,12 @@
         <div style="font-size:20px; font-weight:bold;"><i class="fa-solid fa-laptop-code"></i> SMART COMPUTER</div>
         <div class="nav-links">
             <button onclick="showSec('pos')">Invoice</button>
-            <button onclick="showSec('history')">History</button>
-            <button onclick="showSec('ledger')">Ledger Book</button>
+            <button id="navHistory" onclick="showSec('history')">History</button>
+            <button id="navLedger" onclick="showSec('ledger')">Ledger Book</button>
             <button onclick="showSec('stock')">Inventory</button>
             <button id="navSettings" onclick="showSec('settings')">Admin</button>
-            <button onclick="toggleDarkMode()"><i class="fa-solid fa-moon"></i></button>
-            <button onclick="exportData()" style="background:var(--success)">Backup</button>
-            <button onclick="document.getElementById('restoreInput').click()" style="background:var(--secondary)">Restore</button>
+            <button id="navBackup" onclick="exportData()" style="background:var(--success)">Backup</button>
+            <button id="navRestore" onclick="document.getElementById('restoreInput').click()" style="background:var(--secondary)">Restore</button>
             <input type="file" id="restoreInput" accept=".json" style="display:none" onchange="importData(event)">
             <button onclick="location.reload()" style="background:var(--danger)">Logout</button>
         </div>
@@ -142,6 +141,7 @@
             <button onclick="saveAndPrint()" class="btn btn-primary"><i class="fa-solid fa-save"></i> Save & Print</button>
             <button onclick="printNoSave()" class="btn btn-secondary"><i class="fa-solid fa-print"></i> Print (No Save)</button>
             <button onclick="resetPOS()" class="btn btn-success"><i class="fa-solid fa-file-circle-plus"></i> New Record</button>
+            <button onclick="toggleDarkMode()" class="btn btn-dark" style="background: #334155; color: white;"><i class="fa-solid fa-moon"></i> Dark Mode</button>
         </div>
 
         <div class="invoice-sheet" id="invoice">
@@ -244,11 +244,11 @@
     <div id="ledgerSec" class="hidden panel">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <h3 style="margin: 0;">Customer Ledger Book</h3>
-            <button onclick="deleteAllLedger()" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash-can"></i> Delete All</button>
+            <button onclick="deleteAllLedger()" class="btn btn-danger btn-sm admin-only"><i class="fa-solid fa-trash-can"></i> Delete All</button>
         </div>
         <input type="text" id="searchLedger" placeholder="Search Customer Mobile..." oninput="renderLedger()" style="width:100%; padding:12px; margin-bottom:15px; border:1px solid #ddd; border-radius:8px;">
         <table style="width:100%">
-            <thead><tr><th>Customer</th><th>Mobile</th><th>Total Bill</th><th>Total Paid</th><th>Balance Due</th><th>Action</th></tr></thead>
+            <thead><tr><th>Customer</th><th>Mobile</th><th>Total Bill</th><th>Total Paid</th><th>Balance Due</th><th class="admin-only">Action</th></tr></thead>
             <tbody id="ledgerBody"></tbody>
         </table>
     </div>
@@ -258,10 +258,10 @@
             <h3 style="margin: 0;">Inventory Control</h3>
             <div style="display: flex; gap: 10px;">
                 <input type="text" id="searchStock" placeholder="Search product..." oninput="renderStock()" style="padding: 8px; border-radius: 6px; border: 1px solid #ddd;">
-                <button onclick="deleteAllProducts()" class="btn btn-danger"><i class="fa-solid fa-trash-can"></i> Delete All</button>
+                <button onclick="deleteAllProducts()" class="btn btn-danger admin-only"><i class="fa-solid fa-trash-can"></i> Delete All</button>
             </div>
         </div>
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-bottom:20px; background:#f8fafc; padding:15px; border-radius:10px;">
+        <div id="adminStockControl" class="admin-only" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-bottom:20px; background:#f8fafc; padding:15px; border-radius:10px;">
             <input type="text" id="sCode" placeholder="Code/Barcode" onkeypress="if(event.key==='Enter') fetchStockItem(this)">
             <input type="text" id="sName" placeholder="Product Details">
             <input type="text" id="sCat" placeholder="Category">
@@ -287,7 +287,7 @@
             <button id="stockBtn" onclick="addStock()" class="btn btn-success" style="grid-column: span 2;">Save Product</button>
         </div>
         <table style="width:100%">
-            <thead><tr><th>Code</th><th>Name</th><th>Category</th><th>Warranty</th><th>Cost</th><th>Price</th><th>Stock</th><th>Alert</th><th>Action</th></tr></thead>
+            <thead><tr><th>Code</th><th>Name</th><th>Category</th><th>Warranty</th><th>Buy Price</th><th>Sale Price</th><th>Stock</th><th>Alert</th><th class="admin-only">Action</th></tr></thead>
             <tbody id="stockBody"></tbody>
         </table>
     </div>
@@ -365,7 +365,23 @@
             currentUser = id;
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('app').classList.remove('hidden');
-            id === 'admin' ? document.getElementById('navSettings').classList.remove('hidden') : document.getElementById('navSettings').classList.add('hidden');
+            
+            // Access Control Enforcement
+            if(id === 'admin') {
+                document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
+                document.getElementById('navHistory').classList.remove('hidden');
+                document.getElementById('navLedger').classList.remove('hidden');
+                document.getElementById('navSettings').classList.remove('hidden');
+                document.getElementById('navBackup').classList.remove('hidden');
+                document.getElementById('navRestore').classList.remove('hidden');
+            } else {
+                document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
+                document.getElementById('navHistory').classList.add('hidden');
+                document.getElementById('navLedger').classList.add('hidden');
+                document.getElementById('navSettings').classList.add('hidden');
+                document.getElementById('navBackup').classList.add('hidden');
+                document.getElementById('navRestore').classList.add('hidden');
+            }
             resetPOS();
         } else alert("Invalid Login!");
     }
@@ -409,6 +425,7 @@
     }
 
     function fetchStockItem(input) {
+        if(currentUser !== 'admin') return;
         const code = input.value.trim(); if(!code) return;
         const p = stock.find(x => x.code === code);
         if(p) {
@@ -440,8 +457,8 @@
         document.getElementById('pDue').innerText = due.toFixed(2);
         document.getElementById('inWords').innerText = numberToWords(grand) + " Taka Only";
         
-        // Updated QR text to include Date & Time
-        const qrText = `Name: ${document.getElementById('cName').value}\nInv: ${document.getElementById('invId').innerText}\nDate: ${document.getElementById('curDate').innerText} ${document.getElementById('curTime').innerText}\nTotal: ${grand}\nDue: ${due}`;
+        const qrText = `Customer: ${document.getElementById('cName').value}\nInv No: ${document.getElementById('invId').innerText}\nDate & Time: ${document.getElementById('curDate').innerText} ${document.getElementById('curTime').innerText}\nTotal: ${grand.toFixed(2)}\nDue: ${due.toFixed(2)}`;
+        
         document.getElementById('qrcode').innerHTML = "";
         new QRCode(document.getElementById("qrcode"), { text: qrText, width: 70, height: 70 });
     }
@@ -471,6 +488,7 @@
     function printNoSave() { window.print(); }
 
     function addStock() {
+        if(currentUser !== 'admin') return;
         const c = document.getElementById('sCode').value.trim();
         const n = document.getElementById('sName').value.trim();
         const cat = document.getElementById('sCat').value.trim();
@@ -491,15 +509,26 @@
     function renderStock() {
         const q = document.getElementById('searchStock').value.toLowerCase();
         let h = "";
-        // Updated table body to show all product info
+        const isAdmin = currentUser === 'admin';
         stock.filter(x => x.code.toLowerCase().includes(q) || x.name.toLowerCase().includes(q) || (x.cat && x.cat.toLowerCase().includes(q))).forEach(x => {
             const isLow = parseInt(x.qty) <= (parseInt(x.alert) || 5);
-            h += `<tr style="${isLow ? 'background:#fee2e2' : ''}"><td>${x.code}</td><td>${x.name}</td><td>${x.cat || '-'}</td><td>${x.war || '-'}</td><td>${x.cost || 0}</td><td>${x.price}</td><td>${x.qty}</td><td>${x.alert || 5}</td><td><button onclick="editStock('${x.code}')" style="background:blue; color:white; border:none; padding:4px; cursor:pointer;">Edit</button> <button onclick="if(confirm('Delete?')) db.ref('smart_erp/stock/${x.code}').remove()" style="background:red; color:white; border:none; padding:4px; cursor:pointer;">Del</button></td></tr>`;
+            h += `<tr style="${isLow ? 'background:#fee2e2' : ''}">
+                <td>${x.code}</td>
+                <td>${x.name}</td>
+                <td>${x.cat || '-'}</td>
+                <td>${x.war || '-'}</td>
+                <td>${parseFloat(x.cost || 0).toFixed(2)}</td>
+                <td>${parseFloat(x.price || 0).toFixed(2)}</td>
+                <td>${x.qty}</td>
+                <td>${x.alert || 5}</td>
+                <td class="${isAdmin ? '' : 'hidden'}"><button onclick="editStock('${x.code}')" style="background:blue; color:white; border:none; padding:4px; cursor:pointer;">Edit</button> <button onclick="if(confirm('Delete?')) db.ref('smart_erp/stock/${x.code}').remove()" style="background:red; color:white; border:none; padding:4px; cursor:pointer;">Del</button></td>
+            </tr>`;
         });
         document.getElementById('stockBody').innerHTML = h;
     }
 
     function renderLedger() {
+        if(currentUser !== 'admin') return;
         const q = document.getElementById('searchLedger').value.trim();
         const custData = {};
         invoices.forEach(inv => {
@@ -523,6 +552,7 @@
     }
 
     function editLedgerDue(phone) {
+        if(currentUser !== 'admin') return;
         const custInvoices = invoices.filter(inv => inv.phone === phone);
         if(custInvoices.length === 0) return;
         const newPaid = prompt("Enter new Paid amount for the latest invoice (" + custInvoices[custInvoices.length-1].id + "):", custInvoices[custInvoices.length-1].paid);
@@ -535,18 +565,18 @@
     }
 
     function deleteCustomerInvoices(phone) {
+        if(currentUser !== 'admin') return;
         if(confirm("এই কাস্টমারকে লেজার বুক থেকে সরিয়ে ফেলতে চান? (হিস্ট্রি ডিলিট হবে না)")) {
             const updates = {};
             invoices.forEach(inv => {
-                if(inv.phone === phone) {
-                    updates['smart_erp/invoices/' + inv.id + '/hidden_from_ledger'] = true;
-                }
+                if(inv.phone === phone) updates['smart_erp/invoices/' + inv.id + '/hidden_from_ledger'] = true;
             });
             db.ref().update(updates);
         }
     }
 
     function deleteAllLedger() {
+        if(currentUser !== 'admin') return;
         if(confirm("Are you sure you want to hide ALL records from Ledger? (History will be safe)")) {
             const updates = {};
             invoices.forEach(inv => { updates['smart_erp/invoices/' + inv.id + '/hidden_from_ledger'] = true; });
@@ -556,11 +586,12 @@
 
     function sendNotif(phone, due, name, date) {
         const diffDays = Math.floor((new Date() - new Date(date)) / (1000 * 60 * 60 * 24)) || 1;
-        const msg = `Dear ${name}. Your deu balance on Smart Computer is BDT ${due} which is outstanding for ${diffDays} days. Please pay it soon. You must pay it within 2 days to get discount offer on your next purchase. Thank you for being with Smart Computer. Bkash payment = 01614398989`;
+        const msg = `Dear ${name}. Your deu balance on Smart Computer is BDT ${due} which is outstanding for ${diffDays} days. Please pay it soon. Thank you. Bkash payment = 01614398989`;
         window.open(`https://wa.me/88${phone}?text=${encodeURIComponent(msg)}`);
     }
 
     function renderHistory() {
+        if(currentUser !== 'admin') return;
         const q = document.getElementById('searchInv').value.toLowerCase();
         let h = "";
         invoices.slice().reverse().filter(x => x.id.toLowerCase().includes(q) || x.customer.toLowerCase().includes(q) || x.phone.includes(q)).forEach(x => {
@@ -569,9 +600,21 @@
         document.getElementById('historyBody').innerHTML = h;
     }
 
-    function viewInvoice(id) { const inv = invoices.find(x => x.id === id); if(inv) { populatePOS(inv); showSec('pos'); } }
-    function editInvoice(id) { const inv = invoices.find(x => x.id === id); if(inv && confirm("Edit this invoice?")) { populatePOS(inv); showSec('pos'); } }
-    function deleteInvoice(id) { if(confirm(`Delete Invoice ${id}?`)) db.ref('smart_erp/invoices/' + id).remove(); }
+    function viewInvoice(id) { 
+        const inv = invoices.find(x => x.id === id); 
+        if(inv) { populatePOS(inv); showSec('pos'); } 
+    }
+    
+    function editInvoice(id) { 
+        if(currentUser !== 'admin') return;
+        const inv = invoices.find(x => x.id === id); 
+        if(inv && confirm("Edit this invoice?")) { populatePOS(inv); showSec('pos'); } 
+    }
+    
+    function deleteInvoice(id) { 
+        if(currentUser !== 'admin') return;
+        if(confirm(`Delete Invoice ${id}?`)) db.ref('smart_erp/invoices/' + id).remove(); 
+    }
 
     function populatePOS(inv) {
         document.getElementById('docType').value = inv.type || "Inv"; document.getElementById('invId').innerText = inv.id;
@@ -589,19 +632,25 @@
     }
 
     function saveUser() {
+        if(currentUser !== 'admin') return;
         const id = document.getElementById('newUId').value; const pass = document.getElementById('newUPass').value; const editIdx = document.getElementById('editUserIndex').value;
         if(id && pass) { if(editIdx == -1) users.push({id, pass}); else users[editIdx] = {id, pass}; db.ref('smart_erp/users').set(users); resetUserForm(); }
     }
+    
     function renderUsers() {
+        if(currentUser !== 'admin') return;
         let h = ""; users.forEach((u, i) => { h += `<li style="padding:10px; border-bottom:1px solid #ddd; display:flex; justify-content:space-between;"><b>${u.id}</b><span><button onclick="editUser(${i})" style="color:blue; border:none; background:none; cursor:pointer;">Edit</button> | <button onclick="delUser(${i})" style="color:red; border:none; background:none; cursor:pointer;">Del</button></span></li>`; });
         document.getElementById('userList').innerHTML = h;
     }
+    
     function editUser(i) { document.getElementById('newUId').value = users[i].id; document.getElementById('newUPass').value = users[i].pass; document.getElementById('editUserIndex').value = i; document.getElementById('cancelUserEdit').classList.remove('hidden'); }
     function delUser(i) { if(confirm("Delete user?")) { users.splice(i,1); db.ref('smart_erp/users').set(users); } }
     function resetUserForm() { document.getElementById('newUId').value=""; document.getElementById('newUPass').value=""; document.getElementById('editUserIndex').value="-1"; document.getElementById('cancelUserEdit').classList.add('hidden'); }
 
-    function exportData() { const data = { users, stock, invoices }; const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `Smart_ERP_Backup.json`; a.click(); }
+    function exportData() { if(currentUser !== 'admin') return; const data = { users, stock, invoices }; const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `Smart_ERP_Backup.json`; a.click(); }
+    
     function importData(event) {
+        if(currentUser !== 'admin') return;
         const file = event.target.files[0]; if (!file) return;
         const reader = new FileReader(); reader.onload = function(e) {
             try { const data = JSON.parse(e.target.result); if (data.users && data.stock && data.invoices) { if(confirm("Restore data?")) { db.ref('smart_erp/').set(data); location.reload(); } } } catch (err) { alert("Error reading file."); }
@@ -609,6 +658,11 @@
     }
 
     function showSec(id) {
+        // Restricted Access Logic
+        if(currentUser !== 'admin' && (id === 'history' || id === 'ledger' || id === 'settings')) {
+            alert("Access Denied!");
+            return;
+        }
         ['posSec','historySec','stockSec','settingsSec','ledgerSec'].forEach(s => document.getElementById(s).classList.add('hidden'));
         document.getElementById(id + 'Sec').classList.remove('hidden');
         if(id=='history') renderHistory(); if(id=='stock') renderStock(); if(id=='settings') renderUsers(); if(id=='ledger') renderLedger();
@@ -627,8 +681,10 @@
         str += (n[5] != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) : '';
         return str;
     }
-    function deleteAllProducts() { if(confirm("Delete all products?")) db.ref('smart_erp/stock').remove(); }
+    function deleteAllProducts() { if(currentUser === 'admin' && confirm("Delete all products?")) db.ref('smart_erp/stock').remove(); }
+    
     function editStock(code) {
+        if(currentUser !== 'admin') return;
         const p = stock.find(x => x.code === code);
         if(p) {
             document.getElementById('sCode').value = p.code; document.getElementById('sName').value = p.name;
