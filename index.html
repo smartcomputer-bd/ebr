@@ -12,7 +12,6 @@
 
     <style>
         :root { --primary: #1e40af; --secondary: #3b82f6; --dark: #0f172a; --bg: #e2e8f0; --text: #1e293b; --success: #059669; --danger: #dc2626; --card-bg: white; }
-        /* Dark Mode Colors */
         body.dark-mode { --bg: #0f172a; --text: #f8fafc; --card-bg: #1e293b; }
         body.dark-mode .panel, body.dark-mode .card { background: var(--card-bg); color: white; }
         body.dark-mode input { background: #334155; color: white; border-color: #475569; }
@@ -25,7 +24,6 @@
         .nav-links button { background: #334155; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 6px; margin-left: 5px; transition: 0.3s; }
         .nav-links button:hover { background: var(--primary); }
 
-        /* Dashboard Styles */
         .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; border-bottom: 4px solid var(--primary); }
         .card h4 { margin: 0; color: #64748b; font-size: 13px; text-transform: uppercase; }
@@ -122,7 +120,7 @@
         <div class="dashboard-grid">
             <div class="card">
                 <h4>Today's Sales</h4>
-                <h2 id="todaySales">เงণ 0.00</h2>
+                <h2 id="todaySales">0.00</h2>
             </div>
             <div class="card" style="border-bottom-color: var(--success);">
                 <h4>Total Invoices</h4>
@@ -130,7 +128,7 @@
             </div>
             <div class="card" style="border-bottom-color: orange;">
                 <h4>Total Stock Value</h4>
-                <h2 id="totalStockVal">เงণ 0.00</h2>
+                <h2 id="totalStockVal">0.00</h2>
             </div>
             <div class="card" style="border-bottom-color: var(--danger);">
                 <h4>Low Stock Alert</h4>
@@ -353,9 +351,9 @@
             totalVal += (parseFloat(item.price) * parseInt(item.qty));
             if(parseInt(item.qty) <= (parseInt(item.alert) || 5)) lowStock++;
         });
-        document.getElementById('todaySales').innerText = "เงণ " + salesToday.toFixed(2);
+        document.getElementById('todaySales').innerText = "TK " + salesToday.toFixed(2);
         document.getElementById('totalInvCount').innerText = invoices.length;
-        document.getElementById('totalStockVal').innerText = "เงণ " + totalVal.toLocaleString();
+        document.getElementById('totalStockVal').innerText = "TK " + totalVal.toLocaleString();
         document.getElementById('lowStockCount').innerText = lowStock;
     }
 
@@ -502,16 +500,18 @@
         const q = document.getElementById('searchLedger').value.trim();
         const custData = {};
         invoices.forEach(inv => {
-            const key = inv.phone || 'Unknown';
-            if(!custData[key]) custData[key] = {name: inv.customer, phone: key, total: 0, paid: 0, due: 0, lastInvId: inv.id};
-            custData[key].total += parseFloat(inv.grand) || 0;
-            custData[key].paid += parseFloat(inv.paid) || 0;
-            custData[key].due += parseFloat(inv.due) || 0;
+            if (!inv.hidden_from_ledger) {
+                const key = inv.phone || 'Unknown';
+                if(!custData[key]) custData[key] = {name: inv.customer, phone: key, total: 0, paid: 0, due: 0, date: inv.date};
+                custData[key].total += parseFloat(inv.grand) || 0;
+                custData[key].paid += parseFloat(inv.paid) || 0;
+                custData[key].due += parseFloat(inv.due) || 0;
+            }
         });
         let h = "";
         Object.values(custData).filter(c => c.phone.includes(q) || c.name.toLowerCase().includes(q.toLowerCase())).forEach(c => {
             h += `<tr><td>${c.name}</td><td>${c.phone}</td><td>${c.total.toFixed(2)}</td><td>${c.paid.toFixed(2)}</td><td style="color:red; font-weight:bold;">${c.due.toFixed(2)}</td><td>
-                <button onclick="sendNotif('${c.phone}', '${c.due.toFixed(2)}')" style="background:var(--success); color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;"><i class="fa-brands fa-whatsapp"></i> Notify</button>
+                <button onclick="sendNotif('${c.phone}', '${c.due.toFixed(2)}', '${c.name}', '${c.date}')" style="background:var(--success); color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;"><i class="fa-brands fa-whatsapp"></i> Notify</button>
                 <button onclick="editLedgerDue('${c.phone}')" style="background:blue; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;"><i class="fa-solid fa-edit"></i> Edit</button>
                 <button onclick="deleteCustomerInvoices('${c.phone}')" style="background:var(--danger); color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;"><i class="fa-solid fa-trash"></i> Del</button>
             </td></tr>`;
@@ -532,22 +532,28 @@
     }
 
     function deleteCustomerInvoices(phone) {
-        if(confirm("Delete all invoice records for this customer?")) {
-            const toDelete = invoices.filter(inv => inv.phone === phone);
+        if(confirm("এই কাস্টমারকে লেজার বুক থেকে সরিয়ে ফেলতে চান? (হিস্ট্রি ডিলিট হবে না)")) {
             const updates = {};
-            toDelete.forEach(inv => updates['smart_erp/invoices/' + inv.id] = null);
+            invoices.forEach(inv => {
+                if(inv.phone === phone) {
+                    updates['smart_erp/invoices/' + inv.id + '/hidden_from_ledger'] = true;
+                }
+            });
             db.ref().update(updates);
         }
     }
 
     function deleteAllLedger() {
-        if(confirm("Are you sure you want to delete ALL invoice records and clear the Ledger?")) {
-            db.ref('smart_erp/invoices').remove();
+        if(confirm("Are you sure you want to hide ALL records from Ledger? (History will be safe)")) {
+            const updates = {};
+            invoices.forEach(inv => { updates['smart_erp/invoices/' + inv.id + '/hidden_from_ledger'] = true; });
+            db.ref().update(updates);
         }
     }
 
-    function sendNotif(phone, due) {
-        const msg = `Dear Customer, your total outstanding balance at Smart Computer is BDT ${due}. Please settle it soon. Thank you.`;
+    function sendNotif(phone, due, name, date) {
+        const diffDays = Math.floor((new Date() - new Date(date)) / (1000 * 60 * 60 * 24)) || 1;
+        const msg = `Dear ${name}. Your deu balance on Smart Computer is BDT ${due} which is outstanding for ${diffDays} days. Please pay it soon. You must pay it within 2 days to get discount offer on your next purchase. Thank you for being with Smart Computer. Bkash payment = 01614398989`;
         window.open(`https://wa.me/88${phone}?text=${encodeURIComponent(msg)}`);
     }
 
