@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Computer | Management System</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/div/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
@@ -261,6 +261,7 @@
                 <button onclick="deleteAllProducts()" class="btn btn-danger admin-only"><i class="fa-solid fa-trash-can"></i> Delete All</button>
             </div>
         </div>
+        
         <div id="adminStockControl" class="admin-only" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-bottom:20px; background:#f8fafc; padding:15px; border-radius:10px;">
             <input type="text" id="sCode" placeholder="Code/Barcode" onkeypress="if(event.key==='Enter') fetchStockItem(this)">
             <input type="text" id="sName" placeholder="Product Details">
@@ -286,6 +287,7 @@
             <input type="number" id="sAlert" placeholder="Stock Alert">
             <button id="stockBtn" onclick="addStock()" class="btn btn-success" style="grid-column: span 2;">Save Product</button>
         </div>
+
         <table style="width:100%">
             <thead><tr><th>Code</th><th>Name</th><th>Category</th><th>Warranty</th><th>Buy Price</th><th>Sale Price</th><th>Stock</th><th>Alert</th><th class="admin-only">Action</th></tr></thead>
             <tbody id="stockBody"></tbody>
@@ -366,7 +368,7 @@
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('app').classList.remove('hidden');
             
-            // Access Control Enforcement
+            // এক্সেস কন্ট্রোল লজিক
             if(id === 'admin') {
                 document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
                 document.getElementById('navHistory').classList.remove('hidden');
@@ -521,7 +523,10 @@
                 <td>${parseFloat(x.price || 0).toFixed(2)}</td>
                 <td>${x.qty}</td>
                 <td>${x.alert || 5}</td>
-                <td class="${isAdmin ? '' : 'hidden'}"><button onclick="editStock('${x.code}')" style="background:blue; color:white; border:none; padding:4px; cursor:pointer;">Edit</button> <button onclick="if(confirm('Delete?')) db.ref('smart_erp/stock/${x.code}').remove()" style="background:red; color:white; border:none; padding:4px; cursor:pointer;">Del</button></td>
+                <td class="${isAdmin ? '' : 'hidden'}">
+                    <button onclick="editStock('${x.code}')" style="background:blue; color:white; border:none; padding:4px; cursor:pointer;">Edit</button> 
+                    <button onclick="if(confirm('Delete?')) db.ref('smart_erp/stock/${x.code}').remove()" style="background:red; color:white; border:none; padding:4px; cursor:pointer;">Del</button>
+                </td>
             </tr>`;
         });
         document.getElementById('stockBody').innerHTML = h;
@@ -658,9 +663,9 @@
     }
 
     function showSec(id) {
-        // Restricted Access Logic
+        // এক্সেস রেস্ট্রিকশন লজিক
         if(currentUser !== 'admin' && (id === 'history' || id === 'ledger' || id === 'settings')) {
-            alert("Access Denied!");
+            alert("আপনার এই সেকশনে প্রবেশের অনুমতি নেই!");
             return;
         }
         ['posSec','historySec','stockSec','settingsSec','ledgerSec'].forEach(s => document.getElementById(s).classList.add('hidden'));
