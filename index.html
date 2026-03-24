@@ -477,7 +477,31 @@
             }
         });
         if(billItems.length === 0) return;
-        const inv = { id: invId, type: document.getElementById('docType').value, date: document.getElementById('curDate').innerText, time: document.getElementById('curTime').innerText, customer: document.getElementById('cName').value, phone: document.getElementById('cPhone').value, address: document.getElementById('cAddr').value, email: document.getElementById('cEmail').value, items: billItems, subTotal: document.getElementById('subT').innerText, discount: document.getElementById('vP').value, vat: document.getElementById('vatInp').value, grand: document.getElementById('grandT').innerText, paid: document.getElementById('pPaid').value, due: document.getElementById('pDue').innerText, soldBy: currentUser };
+
+        const grandVal = parseFloat(document.getElementById('grandT').innerText) || 0;
+        const paidVal = parseFloat(document.getElementById('pPaid').value) || 0;
+        const dueVal = grandVal - paidVal;
+
+        const inv = { 
+            id: invId, 
+            type: document.getElementById('docType').value, 
+            date: document.getElementById('curDate').innerText, 
+            time: document.getElementById('curTime').innerText, 
+            customer: document.getElementById('cName').value, 
+            phone: document.getElementById('cPhone').value, 
+            address: document.getElementById('cAddr').value, 
+            email: document.getElementById('cEmail').value, 
+            items: billItems, 
+            subTotal: document.getElementById('subT').innerText, 
+            discount: document.getElementById('vP').value, 
+            vat: document.getElementById('vatInp').value, 
+            grand: grandVal.toFixed(2), 
+            paid: paidVal.toFixed(2), 
+            due: dueVal.toFixed(2), 
+            soldBy: currentUser,
+            hidden_from_ledger: (dueVal <= 0) // যদি বাকি ০ বা তার কম হয়, তবে লেজারে দেখাবে না
+        };
+
         updates['smart_erp/invoices/' + invId] = inv;
         db.ref().update(updates).then(() => {
             document.title = `${inv.id}-${inv.customer}`;
@@ -542,7 +566,6 @@
                 custData[key].total += parseFloat(inv.grand) || 0;
                 custData[key].paid += parseFloat(inv.paid) || 0;
                 custData[key].due += parseFloat(inv.due) || 0;
-                // If there are multiple invoices, it will show the latest soldBy name
                 custData[key].soldBy = inv.soldBy || 'N/A';
             }
         });
@@ -565,8 +588,13 @@
         if(newPaid !== null) {
             const lastInv = custInvoices[custInvoices.length-1];
             const updatedPaid = parseFloat(newPaid) || 0;
-            const updatedDue = (parseFloat(lastInv.grand) || 0) - updatedPaid;
-            db.ref('smart_erp/invoices/' + lastInv.id).update({ paid: updatedPaid.toFixed(2), due: updatedDue.toFixed(2) });
+            const updatedGrand = parseFloat(lastInv.grand) || 0;
+            const updatedDue = updatedGrand - updatedPaid;
+            db.ref('smart_erp/invoices/' + lastInv.id).update({ 
+                paid: updatedPaid.toFixed(2), 
+                due: updatedDue.toFixed(2),
+                hidden_from_ledger: (updatedDue <= 0)
+            });
         }
     }
 
@@ -582,7 +610,7 @@
     }
 
     function sendNotif(phone, due, name, date) {
-        const msg = `Dear ${name}, this is a reminder regarding your outstanding balance of TK ${due} at SMART COMPUTER from your purchase on ${date}. Please pay it soon. Thank you! Bkash Payment 01614398989`;
+        const msg = `Dear ${name}, this is a reminder regarding your outstanding balance of TK ${due} at SMART COMPUTER from your purchase on ${date}. Please settle it soon. Thank you!`;
         window.open(`https://wa.me/88${phone}?text=${encodeURIComponent(msg)}`);
     }
 
