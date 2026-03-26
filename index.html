@@ -141,8 +141,7 @@
             <button onclick="saveAndPrint()" class="btn btn-primary"><i class="fa-solid fa-save"></i> Save & Print</button>
             <button onclick="printNoSave()" class="btn btn-secondary"><i class="fa-solid fa-print"></i> Print (No Save)</button>
             
-            <button onclick="sendWhatsAppInvoice()" class="btn" style="background: #25D366; color: white;"><i class="fa-brands fa-whatsapp"></i> Sent WhatsApp</button>
-            <button onclick="sendEmailInvoice()" class="btn" style="background: #ea4335; color: white;"><i class="fa-solid fa-envelope"></i> Sent Email</button>
+            <button onclick="shareInvoice()" class="btn" style="background: #6366f1; color: white;"><i class="fa-solid fa-share-nodes"></i> Share</button>
             
             <button onclick="resetPOS()" class="btn btn-success"><i class="fa-solid fa-file-circle-plus"></i> New Record</button>
             <button onclick="toggleDarkMode()" class="btn btn-dark" style="background: #334155; color: white;"><i class="fa-solid fa-moon"></i> Dark Mode</button>
@@ -318,7 +317,6 @@
 </div>
 
 <script>
-    // Firebase এবং গ্লোবাল ভেরিয়েবলসমূহ একই থাকছে
     const firebaseConfig = {
         apiKey: "AIzaSyAsosjugcKHhR6-M_AurTrxIe2SV0pIBpE",
         authDomain: "smart-erp-175cf.firebaseapp.com",
@@ -348,8 +346,6 @@
         }
     });
 
-    // আপনার বিদ্যমান সকল ফাংশন (login, resetPOS, calc, saveAndPrint, ইত্যাদি) নিচে অপরিবর্তিত থাকছে
-
     function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
 
     function updateDashboard() {
@@ -374,21 +370,10 @@
             currentUser = id;
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('app').classList.remove('hidden');
-            
             if(id === 'admin') {
                 document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
-                document.getElementById('navHistory').classList.remove('hidden');
-                document.getElementById('navLedger').classList.remove('hidden');
-                document.getElementById('navSettings').classList.remove('hidden');
-                document.getElementById('navBackup').classList.remove('hidden');
-                document.getElementById('navRestore').classList.remove('hidden');
             } else {
                 document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
-                document.getElementById('navHistory').classList.add('hidden');
-                document.getElementById('navLedger').classList.add('hidden');
-                document.getElementById('navSettings').classList.add('hidden');
-                document.getElementById('navBackup').classList.add('hidden');
-                document.getElementById('navRestore').classList.add('hidden');
             }
             resetPOS();
         } else alert("Invalid Login!");
@@ -631,7 +616,6 @@
             </td></tr>`;
         });
         document.getElementById('historyBody').innerHTML = h;
-        if(currentUser !== 'admin') document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
     }
 
     function viewInv(id) {
@@ -759,7 +743,7 @@
         return str;
     }
 
-    function deleteAllProducts() { if(currentUser === 'admin' && confirm("Delete all products?")) db.ref('smart_erp/stock').remove(); }
+    function deleteAllProducts() { if(currentUser === 'admin' && confirm(\"Delete all products?\")) db.ref('smart_erp/stock').remove(); }
     
     function editStock(code) {
         if(currentUser !== 'admin') return;
@@ -787,19 +771,12 @@
         }
     }
 
-    // --- নতুন যুক্ত করা ফাংশনসমূহ ---
-
-    function sendWhatsAppInvoice() {
-        const phone = document.getElementById('cPhone').value.trim();
+    // --- নতুন সমন্বিত Share ফাংশন ---
+    async function shareInvoice() {
         const name = document.getElementById('cName').value.trim() || "Customer";
         const invId = document.getElementById('invId').innerText;
         const grandT = document.getElementById('grandT').innerText;
         const due = document.getElementById('pDue').innerText;
-
-        if (!phone) {
-            alert("কাস্টমারের মোবাইল নম্বর প্রদান করুন!");
-            return;
-        }
 
         let itemDetails = "";
         document.querySelectorAll('#billBody tr').forEach(r => {
@@ -811,25 +788,26 @@
             }
         });
 
-        const msg = `আসসালামু আলাইকুম, *${name}*।\n*SMART COMPUTER* থেকে আপনার ইনভয়েস নিম্নরূপ:\n\n*Invoice No:* ${invId}\n*Items:* ${itemDetails}\n--------------------\n*Grand Total:* TK ${grandT}\n*Due Amount:* TK ${due}\n\nধন্যবাদ আমাদের সাথে থাকার জন্য!`;
-        
-        window.open(`https://wa.me/88${phone}?text=${encodeURIComponent(msg)}`);
-    }
+        const shareText = `আসসালামু আলাইকুম, ${name}।\nSMART COMPUTER থেকে আপনার ইনভয়েস নিম্নরূপ:\n\nInvoice No: ${invId}\nItems: ${itemDetails}\n--------------------\nGrand Total: TK ${grandT}\nDue Amount: TK ${due}\n\nধন্যবাদ আমাদের সাথে থাকার জন্য!`;
 
-    function sendEmailInvoice() {
-        const email = document.getElementById('cEmail').value.trim();
-        const name = document.getElementById('cName').value.trim() || "Customer";
-        const invId = document.getElementById('invId').innerText;
-        
-        if (!email) {
-            alert("কাস্টমারের ইমেইল অ্যাড্রেস প্রদান করুন!");
-            return;
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: `Invoice ${invId}`,
+                    text: shareText
+                });
+            } catch (err) {
+                console.log("Share failed:", err);
+            }
+        } else {
+            // যদি ব্রাউজার Share API সাপোর্ট না করে তবে সরাসরি হোয়াটসঅ্যাপে পাঠাবে
+            const phone = document.getElementById('cPhone').value.trim();
+            if (phone) {
+                window.open(`https://wa.me/88${phone}?text=${encodeURIComponent(shareText)}`);
+            } else {
+                alert("আপনার ব্রাউজারটি সরাসরি শেয়ারিং সাপোর্ট করে না। দয়া করে মোবাইল নম্বর দিয়ে হোয়াটসঅ্যাপে ট্রাই করুন।");
+            }
         }
-
-        const subject = `Invoice from SMART COMPUTER - No: ${invId}`;
-        const body = `Dear ${name},\n\nPlease find your purchase details for Invoice No: ${invId}.\n\n(Important: To send as PDF, please click 'Save & Print' or 'Print', select 'Save as PDF' in your browser, and then attach that file to this email.)\n\nBest Regards,\nSmart Computer`;
-
-        window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
     }
 </script>
 </body>
