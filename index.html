@@ -140,6 +140,10 @@
         <div class="external-actions no-print">
             <button onclick="saveAndPrint()" class="btn btn-primary"><i class="fa-solid fa-save"></i> Save & Print</button>
             <button onclick="printNoSave()" class="btn btn-secondary"><i class="fa-solid fa-print"></i> Print (No Save)</button>
+            
+            <button onclick="sendWhatsAppInvoice()" class="btn" style="background: #25D366; color: white;"><i class="fa-brands fa-whatsapp"></i> Sent WhatsApp</button>
+            <button onclick="sendEmailInvoice()" class="btn" style="background: #ea4335; color: white;"><i class="fa-solid fa-envelope"></i> Sent Email</button>
+            
             <button onclick="resetPOS()" class="btn btn-success"><i class="fa-solid fa-file-circle-plus"></i> New Record</button>
             <button onclick="toggleDarkMode()" class="btn btn-dark" style="background: #334155; color: white;"><i class="fa-solid fa-moon"></i> Dark Mode</button>
         </div>
@@ -314,6 +318,7 @@
 </div>
 
 <script>
+    // Firebase এবং গ্লোবাল ভেরিয়েবলসমূহ একই থাকছে
     const firebaseConfig = {
         apiKey: "AIzaSyAsosjugcKHhR6-M_AurTrxIe2SV0pIBpE",
         authDomain: "smart-erp-175cf.firebaseapp.com",
@@ -342,6 +347,8 @@
             updateDashboard();
         }
     });
+
+    // আপনার বিদ্যমান সকল ফাংশন (login, resetPOS, calc, saveAndPrint, ইত্যাদি) নিচে অপরিবর্তিত থাকছে
 
     function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
 
@@ -499,7 +506,7 @@
             paid: paidVal.toFixed(2), 
             due: dueVal.toFixed(2), 
             soldBy: currentUser,
-            hidden_from_ledger: (dueVal <= 0) // যদি বাকি ০ বা তার কম হয়, তবে লেজারে দেখাবে না
+            hidden_from_ledger: (dueVal <= 0)
         };
 
         updates['smart_erp/invoices/' + invId] = inv;
@@ -778,6 +785,51 @@
                 db.ref('smart_erp/invoices/' + inv.id).update({ hidden_from_ledger: true });
             });
         }
+    }
+
+    // --- নতুন যুক্ত করা ফাংশনসমূহ ---
+
+    function sendWhatsAppInvoice() {
+        const phone = document.getElementById('cPhone').value.trim();
+        const name = document.getElementById('cName').value.trim() || "Customer";
+        const invId = document.getElementById('invId').innerText;
+        const grandT = document.getElementById('grandT').innerText;
+        const due = document.getElementById('pDue').innerText;
+
+        if (!phone) {
+            alert("কাস্টমারের মোবাইল নম্বর প্রদান করুন!");
+            return;
+        }
+
+        let itemDetails = "";
+        document.querySelectorAll('#billBody tr').forEach(r => {
+            const itemName = r.querySelector('.it-n').value;
+            const qty = r.querySelector('.it-q').value;
+            const total = r.querySelector('.it-t').innerText;
+            if (itemName && parseInt(qty) > 0) {
+                itemDetails += `\n- ${itemName} (${qty} pc) = TK ${total}`;
+            }
+        });
+
+        const msg = `আসসালামু আলাইকুম, *${name}*।\n*SMART COMPUTER* থেকে আপনার ইনভয়েস নিম্নরূপ:\n\n*Invoice No:* ${invId}\n*Items:* ${itemDetails}\n--------------------\n*Grand Total:* TK ${grandT}\n*Due Amount:* TK ${due}\n\nধন্যবাদ আমাদের সাথে থাকার জন্য!`;
+        
+        window.open(`https://wa.me/88${phone}?text=${encodeURIComponent(msg)}`);
+    }
+
+    function sendEmailInvoice() {
+        const email = document.getElementById('cEmail').value.trim();
+        const name = document.getElementById('cName').value.trim() || "Customer";
+        const invId = document.getElementById('invId').innerText;
+        
+        if (!email) {
+            alert("কাস্টমারের ইমেইল অ্যাড্রেস প্রদান করুন!");
+            return;
+        }
+
+        const subject = `Invoice from SMART COMPUTER - No: ${invId}`;
+        const body = `Dear ${name},\n\nPlease find your purchase details for Invoice No: ${invId}.\n\n(Important: To send as PDF, please click 'Save & Print' or 'Print', select 'Save as PDF' in your browser, and then attach that file to this email.)\n\nBest Regards,\nSmart Computer`;
+
+        window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
     }
 </script>
 </body>
