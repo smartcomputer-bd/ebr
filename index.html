@@ -662,27 +662,7 @@ function delP(c){
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-// --- Condition 1: Date & Time Formatting Function ---
-function getFormattedDateTime() {
-    const now = new Date();
-    // তারিখ ফরম্যাট: dd-mm-yyyy
-    const day = String(now.getDate()).padStart(2, '0');
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const year = now.getFullYear();
-    const date = `${day}-${month}-${year}`;
-    
-    // সময় ফরম্যাট: ১২ ঘণ্টা (AM/PM)
-    let hours = now.getHours();
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12 || 12; 
-    const time = `${hours}:${minutes} ${ampm}`;
-
-    return { date, time };
-}
-// -----------------------------------------------------
-
-    let users = [{id:'admin', pass:'724672'}];
+    let users = [{id:'admin', pass:'72467'}];
     let stock = [];
     let invoices = [];
     let customers = [];
