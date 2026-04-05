@@ -223,6 +223,13 @@ function delP(c){
         /* ডায়নামিক সীলের রং */
 .status-paid { border-color: #2563eb !important; color: #2563eb !important; } /* নীল */
 .status-due { border-color: #dc2626 !important; color: #dc2626 !important; }   /* লাল */
+
+@media print {
+    #billBody td {
+        padding: 2px !important; /* টেবিলের রো এর উচ্চতা কমানোর জন্য */
+        font-size: 10px !important;
+    }
+}
     </style>
 </head>
 <body onload="document.getElementById('uId').focus()">
@@ -751,7 +758,7 @@ function getFormattedDateTime() {
             if(el) el.value = (id.length > 5 && id !== 'invPayDate') ? 0 : "";
         });
         let rows = "";
-        for(let i=1; i<=10; i++) {
+        for(let i=1; i<=13; i++) {
             rows += `<tr><td>${i}</td><td><input type="text" class="it-c" style="width:90%" onchange="fetchItem(this)"></td><td><input type="text" class="it-n" style="width:95%"></td><td><input type="text" class="it-w" style="width:90%"></td><td><input type="number" class="it-q" value="0" oninput="calc()" style="width:40px"></td><td><input type="number" class="it-p" value="0" oninput="calc()" style="width:60px"></td><td class="it-t">0.00</td></tr>`;
         }
         document.getElementById('billBody').innerHTML = rows;
@@ -1348,7 +1355,9 @@ if (dueAmount > 0) {
         window.open(`https://wa.me/88${phone}?text=${encodeURIComponent(shareText)}`);
     }
 
-    function printNoSave() { window.print(); }
+    function printNoSave() {
+    window.print(); // এটি সরাসরি পুরো পেজ প্রিন্ট উইন্ডো ওপেন করবে যা @media print দ্বারা নিয়ন্ত্রিত
+}
 
     function openCustomerModal() {
         document.getElementById('customerFormBox').classList.remove('hidden');
@@ -1457,7 +1466,29 @@ function formatPaymentDate(dateStr) {
     const year = d.getFullYear();
     return `${day}-${month}-${year}`;
 }
-
+/* ইনভয়েজ এক পেজে রাখার জন্য আপডেট */
+@media print {
+    @page { 
+        size: A4; 
+        margin: 5mm; /* মার্জিন কিছুটা কমিয়ে জায়গা বাড়ানো হয়েছে */
+    }
+    .invoice-sheet {
+        min-height: 280mm !important; /* A4 এর উচ্চতা অনুযায়ী সামঞ্জস্য */
+        max-height: 285mm !important;
+        height: 285mm !important;
+        padding: 5mm !important;
+        overflow: hidden; /* অতিরিক্ত অংশ যাতে অন্য পেজে না যায় */
+        border: none !important;
+        box-shadow: none !important;
+    }
+    .footer-icons {
+        margin-top: auto !important; /* আইকনগুলোকে পেজের একদম নিচে পাঠাতে */
+        padding-bottom: 10px;
+    }
+    /* অপ্রয়োজনীয় গ্যাপ কমানো */
+    .header { margin-bottom: 5px !important; }
+    table { margin-top: 5px !important; }
+}
 </script>
 </body>
 </html>
