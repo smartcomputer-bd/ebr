@@ -1457,10 +1457,18 @@ function startScanner(target) {
         { fps: 10, qrbox: { width: 250, height: 250 } },
         (decodedText) => {
             if(target === 'invoice') {
-                // ইনভয়েসে নতুন রো যোগ করবে (আপনার বিদ্যমান addRow ফাংশন ব্যবহার করে)
-                addRow(decodedText); 
+                // স্টক থেকে স্ক্যান করা কোডটি খুঁজে বের করা
+                const product = stock.find(p => p.code === decodedText);
+                
+                if(product) {
+                    // যদি প্রোডাক্ট পাওয়া যায়, তবে ইনভয়েসে যোগ হবে
+                    addItem(product.code, product.name, product.war, product.price);
+                    alert("Product Added: " + product.name);
+                } else {
+                    alert("Product not found in Inventory!");
+                }
             } else {
-                // ইনভেন্টরি মডালে কোড বসিয়ে দিবে
+                // এটি ইনভেন্টরি ট্যাবে কোড বসানোর জন্য
                 openAddModal();
                 document.getElementById('sCode').value = decodedText;
             }
@@ -1469,15 +1477,12 @@ function startScanner(target) {
     ).catch(err => alert("Camera error: " + err));
 }
 
-function stopScanner() {
-    if (html5QrCode) {
-        html5QrCode.stop().then(() => {
-            document.getElementById('scannerModal').classList.add('hidden');
-        });
-    } else {
-        document.getElementById('scannerModal').classList.add('hidden');
-    }
-}
+                <div class="no-print" style="margin: 10px 0;">
+    <button onclick="startScanner('invoice')" class="btn btn-primary" style="width: 100%; padding: 10px;">
+        <i class="fa-solid fa-camera"></i> Click to Scan Product (Invoice)
+    </button>
+</div>
+
 
 </script>
 </body>
