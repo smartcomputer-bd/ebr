@@ -4,59 +4,168 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Computer | Management System</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js">
+function openAddModal(){document.getElementById('addModal').classList.remove('hidden');}
+function closeAddModal(){document.getElementById('addModal').classList.add('hidden');}
 
+function saveProduct(){
+ const p={
+  code:sCode.value,name:sName.value,cat:sCat.value,war:sWar.value,
+  cost:sCost.value,price:sPrice.value,qty:sQty.value,alert:sAlert.value
+ };
+ db.ref('smart_erp/stock/'+p.code).set(p);
+ closeAddModal();
+}
+
+function renderStock(){
+ const q=document.getElementById('searchStock').value.toLowerCase();
+ let h='';
+ stock.filter(p=>p.code.toLowerCase().includes(q)||p.name.toLowerCase().includes(q)||p.cat?.toLowerCase().includes(q))
+ .forEach(p=>{
+   const low = p.qty < p.alert ? "style='background:#fee2e2'" : "";
+   h+=`<tr ${low}>
+    <td>${p.code}</td><td>${p.name}</td><td>${p.cat||''}</td><td>${p.war||''}</td>
+    <td>${p.cost}</td><td>${p.price}</td><td>${p.qty}</td><td>${p.alert}</td>
+    <td>
+      <button onclick="editP('${p.code}')"><i class="fa fa-edit"></i></button>
+      <button onclick="delP('${p.code}')"><i class="fa fa-trash"></i></button>
+    </td>
+   </tr>`;
+ });
+ document.getElementById('stockBody').innerHTML=h;
+}
+
+function editP(c){
+ const p=stock.find(x=>x.code===c);
+ Object.keys(p).forEach(k=>{if(document.getElementById('s'+k.charAt(0).toUpperCase()+k.slice(1))) document.getElementById('s'+k.charAt(0).toUpperCase()+k.slice(1)).value=p[k];});
+ openAddModal();
+}
+
+function delP(c){
+ if(confirm('Delete?')) db.ref('smart_erp/stock/'+c).remove();
+}
+
+</script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js">
+function openAddModal(){document.getElementById('addModal').classList.remove('hidden');}
+function closeAddModal(){document.getElementById('addModal').classList.add('hidden');}
+
+function saveProduct(){
+ const p={
+  code:sCode.value,name:sName.value,cat:sCat.value,war:sWar.value,
+  cost:sCost.value,price:sPrice.value,qty:sQty.value,alert:sAlert.value
+ };
+ db.ref('smart_erp/stock/'+p.code).set(p);
+ closeAddModal();
+}
+
+function renderStock(){
+ const q=document.getElementById('searchStock').value.toLowerCase();
+ let h='';
+ stock.filter(p=>p.code.toLowerCase().includes(q)||p.name.toLowerCase().includes(q)||p.cat?.toLowerCase().includes(q))
+ .forEach(p=>{
+   const low = p.qty < p.alert ? "style='background:#fee2e2'" : "";
+   h+=`<tr ${low}>
+    <td>${p.code}</td><td>${p.name}</td><td>${p.cat||''}</td><td>${p.war||''}</td>
+    <td>${p.cost}</td><td>${p.price}</td><td>${p.qty}</td><td>${p.alert}</td>
+    <td>
+      <button onclick="editP('${p.code}')"><i class="fa fa-edit"></i></button>
+      <button onclick="delP('${p.code}')"><i class="fa fa-trash"></i></button>
+    </td>
+   </tr>`;
+ });
+ document.getElementById('stockBody').innerHTML=h;
+}
+
+function editP(c){
+ const p=stock.find(x=>x.code===c);
+ Object.keys(p).forEach(k=>{if(document.getElementById('s'+k.charAt(0).toUpperCase()+k.slice(1))) document.getElementById('s'+k.charAt(0).toUpperCase()+k.slice(1)).value=p[k];});
+ openAddModal();
+}
+
+function delP(c){
+ if(confirm('Delete?')) db.ref('smart_erp/stock/'+c).remove();
+}
+
+</script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js">
+function openAddModal(){document.getElementById('addModal').classList.remove('hidden');}
+function closeAddModal(){document.getElementById('addModal').classList.add('hidden');}
+
+function saveProduct(){
+ const p={
+  code:sCode.value,name:sName.value,cat:sCat.value,war:sWar.value,
+  cost:sCost.value,price:sPrice.value,qty:sQty.value,alert:sAlert.value
+ };
+ db.ref('smart_erp/stock/'+p.code).set(p);
+ closeAddModal();
+}
+
+function renderStock(){
+ const q=document.getElementById('searchStock').value.toLowerCase();
+ let h='';
+ stock.filter(p=>p.code.toLowerCase().includes(q)||p.name.toLowerCase().includes(q)||p.cat?.toLowerCase().includes(q))
+ .forEach(p=>{
+   const low = p.qty < p.alert ? "style='background:#fee2e2'" : "";
+   h+=`<tr ${low}>
+    <td>${p.code}</td><td>${p.name}</td><td>${p.cat||''}</td><td>${p.war||''}</td>
+    <td>${p.cost}</td><td>${p.price}</td><td>${p.qty}</td><td>${p.alert}</td>
+    <td>
+      <button onclick="editP('${p.code}')"><i class="fa fa-edit"></i></button>
+      <button onclick="delP('${p.code}')"><i class="fa fa-trash"></i></button>
+    </td>
+   </tr>`;
+ });
+ document.getElementById('stockBody').innerHTML=h;
+}
+
+function editP(c){
+ const p=stock.find(x=>x.code===c);
+ Object.keys(p).forEach(k=>{if(document.getElementById('s'+k.charAt(0).toUpperCase()+k.slice(1))) document.getElementById('s'+k.charAt(0).toUpperCase()+k.slice(1)).value=p[k];});
+ openAddModal();
+}
+
+function delP(c){
+ if(confirm('Delete?')) db.ref('smart_erp/stock/'+c).remove();
+}
+
+</script>
     <style>
-        :root { --primary: #1e40af; --secondary: #3b82f6; --dark: #0f172a; --bg: #e2e8f0; --text: #1e293b; --success: #059669; --danger: #dc2626; --card-bg: white; }
+        :root { --primary: #1e40af; --secondary: #3b82f6; --dark: #0f172a; --bg: #e2e8f0; --text: #1e293b; --success: #059669; --danger: #dc2626; --card-bg: white; --purple: #8b5cf6; }
         body.dark-mode { --bg: #0f172a; --text: #f8fafc; --card-bg: #1e293b; }
         body.dark-mode .panel, body.dark-mode .card { background: var(--card-bg); color: white; }
         body.dark-mode input { background: #334155; color: white; border-color: #475569; }
-
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; transition: 0.3s; }
         .hidden { display: none !important; }
-
         .navbar { background: var(--dark); color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; }
         .nav-links { display: flex; align-items: center; }
         .nav-links button { background: #334155; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 6px; margin-left: 5px; transition: 0.3s; }
         .nav-links button:hover { background: var(--primary); }
-
         .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; border-bottom: 4px solid var(--primary); }
         .card h4 { margin: 0; color: #64748b; font-size: 13px; text-transform: uppercase; }
         .card h2 { margin: 10px 0 0 0; font-size: 24px; }
-
         .external-actions { position: fixed; top: 80px; left: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 500; }
         
         .invoice-sheet { width: 210mm; min-height: 297mm; background: white; padding: 10mm; margin: 10px auto; position: relative; color: #000; box-sizing: border-box; display: flex; flex-direction: column; border: 1px solid #d1d5db; }
-        
         .header { display: flex; justify-content: space-between; border-bottom: 4px solid var(--primary); padding-bottom: 10px; margin-bottom: 10px; }
-        .header h1 { margin: 0; font-size: 36px; color: var(--primary); font-weight: 900; }
-        .slogan { font-size: 13px; color: #444; font-weight: 600; font-style: italic; margin-top: -5px; margin-bottom: 5px; }
-        
-        .header-info p { margin: 2px 0; font-size: 12px; display: flex; align-items: center; gap: 8px; }
-
+        .header h1 { margin: 0; font-size: 45px; color: var(--primary); font-weight: 900; }
+        .slogan { font-size: 14px; color: #444; font-weight: 600; font-style: italic; margin-top: -5px; margin-bottom: 5px; }
+        .header-info p { margin: 2px 0; font-size: 13px; display: flex; align-items: center; gap: 8px; }
         .cust-box { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; background: #f8fafc; padding: 10px; border-radius: 5px; border: 1px solid #e2e8f0; }
         .field { font-size: 13px; display: flex; align-items: center; gap: 5px; }
         .field b { min-width: 100px; color: var(--primary); }
-        input, select { border: 1px solid #ccc; padding: 4px; border-radius: 3px; font-size: 12px; outline: none; }
-
+        
         table { width: 100%; border-collapse: collapse; margin-top: 5px; }
         th { background: #e2e8f0; color: #000; padding: 6px; border: 1px solid #000; font-size: 11px; text-transform: uppercase; }
         td { border: 1px solid #000; padding: 3px; text-align: center; }
-
-        .col-sl { width: 5%; }
-        .col-code { width: 15%; } 
-        .col-desc { width: auto; }
-        .col-war { width: 12%; }
-        .col-qty { width: 8%; }
-        .col-price { width: 14%; }
-        .col-total { width: 15%; }
-
-        #qrcode { margin-top: 10px; display: inline-block; padding: 3px; border: 1px solid #000; border-radius: 4px; }
+        
+        .ledger-summary-card { background: linear-gradient(135deg, #ef4444, #b91c1c); color: white; padding: 15px; border-radius: 10px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 2000; }
+        .modal-content { background: white; width: 90%; max-width: 800px; border-radius: 12px; padding: 25px; max-height: 90vh; overflow-y: auto; color: #1e293b; }
+        .ledger-row { cursor: pointer; transition: 0.2s; }
+        .ledger-row:hover { background: #f1f5f9 !important; }
 
         .footer-icons { display: flex; justify-content: center; gap: 15px; margin-top: auto; padding: 10px 0; border-top: 2px solid var(--primary); }
         .icon-box { text-align: center; width: 55px; color: var(--primary); }
@@ -69,20 +178,51 @@
         .btn-success { background: var(--success); color: white; }
         .btn-danger { background: var(--danger); color: white; }
         .btn-secondary { background: #64748b; color: white; }
+        
+        input, select { border: 1px solid #ccc; padding: 8px; border-radius: 5px; font-size: 13px; outline: none; }
 
-        .pass-container { position: relative; width: 90%; margin: 10px auto; }
-        .toggle-password { position: absolute; right: 10px; top: 12px; cursor: pointer; color: #666; }
+        /* History Tab Enhancement */
+        .history-table { border-collapse: separate; border-spacing: 0 5px; width: 100%; }
+        .history-table th { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 12px; border: none; font-size: 12px; }
+        .history-table th:first-child { border-radius: 8px 0 0 8px; }
+        .history-table th:last-child { border-radius: 0 8px 8px 0; }
+        .history-item { background: #fff; transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .history-item:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); background: #f8fafc !important; }
+        .history-item td { border: none; padding: 10px; border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; }
+        .history-item td:first-child { border-left: 1px solid #f1f5f9; border-radius: 8px 0 0 8px; }
+        .history-item td:last-child { border-right: 1px solid #f1f5f9; border-radius: 0 8px 8px 0; }
+        .act-btn { width: 30px; height: 30px; border-radius: 6px; border: none; color: white; cursor: pointer; margin: 0 2px; transition: 0.2s; }
+        .act-btn:hover { opacity: 0.8; transform: scale(1.1); }
+        
+        /* Status Seal Style */
+        .status-seal-container { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; }
+        .status-seal { width: 70px; height: 70px; border: 3px solid var(--purple); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--purple); font-weight: 900; font-size: 16px; text-transform: uppercase; transform: rotate(-15deg); opacity: 0.8; }
 
-        .war-container { display: flex; gap: 2px; }
+        /* NEW CUSTOMER STYLES */
+        .customer-card-list { border-collapse: separate; border-spacing: 0 10px; width: 100%; }
+        .customer-card-list th { background: #334155; color: white; padding: 15px; font-size: 13px; text-align: left; border: none; }
+        .customer-card-list th:first-child { border-radius: 10px 0 0 10px; }
+        .customer-card-list th:last-child { border-radius: 0 10px 10px 0; text-align: center; }
+        .cust-row { background: white; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: 0.3s; }
+        .cust-row:hover { transform: scale(1.01); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
+        .cust-row td { border: none; padding: 15px; font-size: 14px; border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; }
+        .cust-row td:first-child { border-left: 1px solid #f1f5f9; border-radius: 10px 0 0 10px; border-left: 5px solid var(--secondary); }
+        .cust-row td:last-child { border-right: 1px solid #f1f5f9; border-radius: 0 10px 10px 0; text-align: center; }
+        .cust-avatar { width: 35px; height: 35px; background: var(--secondary); color: white; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-right: 10px; font-weight: bold; }
+        .cust-action-btn { width: 32px; height: 32px; border-radius: 8px; border: none; color: white; cursor: pointer; transition: 0.2s; margin: 0 3px; }
+        .cust-action-btn:hover { transform: translateY(-2px); opacity: 0.9; }
 
         @media print {
             @page { size: A4; margin: 0; }
-            .no-print, .external-actions, .navbar, .dashboard-grid { display: none !important; }
-            body { background: white !important; color: black !important; }
-            .invoice-sheet { box-shadow: none; margin: 0; width: 210mm; height: 297mm; border: none; padding: 10mm; }
-            input { border: none !important; }
-            select { border: none !important; appearance: none; color: black !important; font-weight: bold; font-size: 18px; }
+            .no-print, .external-actions, .navbar, .dashboard-grid, .modal-overlay { display: none !important; }
+            #statementPrintArea { display: block !important; position: absolute; top: 0; left: 0; width: 210mm; }
+            body { background: white !important; }
+            .invoice-sheet { border: none; margin: 0; box-shadow: none; }
+            input[type="date"] { border: none; -webkit-appearance: none; }
         }
+        /* ডায়নামিক সীলের রং */
+.status-paid { border-color: #2563eb !important; color: #2563eb !important; } /* নীল */
+.status-due { border-color: #dc2626 !important; color: #dc2626 !important; }   /* লাল */
     </style>
 </head>
 <body onload="document.getElementById('uId').focus()">
@@ -90,10 +230,10 @@
 <div id="loginPage" style="position:fixed; inset:0; background:var(--dark); display:flex; align-items:center; justify-content:center; z-index:9999;">
     <div style="background:white; padding:40px; border-radius:15px; width:350px; text-align:center;">
         <h2 style="color:var(--primary)">Smart Computer EBR System</h2>
-        <input type="text" id="uId" placeholder="User ID" style="width:90%; padding:12px; margin:10px 0;">
-        <div class="pass-container">
-            <input type="password" id="uPass" placeholder="Password" style="width:100%; padding:12px; margin:0;" onkeypress="if(event.key === 'Enter') login()">
-            <i class="fa-solid fa-eye toggle-password" onclick="togglePass()"></i>
+        <input type="text" id="uId" placeholder="User ID" style="width:90%; margin:10px 0;">
+        <div style="position: relative; width: 90%; margin: 10px auto;">
+            <input type="password" id="uPass" placeholder="Password" style="width:100%;" onkeypress="if(event.key === 'Enter') login()">
+            <i class="fa-solid fa-eye" style="position: absolute; right: 10px; top: 12px; cursor: pointer;" onclick="togglePass()"></i>
         </div>
         <button onclick="login()" class="btn btn-primary" style="width:100%; justify-content:center; margin-top: 10px;">LOGIN</button>
     </div>
@@ -105,12 +245,10 @@
         <div class="nav-links">
             <button onclick="showSec('pos')">Invoice</button>
             <button id="navHistory" onclick="showSec('history')">History</button>
-            <button id="navLedger" onclick="showSec('ledger')">Ledger Book</button>
+            <button id="navLedger" onclick="showSec('ledger')">Ledger</button>
+            <button id="navCustomer" onclick="showSec('customer')">Customer</button>
             <button onclick="showSec('stock')">Inventory</button>
             <button id="navSettings" onclick="showSec('settings')">Admin</button>
-            <button id="navBackup" onclick="exportData()" style="background:var(--success)">Backup</button>
-            <button id="navRestore" onclick="document.getElementById('restoreInput').click()" style="background:var(--secondary)">Restore</button>
-            <input type="file" id="restoreInput" accept=".json" style="display:none" onchange="importData(event)">
             <button onclick="location.reload()" style="background:var(--danger)">Logout</button>
         </div>
     </nav>
@@ -144,7 +282,6 @@
             <button onclick="resetPOS()" class="btn btn-success"><i class="fa-solid fa-file-circle-plus"></i> New Record</button>
             <button onclick="toggleDarkMode()" class="btn btn-dark" style="background: #334155; color: white;"><i class="fa-solid fa-moon"></i> Dark Mode</button>
         </div>
-
         <div class="invoice-sheet" id="invoice">
             <div class="header">
                 <div>
@@ -168,14 +305,13 @@
                     <p><b>Time:</b> <span id="curTime"></span></p>
                 </div>
             </div>
-
             <div class="cust-box">
-                <div class="field"><b>Customer Name:</b> <input type="text" id="cName" style="flex:1"></div>
-                <div class="field"><b>Mobile:</b> <input type="text" id="cPhone" style="flex:1"></div>
+                <div class="field"><b>Customer Name:</b> <input type="text" id="cName" style="flex:1" list="customerListSource" onchange="autoFillCustomerByName(this.value)"></div>
+                <div class="field"><b>Mobile:</b> <input type="text" id="cPhone" style="flex:1" onchange="autoFillCustomer(this.value)"></div>
                 <div class="field"><b>Address:</b> <input type="text" id="cAddr" style="flex:1"></div>
                 <div class="field"><b>Email:</b> <input type="text" id="cEmail" style="flex:1"></div>
+                <datalist id="customerListSource"></datalist>
             </div>
-
             <table>
                 <thead>
                     <tr>
@@ -190,17 +326,25 @@
                 </thead>
                 <tbody id="billBody"></tbody>
             </table>
-
             <div style="display:flex; justify-content:space-between; margin-top:10px;">
-                <div style="width:50%">
-                    <p style="font-size:11px; font-weight:bold; text-decoration:underline;">Terms & Conditions:</p>
-                    <p style="font-size:9px; line-height:1.4;">
-                        1. Warranty covers manufacturing defects only.<br>
-                        2. Physical damage, burn, or liquid damage voids warranty.<br>
-                        3. Product must be returned with original invoice and packaging.<br>
-                        4. Warranty period starts from the date of purchase.
-                    </p>
-                    <div id="qrcode"></div> 
+                <div style="width:55%; display:flex; gap:15px; align-items: flex-start;">
+                    <div style="flex:1">
+                        <p style="font-size:11px; font-weight:bold; text-decoration:underline;">Terms & Conditions:</p>
+                        <p style="font-size:9px; line-height:1.4;">
+                            1. Warranty covers manufacturing defects only.<br>
+                            2. Physical damage, burn, or liquid damage voids warranty.<br>
+                            3. Product must be returned with original invoice and packaging.<br>
+                            4. Warranty period starts from the date of purchase.
+                        </p>
+                        <div id="qrcode"></div>
+                    </div>
+                    <div class="status-seal-container" style="padding-top: 10px;">
+                      <div id="statusSeal" class="status-seal status-paid">PAID</div>
+                        <div id="payDateContainer" class="hidden" style="text-align: center;">
+                            <span style="font-size: 8px; font-weight: bold; display: block; color: var(--purple);">Payment Date:</span>
+                            <input type="date" id="invPayDate" style="width: 100px; padding: 2px; font-size: 10px; border: 1px solid var(--purple); color: var(--purple);">
+                        </div>
+                    </div>
                 </div>
                 <div style="width:280px; text-align:right;">
                     <div style="display:flex; justify-content:space-between; padding:3px 0; font-size:13px;"><span>Sub Total:</span> <span id="subT">0.00</span></div>
@@ -214,7 +358,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="footer-icons">
                 <div class="icon-box"><i class="fa-solid fa-desktop"></i><span>Desktop</span></div>
                 <div class="icon-box"><i class="fa-solid fa-laptop"></i><span>Laptop</span></div>
@@ -224,97 +367,287 @@
                 <div class="icon-box"><i class="fa-solid fa-plug"></i><span>Charger</span></div>
                 <div class="icon-box"><i class="fa-solid fa-print"></i><span>Printer</span></div>
             </div>
-
             <div style="display:flex; justify-content:space-between; margin-top:10px; border-top:1px solid #eee; padding-top:8px;">
-                <div style="border-top:1.5px solid #000; width:140px; text-align:center; font-size:11px; font-weight:bold;">Customer Signature</div>
+                <div style="border-top:1.5px solid #000; width:140px; text-align:center; font-size:11px; font-weight:bold;">Customer Sign</div>
                 <div style="font-size:10px;">Sold By: <span id="soldBy"></span></div>
                 <div style="border-top:1.5px solid #000; width:140px; text-align:center; font-size:11px; font-weight:bold;">Authorized Sign</div>
-            </div>
         </div>
+                <div style="text-align: center; font-size: 10px; color: #666; margin-top: 15px;">
+                This invoice is generated by electronically!
+            </div>
     </div>
+</div>
 
     <div id="historySec" class="hidden panel">
-        <h3>Records History</h3>
-        <input type="text" id="searchInv" placeholder="Search ID, Name or Mobile..." oninput="renderHistory()" style="width:100%; padding:12px; margin-bottom:15px; border:1px solid #ddd; border-radius:8px;">
-        <table style="width:100%">
-            <thead><tr><th>Date</th><th>ID</th><th>Customer</th><th>Phone</th><th>Total</th><th>Sold By</th><th>Action</th></tr></thead>
-            <tbody id="historyBody"></tbody>
-        </table>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="margin: 0; color: var(--primary);"><i class="fa-solid fa-clock-rotate-left"></i> Transactions History</h3>
+            <div style="background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-size: 13px; font-weight: bold;">
+                Total: <span id="historyCount">0</span>
+            </div>
+        </div>
+        <input type="text" id="searchInv" placeholder="Search by Invoice ID, Name or Mobile..." oninput="renderHistory()" style="width:100%; padding:12px; margin-bottom:20px; border:1px solid #cbd5e1; border-radius:10px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);">
+        
+        <div style="overflow-x: auto;">
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>Invoice ID</th>
+                        <th>Customer</th>
+                        <th>Phone</th>
+                        <th>Amount</th>
+                        <th>User</th>
+                        <th style="text-align:center">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="historyBody"></tbody>
+            </table>
+        </div>
     </div>
 
     <div id="ledgerSec" class="hidden panel">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h3 style="margin: 0;">Customer Ledger Book</h3>
-            <button onclick="deleteAllLedger()" class="btn btn-danger btn-sm admin-only"><i class="fa-solid fa-trash-can"></i> Delete All</button>
-        </div>
-        <input type="text" id="searchLedger" placeholder="Search Customer Mobile..." oninput="renderLedger()" style="width:100%; padding:12px; margin-bottom:15px; border:1px solid #ddd; border-radius:8px;">
-        <table style="width:100%">
-            <thead><tr><th>Customer</th><th>Mobile</th><th>Total Bill</th><th>Total Paid</th><th>Balance Due</th><th>Sold By</th><th class="admin-only">Action</th></tr></thead>
-            <tbody id="ledgerBody"></tbody>
-        </table>
-    </div>
-
-    <div id="stockSec" class="hidden panel">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h3 style="margin: 0;">Inventory Control</h3>
-            <div style="display: flex; gap: 10px;">
-                <input type="text" id="searchStock" placeholder="Search product..." oninput="renderStock()" style="padding: 8px; border-radius: 6px; border: 1px solid #ddd;">
-                <button onclick="deleteAllProducts()" class="btn btn-danger admin-only"><i class="fa-solid fa-trash-can"></i> Delete All</button>
+        <div class="ledger-summary-card">
+            <div>
+                <h3 style="margin:0;">Customer Ledger</h3>
+                <p style="margin:5px 0 0 0; opacity: 0.9;">Total Outstanding Balance</p>
+            </div>
+            <div style="text-align:right;">
+                <h2 id="totalLedgerDue" style="margin:0;">TK 0.00</h2>
+                <button onclick="openLedgerModal()" class="btn btn-success" style="margin-top:10px; background:white; color:var(--danger); border:none;"><i class="fa-solid fa-plus-circle"></i> Add New Entry</button>
             </div>
         </div>
         
-        <div id="adminStockControl" class="admin-only" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-bottom:20px; background:#f8fafc; padding:15px; border-radius:10px;">
-            <input type="text" id="sCode" placeholder="Code/Barcode" onkeypress="if(event.key==='Enter') fetchStockItem(this)">
-            <input type="text" id="sName" placeholder="Product Details">
-            <input type="text" id="sCat" placeholder="Category">
-            
-            <div class="war-container">
-                <select id="sWarSelect" onchange="document.getElementById('sWar').value = this.value" style="width: 60px;">
-                    <option value="">Custom</option>
-                    <option value="No">No</option>
-                    <option value="3 Months">3 Mo</option>
-                    <option value="6 Months">6 Mo</option>
-                    <option value="9 Months">9 Mo</option>
-                    <option value="1 Year">1 Yr</option>
-                    <option value="2 Years">2 Yr</option>
-                    <option value="3 Years">3 Yr</option>
-                </select>
-                <input type="text" id="sWar" placeholder="Warranty" style="flex:1">
-            </div>
-
-            <input type="number" id="sCost" placeholder="Buy Price">
-            <input type="number" id="sPrice" placeholder="Sale Price">
-            <input type="number" id="sQty" placeholder="Qty" value="1">
-            <input type="number" id="sAlert" placeholder="Stock Alert">
-            <button id="stockBtn" onclick="addStock()" class="btn btn-success" style="grid-column: span 2;">Save Product</button>
+        <input type="text" id="searchLedger" placeholder="Search Customer Mobile or Name..." oninput="renderLedger()" style="width:100%; padding:12px; margin-bottom:15px; border:1px solid #ddd; border-radius:8px;">
+        
+        <div style="overflow-x: auto;">
+            <table style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Customer</th>
+                        <th>Mobile</th>
+                        <th>Total Due</th>
+                        <th>Last Action</th>
+                        <th>Pay Date</th>
+                        <th>Sold By</th>
+                        <th class="admin-only">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="ledgerBody"></tbody>
+            </table>
         </div>
-
-        <table style="width:100%">
-            <thead><tr><th>Code</th><th>Name</th><th>Category</th><th>Warranty</th><th>Buy Price</th><th>Sale Price</th><th>Stock</th><th>Alert</th><th class="admin-only">Action</th></tr></thead>
-            <tbody id="stockBody"></tbody>
-        </table>
     </div>
 
-    <div id="settingsSec" class="hidden panel">
-        <h3>Admin Panel - User Management</h3>
-        <div style="display:grid; grid-template-columns: 1fr 1.5fr; gap:20px;">
-            <div style="border:1px solid #ddd; padding:20px; border-radius:10px; background:#f9fafb;">
-                <h4 id="userFormTitle">Add/Edit User</h4>
-                <input type="hidden" id="editUserIndex" value="-1">
-                <input type="text" id="newUId" placeholder="Login ID" style="width:94%; padding:10px; margin-bottom:10px;">
-                <input type="password" id="newUPass" placeholder="Password" style="width:94%; padding:10px; margin-bottom:15px;">
-                <button id="userBtn" onclick="saveUser()" class="btn btn-primary" style="width:100%; justify-content:center;">Save User</button>
-                <button id="cancelUserEdit" onclick="resetUserForm()" class="btn btn-danger hidden" style="width:100%; margin-top:5px; justify-content:center;">Cancel</button>
+    <div id="ledgerModal" class="modal-overlay hidden no-print">
+        <div class="modal-content">
+            <h3 id="ledgerModalTitle">New Ledger Entry</h3>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-top:20px;">
+                <div class="field" style="flex-direction:column; align-items:flex-start;">
+                    <b>Customer Name</b>
+                    <input type="text" id="lCustName" list="customerListSource" style="width:95%" onchange="autoFillLedger(this.value)">
+                </div>
+                <div class="field" style="flex-direction:column; align-items:flex-start;">
+                    <b>Mobile Number</b>
+                    <input type="text" id="lCustPhone" style="width:95%">
+                </div>
+                <div class="field" style="flex-direction:column; align-items:flex-start;">
+                    <b>Description</b>
+                    <input type="text" id="lDesc" placeholder="e.g. PC Repair, Due Payment" style="width:95%">
+                </div>
+                <div class="field" style="flex-direction:column; align-items:flex-start;">
+                    <b>Pay Date (Payment Date)</b>
+                    <input type="date" id="invPayDate" style="width:95%">
+                </div>
+                <div class="field" style="flex-direction:column; align-items:flex-start;">
+                    <b>Bill Amount</b>
+                    <input type="number" id="lBill" value="0" style="width:95%">
+                </div>
+                <div class="field" style="flex-direction:column; align-items:flex-start;">
+                    <b>Paid Amount</b>
+                    <input type="number" id="lPaid" value="0" style="width:95%">
+                </div>
             </div>
-            <div style="border:1px solid #ddd; padding:20px; border-radius:10px;">
-                <h4>User List</h4>
-                <ul id="userList" style="list-style:none; padding:0;"></ul>
+            <div style="margin-top:25px; display:flex; justify-content:flex-end; gap:10px;">
+                <button onclick="closeLedgerModal()" class="btn btn-secondary">Cancel</button>
+                <button onclick="saveLedgerEntry()" class="btn btn-primary">Save Transaction</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="statementModal" class="modal-overlay hidden no-print">
+        <div class="modal-content" style="max-width:900px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid var(--primary); padding-bottom:10px;">
+                <h3>Transaction Statement</h3>
+                <button onclick="closeStatementModal()" class="btn btn-danger" style="padding:5px 10px;">X</button>
+            </div>
+            <div id="statementHeader" style="margin:15px 0; background:#f8fafc; padding:15px; border-radius:8px; display:grid; grid-template-columns:1fr 1fr;">
+                </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Bill</th>
+                        <th>Paid</th>
+                        <th>Balance</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="statementBody"></tbody>
+            </table>
+            <div style="margin-top:20px; text-align:right;">
+                <button onclick="openLedgerModal(true)" class="btn btn-success" style="display:inline-flex;">Add New Transaction</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="statementPrintArea" class="hidden">
+        </div>
+
+    <div id="customerSec" class="hidden panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 3px solid var(--primary); padding-bottom: 15px;">
+            <h3 style="margin: 0; color: var(--primary); font-size: 24px;"><i class="fa-solid fa-users-gear"></i> Customer Database</h3>
+            <button onclick="openCustomerModal()" class="btn btn-primary" style="box-shadow: 0 4px 10px rgba(30, 64, 175, 0.3);"><i class="fa-solid fa-user-plus"></i> Add New Customer</button>
+        </div>
+
+        <div id="customerFormBox" class="hidden" style="margin-bottom: 30px; background: linear-gradient(to right, #f8fafc, #ffffff); padding: 25px; border-radius: 15px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
+            <h4 id="custFormTitle" style="margin-top: 0; color: var(--primary); border-left: 4px solid var(--primary); padding-left: 10px;">Register New Customer</h4>
+            <input type="hidden" id="editCustPhone">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                    <label style="font-size: 12px; font-weight: bold; color: #64748b;">Customer Name</label>
+                    <input type="text" id="custName" placeholder="Full Name" style="padding: 12px; border-radius: 8px;">
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                    <label style="font-size: 12px; font-weight: bold; color: #64748b;">Phone Number</label>
+                    <input type="text" id="custPhone" placeholder="Mobile" style="padding: 12px; border-radius: 8px;">
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                    <label style="font-size: 12px; font-weight: bold; color: #64748b;">Address</label>
+                    <input type="text" id="custAddr" placeholder="Location" style="padding: 12px; border-radius: 8px;">
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                    <label style="font-size: 12px; font-weight: bold; color: #64748b;">Email Address</label>
+                    <input type="text" id="custEmail" placeholder="Email" style="padding: 12px; border-radius: 8px;">
+                </div>
+            </div>
+            <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                <button onclick="closeCustomerModal()" class="btn btn-secondary">Discard</button>
+                <button onclick="saveCustomerData()" class="btn btn-success" id="saveCustBtn" style="padding: 10px 30px;">Save Record</button>
+            </div>
+        </div>
+
+        <div style="position: relative; margin-bottom: 20px;">
+            <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 15px; top: 15px; color: #94a3b8;"></i>
+            <input type="text" id="searchCust" placeholder="Search by name, phone or address..." oninput="renderCustomers()" style="width:100%; padding: 12px 12px 12px 45px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 15px;">
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table class="customer-card-list">
+                <thead>
+                    <tr>
+                        <th>Customer Info</th>
+                        <th>Mobile</th>
+                        <th>Address</th>
+                        <th>Email</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="customerTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    
+<div id="stockSec" class="hidden panel">
+    <h2 style="color:var(--primary); margin-bottom:15px;">🎯 Smart Inventory</h2>
+
+    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+        <div style="display:flex; gap:10px;">
+            <button class="btn btn-success" onclick="openAddModal()"><i class="fa fa-plus"></i> Add New</button>
+            <input type="text" id="searchStock" placeholder="Search by Code / Name / Category..." oninput="renderStock()" style="padding:8px; border-radius:6px;">
+        </div>
+    </div>
+
+    <table style="width:100%">
+        <thead>
+            <tr>
+                <th>Code</th><th>Name</th><th>Category</th><th>Warranty</th>
+                <th>Buy</th><th>Sale</th><th>Stock</th><th>Alert</th><th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="stockBody"></tbody>
+    </table>
+</div>
+
+<div id="addModal" class="modal-overlay hidden">
+  <div class="modal-content">
+    <h3>Add / Edit Product</h3>
+    <input id="sCode" placeholder="Code"><br><br>
+    <input id="sName" placeholder="Product Name"><br><br>
+    <input id="sCat" list="catList" placeholder="Category"><datalist id="catList"></datalist><br><br>
+<input id="sWar" list="warList" placeholder="Warranty" style="width:100%; margin-bottom:10px;">
+<datalist id="warList">
+  <option value="1 Month"></option>
+  <option value="2 Months"></option>
+  <option value="3 Months"></option>
+  <option value="6 Months"></option>
+  <option value="9 Months"></option>
+  <option value="1 Year"></option>
+  <option value="2 Years"></option>
+  <option value="3 Years"></option>
+  <option value="Lifetime"></option>
+</datalist><br><br>
+    <input id="sCost" placeholder="Buy Price"><br><br>
+    <input id="sPrice" placeholder="Sale Price"><br><br>
+    <input id="sQty" placeholder="Stock"><br><br>
+    <input id="sAlert" placeholder="Alert"><br><br>
+
+    <button class="btn btn-success" onclick="saveProduct()">Save</button>
+    <button class="btn btn-danger" onclick="closeAddModal()">Close</button>
+  </div>
+</div>
+
+<div id="settingsSec" class="hidden panel">
+    <h3>Admin Panel - User Management</h3>
+    <div style="display:grid; grid-template-columns: 1fr 1.5fr; gap:20px;">
+        <div style="border:1px solid #ddd; padding:20px; border-radius:10px; background:#f9fafb;">
+            <h4 id="userFormTitle">Add/Edit User</h4>
+            <input type="hidden" id="editUserIndex" value="-1">
+            <input type="text" id="newUId" placeholder="Login ID" style="width:94%; padding:10px; margin-bottom:10px;">
+            <input type="password" id="newUPass" placeholder="Password" style="width:94%; padding:10px; margin-bottom:15px;">
+            <button id="userBtn" onclick="saveUser()" class="btn btn-primary" style="width:100%; justify-content:center;">Save User</button>
+            <button id="cancelUserEdit" onclick="resetUserForm()" class="btn btn-danger hidden" style="width:100%; margin-top:5px; justify-content:center;">Cancel</button>
+        </div>
+        <div style="border:1px solid #ddd; padding:20px; border-radius:10px;">
+            <h4>User List</h4>
+            <ul id="userList" style="list-style:none; padding:0;"></ul>
+
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 2px dashed #ddd;">
+                <h4 style="color: var(--primary);"><i class="fa-solid fa-database"></i> System Maintenance</h4>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="exportData()" class="btn btn-success" style="flex: 1; justify-content: center;">
+                        <i class="fa-solid fa-download"></i> Backup Data
+                    </button>
+                    <button onclick="document.getElementById('restoreInput').click()" class="btn btn-secondary" style="flex: 1; justify-content: center; background:var(--secondary)">
+                        <i class="fa-solid fa-upload"></i> Restore Data
+                    </button>
+                    <input type="file" id="restoreInput" accept=".json" style="display:none" onchange="importData(event)">
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
+	function formatCustomDate(date) {
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const d = new Date(date);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = months[d.getMonth()];
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
+}
+	
     const firebaseConfig = {
         apiKey: "AIzaSyAsosjugcKHhR6-M_AurTrxIe2SV0pIBpE",
         authDomain: "smart-erp-175cf.firebaseapp.com",
@@ -328,10 +661,33 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+// --- Condition 1: Date & Time Formatting Function ---
+function getFormattedDateTime() {
+    const now = new Date();
+    // তারিখ ফরম্যাট: dd-mm-yyyy
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = now.getFullYear();
+    const date = `${day}-${month}-${year}`;
+    
+    // সময় ফরম্যাট: ১২ ঘণ্টা (AM/PM)
+    let hours = now.getHours();
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12; 
+    const time = `${hours}:${minutes} ${ampm}`;
+
+    return { date, time };
+}
+// -----------------------------------------------------
+
     let users = [{id:'admin', pass:'724672'}];
     let stock = [];
     let invoices = [];
+    let customers = [];
+    let ledgerTransactions = [];
     let currentUser = "";
+    let activeStatementPhone = "";
 
     db.ref('smart_erp/').on('value', (snapshot) => {
         const data = snapshot.val();
@@ -339,26 +695,17 @@
             users = data.users || users;
             stock = data.stock ? Object.values(data.stock).filter(item => item && item.code && item.name) : [];
             invoices = data.invoices ? Object.values(data.invoices) : [];
-            renderHistory(); renderStock(); renderUsers(); renderLedger();
-            updateDashboard();
+            customers = data.customers ? Object.values(data.customers) : [];
+            ledgerTransactions = data.ledger_transactions ? Object.values(data.ledger_transactions) : [];
+            
+            renderHistory(); renderStock(); renderUsers(); renderCustomers();
+            renderLedger(); updateDashboard(); updateCustomerListSource();
+            if(activeStatementPhone) viewStatement(activeStatementPhone);
         }
     });
 
     function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
-
-    function updateDashboard() {
-        const today = new Date().toLocaleDateString();
-        let salesToday = 0; let totalVal = 0; let lowStock = 0;
-        invoices.forEach(inv => { if(inv.date === today) salesToday += parseFloat(inv.grand) || 0; });
-        stock.forEach(item => {
-            totalVal += (parseFloat(item.price) * parseInt(item.qty));
-            if(parseInt(item.qty) <= (parseInt(item.alert) || 5)) lowStock++;
-        });
-        document.getElementById('todaySales').innerText = "TK " + salesToday.toFixed(2);
-        document.getElementById('totalInvCount').innerText = invoices.length;
-        document.getElementById('totalStockVal').innerText = "TK " + totalVal.toLocaleString();
-        document.getElementById('lowStockCount').innerText = lowStock;
-    }
+    function togglePass() { const p = document.getElementById('uPass'); p.type = p.type === "password" ? "text" : "password"; }
 
     function login() {
         const id = document.getElementById('uId').value.trim();
@@ -368,38 +715,41 @@
             currentUser = id;
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('app').classList.remove('hidden');
-            
             if(id === 'admin') {
                 document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
-                document.getElementById('navHistory').classList.remove('hidden');
-                document.getElementById('navLedger').classList.remove('hidden');
-                document.getElementById('navSettings').classList.remove('hidden');
-                document.getElementById('navBackup').classList.remove('hidden');
-                document.getElementById('navRestore').classList.remove('hidden');
             } else {
                 document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
-                document.getElementById('navHistory').classList.add('hidden');
-                document.getElementById('navLedger').classList.add('hidden');
-                document.getElementById('navSettings').classList.add('hidden');
-                document.getElementById('navBackup').classList.add('hidden');
-                document.getElementById('navRestore').classList.add('hidden');
             }
             resetPOS();
         } else alert("Invalid Login!");
     }
 
-    function togglePass() {
-        const p = document.getElementById('uPass');
-        p.type = p.type === "password" ? "text" : "password";
+    function showSec(id) {
+        ['posSec','historySec','stockSec','settingsSec','ledgerSec','customerSec','dashSec'].forEach(s => document.getElementById(s).classList.add('hidden'));
+        if(id === 'pos') {
+            document.getElementById('posSec').classList.remove('hidden');
+            document.getElementById('dashSec').classList.remove('hidden');
+        } else {
+            document.getElementById(id + 'Sec').classList.remove('hidden');
+        }
+        if(id=='history') renderHistory();
+        if(id=='stock') renderStock();
+        if(id=='settings') renderUsers();
+        if(id=='ledger') renderLedger();
+        if(id=='customer') renderCustomers();
     }
 
+    // --- POS & INVOICE CORE FUNCTIONS ---
     function resetPOS() {
         const d = new Date();
-        document.getElementById('curDate').innerText = d.toLocaleDateString();
+        document.getElementById('curDate').innerText = formatCustomDate(new Date());
         document.getElementById('curTime').innerText = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         genId();
         document.getElementById('soldBy').innerText = currentUser;
-        ['cName','cPhone','cAddr','cEmail','vP','vatInp','pPaid'].forEach(id => document.getElementById(id).value = (id.length > 5) ? 0 : "");
+        ['cName','cPhone','cAddr','cEmail','vP','vatInp','pPaid','invPayDate'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.value = (id.length > 5 && id !== 'invPayDate') ? 0 : "";
+        });
         let rows = "";
         for(let i=1; i<=13; i++) {
             rows += `<tr><td>${i}</td><td><input type="text" class="it-c" style="width:90%" onchange="fetchItem(this)"></td><td><input type="text" class="it-n" style="width:95%"></td><td><input type="text" class="it-w" style="width:90%"></td><td><input type="number" class="it-q" value="0" oninput="calc()" style="width:40px"></td><td><input type="number" class="it-p" value="0" oninput="calc()" style="width:60px"></td><td class="it-t">0.00</td></tr>`;
@@ -426,23 +776,6 @@
         }
     }
 
-    function fetchStockItem(input) {
-        if(currentUser !== 'admin') return;
-        const code = input.value.trim(); if(!code) return;
-        const p = stock.find(x => x.code === code);
-        if(p) {
-            document.getElementById('sName').value = p.name;
-            document.getElementById('sCat').value = p.cat || "";
-            document.getElementById('sWar').value = p.war || "";
-            document.getElementById('sCost').value = p.cost || 0;
-            document.getElementById('sPrice').value = p.price;
-            document.getElementById('sQty').value = p.qty;
-            document.getElementById('sAlert').value = p.alert || 5;
-            document.getElementById('stockBtn').innerText = "Update Product";
-        }
-        document.getElementById('sName').focus();
-    }
-
     function calc() {
         let sub = 0;
         document.querySelectorAll('#billBody tr').forEach(r => {
@@ -458,9 +791,33 @@
         document.getElementById('grandT').innerText = grand.toFixed(2);
         document.getElementById('pDue').innerText = due.toFixed(2);
         document.getElementById('inWords').innerText = numberToWords(grand) + " Taka Only";
-        
-        const qrText = `Customer: ${document.getElementById('cName').value}\nInv No: ${document.getElementById('invId').innerText}\nDate & Time: ${document.getElementById('curDate').innerText} ${document.getElementById('curTime').innerText}\nTotal: ${grand.toFixed(2)}\nDue: ${due.toFixed(2)}`;
-        
+        // ডিজিটাল সীল ডায়নামিক করার কোড
+const statusSeal = document.getElementById('statusSeal');
+const dueAmount = parseFloat(document.getElementById('pDue').innerText) || 0;
+
+if (dueAmount > 0) {
+    statusSeal.innerText = "DUE";
+    statusSeal.classList.remove('status-paid');
+    statusSeal.classList.add('status-due');
+} else {
+    statusSeal.innerText = "PAID";
+    statusSeal.classList.remove('status-due');
+    statusSeal.classList.add('status-paid');
+}
+
+        const seal = document.getElementById('statusSeal');
+        const payDateBox = document.getElementById('payDateContainer');
+        if(due > 0) {
+            seal.innerText = "DUE";
+            payDateBox.classList.remove('hidden');
+        } else {
+            seal.innerText = "PAID";
+            payDateBox.classList.add('hidden');
+            formatPaymentDate(document.getElementById('invPayDate').value)
+ = "";
+        }
+
+        const qrText = `Customer: ${document.getElementById('cName').value}\nInv No: ${document.getElementById('invId').innerText}\nTotal: ${grand.toFixed(2)}\nDue: ${due.toFixed(2)}`;
         document.getElementById('qrcode').innerHTML = "";
         new QRCode(document.getElementById("qrcode"), { text: qrText, width: 70, height: 70 });
     }
@@ -478,265 +835,323 @@
             }
         });
         if(billItems.length === 0) return;
-
         const grandVal = parseFloat(document.getElementById('grandT').innerText) || 0;
         const paidVal = parseFloat(document.getElementById('pPaid').value) || 0;
         const dueVal = grandVal - paidVal;
+        const payDate = formatPaymentDate(document.getElementById('invPayDate').value)
+;
+        const inv = { id: invId, type: document.getElementById('docType').value, date: document.getElementById('curDate').innerText, time: document.getElementById('curTime').innerText, customer: document.getElementById('cName').value, phone: document.getElementById('cPhone').value, address: document.getElementById('cAddr').value, email: document.getElementById('cEmail').value, items: billItems, grand: grandVal.toFixed(2), paid: paidVal.toFixed(2), due: dueVal.toFixed(2), soldBy: currentUser, payDate: payDate };
 
-        const inv = { 
-            id: invId, 
-            type: document.getElementById('docType').value, 
-            date: document.getElementById('curDate').innerText, 
-            time: document.getElementById('curTime').innerText, 
-            customer: document.getElementById('cName').value, 
-            phone: document.getElementById('cPhone').value, 
-            address: document.getElementById('cAddr').value, 
-            email: document.getElementById('cEmail').value, 
-            items: billItems, 
-            subTotal: document.getElementById('subT').innerText, 
-            discount: document.getElementById('vP').value, 
-            vat: document.getElementById('vatInp').value, 
-            grand: grandVal.toFixed(2), 
-            paid: paidVal.toFixed(2), 
-            due: dueVal.toFixed(2), 
-            soldBy: currentUser,
-            hidden_from_ledger: (dueVal <= 0) // যদি বাকি ০ বা তার কম হয়, তবে লেজারে দেখাবে না
-        };
-
+        if(inv.phone) {
+            db.ref('smart_erp/customers/' + inv.phone).update({ name: inv.customer, phone: inv.phone, addr: inv.address, email: inv.email });
+            
+            if(dueVal > 0) {
+                const lId = Date.now();
+                updates['smart_erp/ledger_transactions/' + lId] = { 
+                    id: lId, 
+                    phone: inv.phone, 
+                    name: inv.customer, 
+                    desc: "Inv: " + invId, 
+                    bill: grandVal, 
+                    paid: paidVal, 
+                    date: new Date().toISOString().split('T')[0], 
+                    payDate: payDate, 
+                    soldBy: currentUser 
+                };
+            }
+        }
         updates['smart_erp/invoices/' + invId] = inv;
-        db.ref().update(updates).then(() => {
-            document.title = `${inv.id}-${inv.customer}`;
-            window.print();
-            setTimeout(() => { document.title = "Smart Computer | Management System"; }, 1000);
-        });
+        db.ref().update(updates).then(() => { window.print(); });
     }
 
-    function printNoSave() { window.print(); }
-
-    function addStock() {
-        if(currentUser !== 'admin') return;
-        const c = document.getElementById('sCode').value.trim();
-        const n = document.getElementById('sName').value.trim();
-        const cat = document.getElementById('sCat').value.trim();
-        const war = document.getElementById('sWar').value.trim();
-        const cost = document.getElementById('sCost').value || 0;
-        const p = document.getElementById('sPrice').value || 0;
-        const q = document.getElementById('sQty').value || 0;
-        const alertL = document.getElementById('sAlert').value || 5;
-        if(c && n) {
-            db.ref('smart_erp/stock/' + c).set({code:c, name:n, cat:cat, war:war, cost:cost, price:p, qty:q, alert:alertL}).then(() => {
-                ['sCode','sName','sCat','sWar','sCost','sPrice','sQty','sAlert'].forEach(id => document.getElementById(id).value = "");
-                document.getElementById('sWarSelect').value = "";
-                document.getElementById('stockBtn').innerText = "Save Product";
-            });
+    // --- LEDGER FUNCTIONS ---
+    function openLedgerModal(forExisting = false) {
+        document.getElementById('ledgerModal').classList.remove('hidden');
+        if(forExisting && activeStatementPhone) {
+            const c = customers.find(x => x.phone === activeStatementPhone);
+            document.getElementById('lCustName').value = c ? c.name : "";
+            document.getElementById('lCustPhone').value = activeStatementPhone;
+        } else {
+            ['lCustName','lCustPhone','lDesc','lPayDate','lBill','lPaid'].forEach(id => document.getElementById(id).value = (id.includes('lBill') || id.includes('lPaid')) ? 0 : "");
         }
     }
 
-    function renderStock() {
-        const q = document.getElementById('searchStock').value.toLowerCase();
-        let h = "";
-        const isAdmin = currentUser === 'admin';
-        stock.filter(x => x.code.toLowerCase().includes(q) || x.name.toLowerCase().includes(q) || (x.cat && x.cat.toLowerCase().includes(q))).forEach(x => {
-            const isLow = parseInt(x.qty) <= (parseInt(x.alert) || 5);
-            h += `<tr style="${isLow ? 'background:#fee2e2' : ''}">
-                <td>${x.code}</td>
-                <td>${x.name}</td>
-                <td>${x.cat || '-'}</td>
-                <td>${x.war || '-'}</td>
-                <td>${parseFloat(x.cost || 0).toFixed(2)}</td>
-                <td>${parseFloat(x.price || 0).toFixed(2)}</td>
-                <td>${x.qty}</td>
-                <td>${x.alert || 5}</td>
-                <td class="${isAdmin ? '' : 'hidden'}">
-                    <button onclick="editStock('${x.code}')" style="background:blue; color:white; border:none; padding:4px; cursor:pointer;">Edit</button> 
-                    <button onclick="if(confirm('Delete?')) db.ref('smart_erp/stock/${x.code}').remove()" style="background:red; color:white; border:none; padding:4px; cursor:pointer;">Del</button>
-                </td>
-            </tr>`;
+    function closeLedgerModal() { document.getElementById('ledgerModal').classList.add('hidden'); }
+
+    function autoFillLedger(name) {
+        const c = customers.find(x => x.name === name);
+        if(c) {
+            document.getElementById('lCustPhone').value = c.phone;
+        }
+    }
+
+    function saveLedgerEntry() {
+        const phone = document.getElementById('lCustPhone').value.trim();
+        const name = document.getElementById('lCustName').value.trim();
+        if(!phone || !name) return alert("Phone and Name required!");
+        
+        const lId = Date.now();
+        const entry = {
+            id: lId,
+            phone: phone,
+            name: name,
+            desc: document.getElementById('lDesc').value || "Manual Entry",
+            bill: parseFloat(document.getElementById('lBill').value) || 0,
+            paid: parseFloat(document.getElementById('lPaid').value) || 0,
+            date: new Date().toISOString().split('T')[0],
+            payDate: document.getElementById('lPayDate').value || "",
+            soldBy: currentUser
+        };
+
+        db.ref('smart_erp/ledger_transactions/' + lId).set(entry).then(() => {
+            closeLedgerModal();
+            if(!customers.find(x => x.phone === phone)) {
+                db.ref('smart_erp/customers/' + phone).set({name, phone});
+            }
         });
-        document.getElementById('stockBody').innerHTML = h;
     }
 
     function renderLedger() {
-        if(currentUser !== 'admin') return;
-        const q = document.getElementById('searchLedger').value.trim();
-        const custData = {};
-        invoices.forEach(inv => {
-            if (!inv.hidden_from_ledger) {
-                const key = inv.phone || 'Unknown';
-                if(!custData[key]) custData[key] = {name: inv.customer, phone: key, total: 0, paid: 0, due: 0, date: inv.date, soldBy: inv.soldBy || 'N/A'};
-                custData[key].total += parseFloat(inv.grand) || 0;
-                custData[key].paid += parseFloat(inv.paid) || 0;
-                custData[key].due += parseFloat(inv.due) || 0;
-                custData[key].soldBy = inv.soldBy || 'N/A';
+        const q = document.getElementById('searchLedger').value.toLowerCase();
+        const grouped = {};
+        ledgerTransactions.forEach(t => {
+            if(!grouped[t.phone]) grouped[t.phone] = { name: t.name, phone: t.phone, totalBill:0, totalPaid:0, lastDate: t.date, payDate: t.payDate, lastDesc: t.desc, soldBy: t.soldBy || "-" };
+            grouped[t.phone].totalBill += parseFloat(t.bill);
+            grouped[t.phone].totalPaid += parseFloat(t.paid);
+            if(t.payDate) grouped[t.phone].payDate = t.payDate;
+            if(t.date >= grouped[t.phone].lastDate) {
+                grouped[t.phone].lastDate = t.date;
+                grouped[t.phone].lastDesc = t.desc;
+                grouped[t.phone].soldBy = t.soldBy || "-";
             }
         });
+
+        let totalOutstanding = 0;
+        let list = Object.values(grouped).filter(c => (c.totalBill - c.totalPaid) > 0);
+        
+        list.sort((a, b) => {
+            if(!a.payDate) return 1;
+            if(!b.payDate) return -1;
+            return new Date(a.payDate) - new Date(b.payDate);
+        });
+
         let h = "";
-        Object.values(custData).filter(c => c.phone.includes(q) || c.name.toLowerCase().includes(q.toLowerCase())).forEach(c => {
-            h += `<tr><td>${c.name}</td><td>${c.phone}</td><td>${c.total.toFixed(2)}</td><td>${c.paid.toFixed(2)}</td><td style="color:red; font-weight:bold;">${c.due.toFixed(2)}</td><td>${c.soldBy}</td><td>
-                <button onclick="sendNotif('${c.phone}', '${c.due.toFixed(2)}', '${c.name}', '${c.date}')" style="background:var(--success); color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;"><i class="fa-brands fa-whatsapp"></i> Notify</button>
-                <button onclick="editLedgerDue('${c.phone}')" style="background:blue; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;"><i class="fa-solid fa-edit"></i> Edit</button>
-                <button onclick="deleteCustomerInvoices('${c.phone}')" style="background:var(--danger); color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;"><i class="fa-solid fa-trash"></i> Del</button>
-            </td></tr>`;
+        list.filter(c => c.phone.includes(q) || c.name.toLowerCase().includes(q)).forEach(c => {
+            const due = c.totalBill - c.totalPaid;
+            totalOutstanding += due;
+            h += `<tr class="ledger-row">
+                <td onclick="viewStatement('${c.phone}')"><b>${c.name}</b></td>
+                <td onclick="viewStatement('${c.phone}')">${c.phone}</td>
+                <td onclick="viewStatement('${c.phone}')" style="color:var(--danger); font-weight:bold;">${due.toFixed(2)}</td>
+                <td onclick="viewStatement('${c.phone}')">${c.lastDate}</td>
+                <td onclick="viewStatement('${c.phone}')">${c.payDate || '-'}</td>
+                <td onclick="viewStatement('${c.phone}')">${c.soldBy}</td>
+                <td class="admin-only">
+                    <button onclick="printLedgerInvoice('${c.phone}')" title="Print" style="background:#64748b; color:white; border:none; padding:5px; border-radius:3px; cursor:pointer;"><i class="fa-solid fa-print"></i></button>
+                    <button onclick="deleteLedgerGroup('${c.phone}')" title="Delete" style="background:var(--danger); color:white; border:none; padding:5px; border-radius:3px; cursor:pointer;"><i class="fa-solid fa-trash"></i></button>
+                    <button onclick="sendLedgerSMS('${c.phone}', '${due.toFixed(2)}')" title="SMS" style="background:#0ea5e9; color:white; border:none; padding:5px; border-radius:3px; cursor:pointer;"><i class="fa-solid fa-comment-sms"></i></button>
+                    <button onclick="sendLedgerWA('${c.phone}', '${c.name}', '${c.lastDate}', '${c.lastDesc}', '${c.payDate}')" title="WhatsApp" style="background:#25d366; color:white; border:none; padding:5px; border-radius:3px; cursor:pointer;"><i class="fa-brands fa-whatsapp"></i></button>
+                    <button onclick="window.location.href='tel:${c.phone}'" title="Call" style="background:#3b82f6; color:white; border:none; padding:5px; border-radius:3px; cursor:pointer;"><i class="fa-solid fa-phone"></i></button>
+                </td>
+            </tr>`;
         });
         document.getElementById('ledgerBody').innerHTML = h;
+        document.getElementById('totalLedgerDue').innerText = "TK " + totalOutstanding.toFixed(2);
     }
 
-    function editLedgerDue(phone) {
-        if(currentUser !== 'admin') return;
-        const custInvoices = invoices.filter(inv => inv.phone === phone);
-        if(custInvoices.length === 0) return;
-        const newPaid = prompt("Enter new Paid amount for the latest invoice (" + custInvoices[custInvoices.length-1].id + "):", custInvoices[custInvoices.length-1].paid);
-        if(newPaid !== null) {
-            const lastInv = custInvoices[custInvoices.length-1];
-            const updatedPaid = parseFloat(newPaid) || 0;
-            const updatedGrand = parseFloat(lastInv.grand) || 0;
-            const updatedDue = updatedGrand - updatedPaid;
-            db.ref('smart_erp/invoices/' + lastInv.id).update({ 
-                paid: updatedPaid.toFixed(2), 
-                due: updatedDue.toFixed(2),
-                hidden_from_ledger: (updatedDue <= 0)
-            });
-        }
+    function sendLedgerSMS(phone, due) {
+        const msg = `Total deu ৳${due} at SMART COMPUTER. Please pay & enjoy existing offer. Thanks for bing with us.`;
+        window.location.href = `sms:${phone}?body=${encodeURIComponent(msg)}`;
     }
 
-    function deleteCustomerInvoices(phone) {
-        if(currentUser !== 'admin') return;
-        if(confirm("এই কাস্টমারের সকল রেকর্ড লেজার থেকে মুছে ফেলতে চান? (এটি ইনভয়েস হিস্ট্রি থেকে মুছবে না)")) {
-            invoices.forEach(inv => {
-                if(inv.phone === phone) {
-                    db.ref('smart_erp/invoices/' + inv.id).update({ hidden_from_ledger: true });
-                }
-            });
-        }
-    }
-
-    function sendNotif(phone, due, name, date) {
-        const msg = `Dear ${name}, this is a reminder regarding your outstanding balance of TK ${due} at SMART COMPUTER from your purchase on ${date}. Please settle it soon. Thank you!`;
+    function sendLedgerWA(phone, name, entryDate, desc, payDate) {
+        const msg = `আসসালামু ওয়া আলাইকুম। প্রিয় ${name}। আপনি SMART COMPUTER থেকে ${entryDate} তারিখে ${desc} সেবা/পন্য গ্রহন করেছিলেন। ইহার ইনরোলমেন্ট ${payDate || 'দ্রুততম'} তারিখের মধ্যে করলে আপনি নিয়মিত অফারের আওতায় থাকবেন। বিকাশ পেমেন্ট 01614398989। SMART COMPUTER এর সাথে থাকার জন্য অসংখ্য ধন্যবাদ।`;
         window.open(`https://wa.me/88${phone}?text=${encodeURIComponent(msg)}`);
     }
 
-    function renderHistory() {
-        const q = document.getElementById('searchInv').value.toLowerCase();
-        let h = "";
-        invoices.filter(x => x.id.toLowerCase().includes(q) || x.customer.toLowerCase().includes(q) || x.phone.includes(q)).reverse().forEach(x => {
-            h += `<tr><td>${x.date}</td><td>${x.id}</td><td>${x.customer}</td><td>${x.phone}</td><td>${x.grand}</td><td>${x.soldBy || 'N/A'}</td><td>
-                <button onclick="viewInv('${x.id}')" style="background:var(--primary); color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;"><i class="fa-solid fa-eye"></i></button>
-                <button onclick="if(confirm('Delete?')) db.ref('smart_erp/invoices/${x.id}').remove()" class="admin-only" style="background:var(--danger); color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;"><i class="fa-solid fa-trash"></i></button>
-            </td></tr>`;
+    function printLedgerInvoice(phone) {
+        const trans = ledgerTransactions.filter(t => t.phone === phone).sort((a,b) => new Date(a.date) - new Date(b.date));
+        const cust = customers.find(x => x.phone === phone) || {name: trans[0].name, phone: phone};
+        let rows = ""; let subT = 0; let paidT = 0; let runningBalance = 0;
+        
+        trans.forEach((t, i) => {
+            subT += parseFloat(t.bill);
+            paidT += parseFloat(t.paid);
+            runningBalance += (parseFloat(t.bill) - parseFloat(t.paid));
+            rows += `<tr>
+                <td>${t.date}</td>
+                <td>${t.desc}</td>
+                <td>${parseFloat(t.bill).toFixed(2)}</td>
+                <td>${parseFloat(t.paid).toFixed(2)}</td>
+                <td style="font-weight:bold;">${runningBalance.toFixed(2)}</td>
+            </tr>`;
         });
-        document.getElementById('historyBody').innerHTML = h;
-        if(currentUser !== 'admin') document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
-    }
 
-    function viewInv(id) {
-        const inv = invoices.find(x => x.id === id);
-        if(!inv) return;
-        document.getElementById('docType').value = inv.type;
-        document.getElementById('invId').innerText = inv.id;
-        document.getElementById('curDate').innerText = inv.date;
-        document.getElementById('curTime').innerText = inv.time;
-        document.getElementById('cName').value = inv.customer;
-        document.getElementById('cPhone').value = inv.phone;
-        document.getElementById('cAddr').value = inv.address;
-        document.getElementById('cEmail').value = inv.email;
-        document.getElementById('vP').value = inv.discount;
-        document.getElementById('vatInp').value = inv.vat;
-        document.getElementById('pPaid').value = inv.paid;
-        document.getElementById('soldBy').innerText = inv.soldBy || 'N/A';
-
-        let rows = "";
-        inv.items.forEach((it, i) => {
-            rows += `<tr><td>${i+1}</td><td><input type="text" class="it-c" value="${it.code}" style="width:90%"></td><td><input type="text" class="it-n" value="${it.name}" style="width:95%"></td><td><input type="text" class="it-w" value="${it.war || ''}" style="width:90%"></td><td><input type="number" class="it-q" value="${it.q}" oninput="calc()" style="width:40px"></td><td><input type="number" class="it-p" value="${it.p}" oninput="calc()" style="width:60px"></td><td class="it-t">${it.t}</td></tr>`;
-        });
-        for(let i=inv.items.length+1; i<=13; i++) {
-            rows += `<tr><td>${i}</td><td><input type="text" class="it-c" style="width:90%"></td><td><input type="text" class="it-n" style="width:95%"></td><td><input type="text" class="it-w" style="width:90%"></td><td><input type="number" class="it-q" value="0" style="width:40px"></td><td><input type="number" class="it-p" value="0" style="width:60px"></td><td class="it-t">0.00</td></tr>`;
-        }
-        document.getElementById('billBody').innerHTML = rows;
-        calc();
-        showSec('pos');
-    }
-
-    function saveUser() {
-        if(currentUser !== 'admin') return;
-        const id = document.getElementById('newUId').value.trim();
-        const pass = document.getElementById('newUPass').value.trim();
-        const index = parseInt(document.getElementById('editUserIndex').value);
-        if(id && pass) {
-            if (index > -1) users[index] = {id, pass};
-            else users.push({id, pass});
-            db.ref('smart_erp/users').set(users).then(() => resetUserForm());
-        }
-    }
-
-    function renderUsers() {
-        let h = "";
-        users.forEach((u, i) => {
-            h += `<li style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #eee;">
-                <span><b>${u.id}</b> (Pass: ${u.pass})</span>
-                <div>
-                    <button onclick="editUser(${i})" style="background:blue; color:white; border:none; padding:3px 8px; border-radius:3px; cursor:pointer; margin-right:5px;">Edit</button>
-                    <button onclick="if(confirm('Delete user?')) { users.splice(${i},1); db.ref('smart_erp/users').set(users); }" style="background:red; color:white; border:none; padding:3px 8px; border-radius:3px; cursor:pointer;">Del</button>
+        const dueT = subT - paidT;
+        const printHTML = `
+            <div class="invoice-sheet">
+                <div class="header">
+                    <div>
+                        <h1>SMART COMPUTER</h1>
+                        <div class="slogan">Quality Service, Smart Solution, Your Digital Service Partner.</div>
+                        <div class="header-info">
+                            <p><i class="fa-solid fa-phone"></i> 01614-398989</p>
+                            <p><i class="fa-solid fa-envelope"></i> smartcomputer660@gmail.com</p>
+                            <p><i class="fa-solid fa-location-dot"></i> 1 No Camp, Housing Bajar Road, Ward No-12, Khalishpur, Khulna</p>
+                            <p><i class="fa-solid fa-globe"></i> smartcomputer-bd.github.io/com</p>
+                        </div>
+                    </div>
+                    <div style="text-align:right">
+                        <h3>STATEMENT</h3>
+                        <p><b>Date:</b> ${new Date().toLocaleDateString()}</p>
+                    </div>
                 </div>
-            </li>`;
+                <div class="cust-box">
+                    <div class="field"><b>Customer:</b> ${cust.name}</div>
+                    <div class="field"><b>Mobile:</b> ${phone}</div>
+                    <div class="field"><b>Address:</b> ${cust.addr || '-'}</div>
+                    <div class="field"><b>Email:</b> ${cust.email || '-'}</div>
+                </div>
+                <table>
+                    <thead><tr><th>Date</th><th>Description</th><th>Bill</th><th>Paid</th><th>Balance</th></tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>
+                <div style="display:flex; justify-content:flex-end; margin-top:10px;">
+                    <div style="width:250px; text-align:right;">
+                        <div style="display:flex; justify-content:space-between;"><span>Total Bill:</span> <span>${subT.toFixed(2)}</span></div>
+                        <div style="display:flex; justify-content:space-between;"><span>Total Paid:</span> <span>${paidT.toFixed(2)}</span></div>
+                        <div style="display:flex; justify-content:space-between; color:red; font-weight:bold; border-top:1px solid #000; padding-top:5px;"><span>Net Due:</span> <span>${dueT.toFixed(2)}</span></div>
+                    </div>
+                </div>
+                <div style="margin-top:auto; display:flex; justify-content:flex-end; padding-top:50px;">
+                    <div style="border-top:1.5px solid #000; width:160px; text-align:center; font-size:12px; font-weight:bold;">Authorized Sign</div>
+                </div>
+                <div style="text-align: center; font-size: 10px; color: #666; margin-top: 15px;">
+                This statement is generated by electronically!
+            </div>
+            </div>`;
+        
+        document.getElementById('statementPrintArea').innerHTML = printHTML;
+        window.print();
+    }
+
+    function viewStatement(phone) {
+        activeStatementPhone = phone;
+        const trans = ledgerTransactions.filter(t => t.phone === phone);
+        const cust = customers.find(x => x.phone === phone) || {name: trans[0].name, phone: phone};
+        
+        document.getElementById('statementHeader').innerHTML = `
+            <div><b>Name:</b> ${cust.name}<br><b>Phone:</b> ${phone}</div>
+            <div style="text-align:right;"><b>Balance:</b> <span id="stBalance">0.00</span></div>
+        `;
+        
+        let h = ""; let bal = 0;
+        trans.sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(t => {
+            bal += (parseFloat(t.bill) - parseFloat(t.paid));
+            h += `<tr>
+                <td>${t.date}</td>
+                <td>${t.desc}</td>
+                <td>${parseFloat(t.bill).toFixed(2)}</td>
+                <td>${parseFloat(t.paid).toFixed(2)}</td>
+                <td style="font-weight:bold;">${bal.toFixed(2)}</td>
+                <td><button onclick="deleteTransaction('${t.id}')" style="background:none; border:none; color:red; cursor:pointer;"><i class="fa-solid fa-times"></i></button></td>
+            </tr>`;
         });
-        document.getElementById('userList').innerHTML = h;
+        document.getElementById('statementBody').innerHTML = h;
+        document.getElementById('stBalance').innerText = bal.toFixed(2);
+        document.getElementById('statementModal').classList.remove('hidden');
     }
 
-    function editUser(i) {
-        const u = users[i];
-        document.getElementById('newUId').value = u.id;
-        document.getElementById('newUPass').value = u.pass;
-        document.getElementById('editUserIndex').value = i;
-        document.getElementById('userFormTitle').innerText = "Edit User";
-        document.getElementById('userBtn').innerText = "Update User";
-        document.getElementById('cancelUserEdit').classList.remove('hidden');
+    function closeStatementModal() { activeStatementPhone = ""; document.getElementById('statementModal').classList.add('hidden'); }
+
+    function deleteTransaction(id) {
+        if(confirm("Delete this transaction?")) db.ref('smart_erp/ledger_transactions/' + id).remove();
     }
 
-    function resetUserForm() {
-        document.getElementById('newUId').value = "";
-        document.getElementById('newUPass').value = "";
-        document.getElementById('editUserIndex').value = "-1";
-        document.getElementById('userFormTitle').innerText = "Add User";
-        document.getElementById('userBtn').innerText = "Save User";
-        document.getElementById('cancelUserEdit').classList.add('hidden');
-    }
-
-    function exportData() {
-        const data = { stock, invoices, users };
-        const blob = new Blob([JSON.stringify(data)], {type: "application/json"});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `Smart_ERP_Backup_${new Date().toLocaleDateString()}.json`;
-        a.click();
-    }
-
-    function importData(event) {
-        const file = event.target.files[0];
-        if(!file) return;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const data = JSON.parse(e.target.result);
-            if(data.stock || data.invoices || data.users) {
-                if(confirm("This will overwrite current data. Continue?")) {
-                    db.ref('smart_erp').set(data).then(() => alert("Data Restored!"));
-                }
-            }
-        };
-        reader.readAsText(file);
-    }
-
-    function showSec(id) {
-        ['posSec','historySec','stockSec','settingsSec','ledgerSec','dashSec'].forEach(s => document.getElementById(s).classList.add('hidden'));
-        if(id === 'pos') {
-            document.getElementById('posSec').classList.remove('hidden');
-            document.getElementById('dashSec').classList.remove('hidden');
-        } else {
-            document.getElementById(id + 'Sec').classList.remove('hidden');
+    function deleteLedgerGroup(phone) {
+        if(confirm("Delete all ledger records for this customer?")) {
+            ledgerTransactions.forEach(t => {
+                if(t.phone === phone) db.ref('smart_erp/ledger_transactions/' + t.id).remove();
+            });
         }
-        if(id=='history') renderHistory();
-        if(id=='stock') renderStock();
-        if(id=='settings') renderUsers();
-        if(id=='ledger') renderLedger();
+    }
+
+    // --- OTHER CORE FUNCTIONS ---
+    function updateDashboard() {
+        const today = new Date().toLocaleDateString();
+        let salesToday = 0; let totalVal = 0; let lowStock = 0;
+        invoices.forEach(inv => { if(inv.date === today) salesToday += parseFloat(inv.grand) || 0; });
+        stock.forEach(item => {
+            totalVal += (parseFloat(item.price) * parseInt(item.qty));
+            if(parseInt(item.qty) <= (parseInt(item.alert) || 5)) lowStock++;
+        });
+        document.getElementById('todaySales').innerText = "TK " + salesToday.toFixed(2);
+        document.getElementById('totalInvCount').innerText = invoices.length;
+        document.getElementById('totalStockVal').innerText = "TK " + totalVal.toLocaleString();
+        document.getElementById('lowStockCount').innerText = lowStock;
+    }
+
+    // UPDATED RENDER CUSTOMERS
+    function renderCustomers() {
+        const q = document.getElementById('searchCust').value.toLowerCase();
+        let h = "";
+        
+        // Sorting: Show newest first by reversing or tracking timestamp (reversing existing array)
+        let sortedCustomers = [...customers].reverse();
+
+        sortedCustomers.filter(c => c.name.toLowerCase().includes(q) || c.phone.includes(q) || (c.addr && c.addr.toLowerCase().includes(q))).forEach(c => {
+            const firstLetter = c.name ? c.name.charAt(0).toUpperCase() : '?';
+            h += `<tr class="cust-row">
+                <td>
+                    <div style="display: flex; align-items: center;">
+                        <div class="cust-avatar">${firstLetter}</div>
+                        <div>
+                            <div style="font-weight: bold; color: var(--dark);">${c.name}</div>
+                            <div style="font-size: 11px; color: #64748b;">Customer</div>
+                        </div>
+                    </div>
+                </td>
+                <td style="font-weight: 600; color: #1e293b;">${c.phone}</td>
+                <td style="color: #475569;">${c.addr || '--'}</td>
+                <td style="color: #475569;">${c.email || '--'}</td>
+                <td>
+                    <button onclick="window.location.href='tel:${c.phone}'" class="cust-action-btn" style="background: #10b981;" title="Call"><i class="fa-solid fa-phone"></i></button>
+                    <button onclick="editCustomer('${c.phone}')" class="cust-action-btn" style="background: #f59e0b;" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                    <button onclick="deleteCustomer('${c.phone}')" class="cust-action-btn admin-only" style="background: #ef4444;" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                </td>
+            </tr>`;
+        });
+        document.getElementById('customerTableBody').innerHTML = h || `<tr><td colspan="5" style="text-align:center; padding:50px; color:#94a3b8;">No customer found in database.</td></tr>`;
+        
+        if(currentUser !== 'admin') {
+            document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
+        }
+    }
+
+    function editCustomer(phone) {
+        const c = customers.find(x => x.phone === phone);
+        if(!c) return;
+        document.getElementById('customerFormBox').classList.remove('hidden');
+        document.getElementById('custFormTitle').innerText = "Update Customer Information";
+        document.getElementById('custName').value = c.name;
+        document.getElementById('custPhone').value = c.phone;
+        document.getElementById('custAddr').value = c.addr || "";
+        document.getElementById('custEmail').value = c.email || "";
+        document.getElementById('editCustPhone').value = c.phone;
+        document.getElementById('saveCustBtn').innerText = "Update Record";
+        document.getElementById('customerSec').scrollIntoView();
+    }
+
+    function deleteCustomer(phone) {
+        if(confirm("Are you sure you want to delete this customer? This will not delete their invoices.")) {
+            db.ref('smart_erp/customers/' + phone).remove();
+        }
+    }
+
+    function updateCustomerListSource() {
+        let h = "";
+        customers.forEach(c => { h += `<option value="${c.name}">${c.phone}</option>`; });
+        document.getElementById('customerListSource').innerHTML = h;
     }
 
     function numberToWords(num) {
@@ -753,32 +1168,174 @@
         return str;
     }
 
-    function deleteAllProducts() { if(currentUser === 'admin' && confirm("Delete all products?")) db.ref('smart_erp/stock').remove(); }
+    function exportData() {
+        const data = { stock, invoices, users, customers, ledger_transactions: ledgerTransactions };
+        const blob = new Blob([JSON.stringify(data)], {type: "application/json"});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `Smart_ERP_Backup_${new Date().toLocaleDateString()}.json`;
+        a.click();
+    }
+
+    function importData(event) {
+        const file = event.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const data = JSON.parse(e.target.result);
+            if(confirm("Overwrite current data?")) db.ref('smart_erp').set(data);
+        };
+        reader.readAsText(file);
+    }
     
-    function editStock(code) {
-        if(currentUser !== 'admin') return;
-        const p = stock.find(x => x.code === code);
-        if(p) {
-            document.getElementById('sCode').value = p.code;
-            document.getElementById('sName').value = p.name;
-            document.getElementById('sCat').value = p.cat || "";
-            document.getElementById('sWar').value = p.war || "";
-            document.getElementById('sCost').value = p.cost || 0;
-            document.getElementById('sPrice').value = p.price;
-            document.getElementById('sQty').value = p.qty;
-            document.getElementById('sAlert').value = p.alert || 5;
-            document.getElementById('stockBtn').innerText = "Update Product";
-            showSec('stock');
-            document.getElementById('sName').focus();
+    function renderStock() {
+        const q = document.getElementById('searchStock').value.toLowerCase();
+        let h = "";
+        stock.filter(x => x.code.toLowerCase().includes(q) || x.name.toLowerCase().includes(q)).forEach(x => {
+            h += `<tr><td>${x.code}</td><td>${x.name}</td><td>${x.cat || '-'}</td><td>${x.war || '-'}</td><td>${x.cost}</td><td>${x.price}</td><td>${x.qty}</td><td>${x.alert}</td>
+            <td class="admin-only"><button onclick="editStock('${x.code}')">Edit</button></td></tr>`;
+        });
+        document.getElementById('stockBody').innerHTML = h;
+    }
+
+    function autoFillCustomerByName(name) {
+        const c = customers.find(x => x.name === name);
+        if(c) {
+            document.getElementById('cPhone').value = c.phone;
+            document.getElementById('cAddr').value = c.addr || "";
+            document.getElementById('cEmail').value = c.email || "";
         }
     }
 
-    function deleteAllLedger() {
-        if(currentUser === 'admin' && confirm("সব লেজার ডাটা মুছে ফেলতে চান? এটি পারমানেন্টলি লেজার ক্লিন করবে।")) {
-            invoices.forEach(inv => {
-                db.ref('smart_erp/invoices/' + inv.id).update({ hidden_from_ledger: true });
-            });
+    function autoFillCustomer(phone) {
+        const c = customers.find(x => x.phone === phone);
+        if(c) {
+            document.getElementById('cName').value = c.name;
+            document.getElementById('cAddr').value = c.addr || "";
+            document.getElementById('cEmail').value = c.email || "";
         }
+    }
+
+    function renderHistory() {
+        const q = document.getElementById('searchInv').value.toLowerCase();
+        const historyBody = document.getElementById('historyBody');
+        
+        let sortedInvoices = [...invoices].sort((a, b) => {
+            return new Date(b.date + ' ' + (b.time || '00:00')) - new Date(a.date + ' ' + (a.time || '00:00'));
+        });
+
+        let filtered = sortedInvoices.filter(x => 
+            x.id.toLowerCase().includes(q) || 
+            x.customer.toLowerCase().includes(q) || 
+            x.phone.includes(q)
+        );
+
+        document.getElementById('historyCount').innerText = filtered.length;
+
+        let h = "";
+        filtered.forEach(x => {
+            h += `
+            <tr class="history-item">
+                <td>
+                    <div style="font-weight: bold; color: var(--dark);">${x.date}</div>
+                    <div style="font-size: 10px; color: #64748b;"><i class="fa-regular fa-clock"></i> ${x.time || '--:--'}</div>
+                </td>
+                <td style="font-weight: bold; color: var(--primary);">${x.id}</td>
+                <td style="font-weight: 600;">${x.customer}</td>
+                <td style="color: #64748b;">${x.phone}</td>
+                <td style="font-weight: bold;">TK ${parseFloat(x.grand).toFixed(2)}</td>
+                <td style="font-size: 11px; color: #475569;">${x.soldBy}</td>
+                <td>
+                    <div style="display: flex; justify-content: center;">
+                        <button class="act-btn" onclick="viewInvoice('${x.id}')" title="View" style="background: #10b981;"><i class="fa-solid fa-eye"></i></button>
+                        <button class="act-btn" onclick="viewInvoice('${x.id}')" title="Edit" style="background: #f59e0b;"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="act-btn admin-only" onclick="deleteInvoice('${x.id}')" title="Delete" style="background: #ef4444;"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </td>
+            </tr>`;
+        });
+        historyBody.innerHTML = h || `<tr><td colspan="7" style="padding: 30px; color: #94a3b8; text-align:center;">No records found.</td></tr>`;
+        
+        if(currentUser !== 'admin') {
+            document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
+        }
+    }
+
+    function viewInvoice(id) {
+        const inv = invoices.find(x => x.id === id);
+        if(!inv) return;
+        document.getElementById('invId').innerText = inv.id;
+        document.getElementById('docType').value = inv.type || "Inv";
+        document.getElementById('curDate').innerText = inv.date;
+        document.getElementById('curTime').innerText = inv.time || "";
+        document.getElementById('cName').value = inv.customer;
+        document.getElementById('cPhone').value = inv.phone;
+        document.getElementById('cAddr').value = inv.address;
+        document.getElementById('cEmail').value = inv.email;
+        document.getElementById('vP').value = 0;
+        document.getElementById('vatInp').value = 0;
+        document.getElementById('pPaid').value = inv.paid;
+        formatPaymentDate(document.getElementById('invPayDate').value)
+ = inv.payDate || "";
+        
+        let rows = "";
+        inv.items.forEach((item, i) => {
+            rows += `<tr><td>${i+1}</td><td><input type="text" class="it-c" value="${item.code}"></td><td><input type="text" class="it-n" value="${item.name}"></td><td><input type="text" class="it-w" value="${item.war}"></td><td><input type="number" class="it-q" value="${item.q}" oninput="calc()"></td><td><input type="number" class="it-p" value="${item.p}" oninput="calc()"></td><td class="it-t">${item.t}</td></tr>`;
+        });
+        for(let i=inv.items.length+1; i<=13; i++) {
+            rows += `<tr><td>${i}</td><td><input type="text" class="it-c"></td><td><input type="text" class="it-n"></td><td><input type="text" class="it-w"></td><td><input type="number" class="it-q" value="0"></td><td><input type="number" class="it-p" value="0"></td><td class="it-t">0.00</td></tr>`;
+        }
+        document.getElementById('billBody').innerHTML = rows;
+        calc();
+        showSec('pos');
+    }
+
+    function deleteInvoice(id) {
+        if(confirm("Delete this record?")) db.ref('smart_erp/invoices/' + id).remove();
+    }
+
+    function renderUsers() {
+        let h = "";
+        users.forEach((u, i) => {
+            h += `<li style="display:flex; justify-content:space-between; margin-bottom:10px; padding:10px; background:#f1f5f9; border-radius:5px;">
+                <span><b>${u.id}</b></span>
+                <div>
+                    <button onclick="editUser(${i})" style="border:none; background:none; color:blue; cursor:pointer;"><i class="fa-solid fa-edit"></i></button>
+                    <button onclick="deleteUser(${i})" style="border:none; background:none; color:red; cursor:pointer;"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            </li>`;
+        });
+        document.getElementById('userList').innerHTML = h;
+    }
+
+    function saveUser() {
+        const id = document.getElementById('newUId').value.trim();
+        const pass = document.getElementById('newUPass').value.trim();
+        const idx = parseInt(document.getElementById('editUserIndex').value);
+        if(!id || !pass) return alert("Fill all fields");
+        if(idx === -1) users.push({id, pass});
+        else users[idx] = {id, pass};
+        db.ref('smart_erp/users').set(users).then(() => resetUserForm());
+    }
+
+    function editUser(i) {
+        document.getElementById('newUId').value = users[i].id;
+        document.getElementById('newUPass').value = users[i].pass;
+        document.getElementById('editUserIndex').value = i;
+        document.getElementById('userBtn').innerText = "Update User";
+        document.getElementById('cancelUserEdit').classList.remove('hidden');
+    }
+
+    function resetUserForm() {
+        document.getElementById('newUId').value = "";
+        document.getElementById('newUPass').value = "";
+        document.getElementById('editUserIndex').value = "-1";
+        document.getElementById('userBtn').innerText = "Save User";
+        document.getElementById('cancelUserEdit').classList.add('hidden');
+    }
+
+    function deleteUser(i) {
+        if(confirm("Delete user?")) { users.splice(i, 1); db.ref('smart_erp/users').set(users); }
     }
 
     function shareInvoice() {
@@ -786,27 +1343,121 @@
         const cName = document.getElementById('cName').value || "Customer";
         const grand = document.getElementById('grandT').innerText;
         const due = document.getElementById('pDue').innerText;
-        const date = document.getElementById('curDate').innerText;
         const phone = document.getElementById('cPhone').value;
-
-        const shareText = `*SMART COMPUTER - Invoice*\n\n` +
-                          `Invoice No: ${invId}\n` +
-                          `Date: ${date}\n` +
-                          `Customer: ${cName}\n` +
-                          `Total Amount: TK ${grand}\n` +
-                          `Due Amount: TK ${due}\n\n` +
-                          `Thank you for being with us!`;
-
-        if (navigator.share) {
-            navigator.share({
-                title: 'Smart Computer Invoice',
-                text: shareText,
-            }).catch(console.error);
-        } else {
-            const waUrl = `https://wa.me/88${phone}?text=${encodeURIComponent(shareText)}`;
-            window.open(waUrl, '_blank');
-        }
+        const shareText = `*SMART COMPUTER - Invoice*\nInv: ${invId}\nCust: ${cName}\nTotal: TK ${grand}\nDue: TK ${due}\nThank you!`;
+        window.open(`https://wa.me/88${phone}?text=${encodeURIComponent(shareText)}`);
     }
+
+    function printNoSave() { window.print(); }
+
+    function openCustomerModal() {
+        document.getElementById('customerFormBox').classList.remove('hidden');
+        document.getElementById('custFormTitle').innerText = "Register New Customer";
+        document.getElementById('saveCustBtn').innerText = "Save Information";
+        ['custName','custPhone','custAddr','custEmail','editCustPhone'].forEach(id => document.getElementById(id).value = "");
+    }
+    function closeCustomerModal() { document.getElementById('customerFormBox').classList.add('hidden'); }
+    
+    function saveCustomerData() {
+        const phone = document.getElementById('custPhone').value.trim();
+        const name = document.getElementById('custName').value.trim();
+        const oldPhone = document.getElementById('editCustPhone').value;
+        
+        if(!phone || !name) return alert("Name and Phone required");
+        
+        const updates = {};
+        const data = {
+            name, phone, addr: document.getElementById('custAddr').value, email: document.getElementById('custEmail').value
+        };
+
+        if(oldPhone && oldPhone !== phone) {
+            db.ref('smart_erp/customers/' + oldPhone).remove();
+        }
+        
+        db.ref('smart_erp/customers/' + phone).update(data).then(() => {
+            alert("Customer data saved successfully!");
+            closeCustomerModal();
+        });
+    }
+
+    function addStock() {
+        const code = document.getElementById('sCode').value.trim();
+        if(!code) return;
+        const item = {
+            code, name: document.getElementById('sName').value, cat: document.getElementById('sCat').value, 
+            war: document.getElementById('sWar').value, cost: document.getElementById('sCost').value, 
+            price: document.getElementById('sPrice').value, qty: document.getElementById('sQty').value, 
+            alert: document.getElementById('sAlert').value
+        };
+        db.ref('smart_erp/stock/' + code).set(item).then(() => {
+            ['sCode','sName','sCat','sWar','sCost','sPrice','sQty','sAlert'].forEach(id => document.getElementById(id).value = (id==='sQty'?1:""));
+        });
+    }
+    function editStock(code) {
+        const x = stock.find(p => p.code === code);
+        if(!x) return;
+        document.getElementById('sCode').value = x.code;
+        document.getElementById('sName').value = x.name;
+        document.getElementById('sCat').value = x.cat || "";
+        document.getElementById('sWar').value = x.war || "";
+        document.getElementById('sCost').value = x.cost;
+        document.getElementById('sPrice').value = x.price;
+        document.getElementById('sQty').value = x.qty;
+        document.getElementById('sAlert').value = x.alert;
+        showSec('stock');
+    }
+
+function openAddModal(){document.getElementById('addModal').classList.remove('hidden');}
+function closeAddModal(){document.getElementById('addModal').classList.add('hidden');}
+
+function saveProduct(){
+ const p={
+  code:sCode.value,name:sName.value,cat:sCat.value,war:sWar.value,
+  cost:sCost.value,price:sPrice.value,qty:sQty.value,alert:sAlert.value
+ };
+ db.ref('smart_erp/stock/'+p.code).set(p);
+ closeAddModal();
+}
+
+function renderStock(){
+ const q=document.getElementById('searchStock').value.toLowerCase();
+ let h='';
+ stock.filter(p=>p.code.toLowerCase().includes(q)||p.name.toLowerCase().includes(q)||p.cat?.toLowerCase().includes(q))
+ .forEach(p=>{
+   const low = p.qty < p.alert ? "style='background:#fee2e2'" : "";
+   h+=`<tr ${low}>
+    <td>${p.code}</td><td>${p.name}</td><td>${p.cat||''}</td><td>${p.war||''}</td>
+    <td>${p.cost}</td><td>${p.price}</td><td>${p.qty}</td><td>${p.alert}</td>
+    <td>
+      <button onclick="editP('${p.code}')"><i class="fa fa-edit"></i></button>
+      <button onclick="delP('${p.code}')"><i class="fa fa-trash"></i></button>
+    </td>
+   </tr>`;
+ });
+ document.getElementById('stockBody').innerHTML=h;
+}
+
+function editP(c){
+ const p=stock.find(x=>x.code===c);
+ Object.keys(p).forEach(k=>{if(document.getElementById('s'+k.charAt(0).toUpperCase()+k.slice(1))) document.getElementById('s'+k.charAt(0).toUpperCase()+k.slice(1)).value=p[k];});
+ openAddModal();
+}
+
+function delP(c){
+ if(confirm('Delete?')) db.ref('smart_erp/stock/'+c).remove();
+}
+
+// তারিখকে DD-MMM-YYYY ফরম্যাটে রূপান্তর করার ফাংশন
+function formatPaymentDate(dateStr) {
+    if (!dateStr) return "";
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const d = new Date(dateStr);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = months[d.getMonth()];
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
+}
+
 </script>
 </body>
 </html>
