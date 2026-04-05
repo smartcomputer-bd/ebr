@@ -151,7 +151,7 @@ function delP(c){
         .invoice-sheet { width: 210mm; min-height: 297mm; background: white; padding: 10mm; margin: 10px auto; position: relative; color: #000; box-sizing: border-box; display: flex; flex-direction: column; border: 1px solid #d1d5db; }
         .header { display: flex; justify-content: space-between; border-bottom: 4px solid var(--primary); padding-bottom: 10px; margin-bottom: 10px; }
         .header h1 { margin: 0; font-size: 45px; color: var(--primary); font-weight: 900; }
-        .slogan { font-size: 14px; color: #444; font-weight: 600; font-style: italic; margin-top: -5px; margin-bottom: 5px; }
+        .slogan { font-size: 15px; color: red; font-weight: 600; font-style: italic; margin-top: -5px; margin-bottom: 5px; }
         .header-info p { margin: 2px 0; font-size: 13px; display: flex; align-items: center; gap: 8px; }
         .cust-box { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; background: #f8fafc; padding: 10px; border-radius: 5px; border: 1px solid #e2e8f0; }
         .field { font-size: 13px; display: flex; align-items: center; gap: 5px; }
@@ -224,8 +224,16 @@ function delP(c){
 .status-paid { border-color: #2563eb !important; color: #2563eb !important; } /* নীল */
 .status-due { border-color: #dc2626 !important; color: #dc2626 !important; }   /* লাল */
     </style>
+    <script src="https://unpkg.com/html5-qrcode"></script>
 </head>
 <body onload="document.getElementById('uId').focus()">
+<div id="scannerModal" class="modal-overlay hidden no-print">
+    <div class="modal-content" style="max-width: 400px; text-align: center;">
+        <h3 id="scanTitle">Scanning...</h3>
+        <div id="reader" style="width: 100%; border-radius: 10px; overflow: hidden;"></div>
+        <button onclick="stopScanner()" class="btn btn-danger" style="width: 100%; margin-top: 15px; justify-content: center;">Close Camera</button>
+    </div>
+</div>
 
 <div id="loginPage" style="position:fixed; inset:0; background:var(--dark); display:flex; align-items:center; justify-content:center; z-index:9999;">
     <div style="background:white; padding:40px; border-radius:15px; width:350px; text-align:center;">
@@ -301,8 +309,7 @@ function delP(c){
                         <option value="Cha">CHALAN</option>
                     </select>
                     <p><b>No:</b> <span id="invId" style="font-weight:bold; color:var(--danger)"></span></p>
-                    <p><b>Date:</b> <span id="curDate"></span></p>
-                    <p><b>Time:</b> <span id="curTime"></span></p>
+                   <p style="font-size: 13px;"><b>Date:</b> <span id="curDate"></span> | <b>Time:</b> <span id="curTime"></span></p>
                 </div>
             </div>
             <div class="cust-box">
@@ -312,6 +319,8 @@ function delP(c){
                 <div class="field"><b>Email:</b> <input type="text" id="cEmail" style="flex:1"></div>
                 <datalist id="customerListSource"></datalist>
             </div>
+            <button onclick="startScanner('invoice')" class="btn btn-primary no-print" style="margin: 10px 0;"><i class="fa-solid fa-camera"></i> Scan Product</button>
+
             <table>
                 <thead>
                     <tr>
@@ -455,7 +464,7 @@ function delP(c){
                 </div>
                 <div class="field" style="flex-direction:column; align-items:flex-start;">
                     <b>Pay Date (Payment Date)</b>
-                    <input type="date" id="invPayDate" style="width:95%">
+                    <input type="date" id="lPayDate" style="width:95%">
                 </div>
                 <div class="field" style="flex-direction:column; align-items:flex-start;">
                     <b>Bill Amount</b>
@@ -564,6 +573,7 @@ function delP(c){
     <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
         <div style="display:flex; gap:10px;">
             <button class="btn btn-success" onclick="openAddModal()"><i class="fa fa-plus"></i> Add New</button>
+            <button class="btn btn-secondary" onclick="startScanner('stock')"><i class="fa fa-camera"></i> Scan to Add</button>
             <input type="text" id="searchStock" placeholder="Search by Code / Name / Category..." oninput="renderStock()" style="padding:8px; border-radius:6px;">
         </div>
     </div>
@@ -585,19 +595,10 @@ function delP(c){
     <input id="sCode" placeholder="Code"><br><br>
     <input id="sName" placeholder="Product Name"><br><br>
     <input id="sCat" list="catList" placeholder="Category"><datalist id="catList"></datalist><br><br>
-<input id="sWar" list="warList" placeholder="Warranty" style="width:100%; margin-bottom:10px;">
-<datalist id="warList">
-  <option value="No Warranty"></option>
-  <option value="1 Month"></option>
-  <option value="2 Months"></option>
-  <option value="3 Months"></option>
-  <option value="6 Months"></option>
-  <option value="9 Months"></option>
-  <option value="1 Year"></option>
-  <option value="2 Years"></option>
-  <option value="3 Years"></option>
-  <option value="Lifetime"></option>
-</datalist><br><br>
+    <select id="sWar">
+      <option>3 Years</option><option>2 Years</option><option>1 Year</option>
+      <option>9 Months</option><option>6 Months</option><option>3 Months</option>
+    </select><br><br>
     <input id="sCost" placeholder="Buy Price"><br><br>
     <input id="sPrice" placeholder="Sale Price"><br><br>
     <input id="sQty" placeholder="Stock"><br><br>
@@ -814,8 +815,7 @@ if (dueAmount > 0) {
         } else {
             seal.innerText = "PAID";
             payDateBox.classList.add('hidden');
-            formatPaymentDate(document.getElementById('invPayDate').value)
- = "";
+            document.getElementById('invPayDate').value = "";
         }
 
         const qrText = `Customer: ${document.getElementById('cName').value}\nInv No: ${document.getElementById('invId').innerText}\nTotal: ${grand.toFixed(2)}\nDue: ${due.toFixed(2)}`;
@@ -839,8 +839,7 @@ if (dueAmount > 0) {
         const grandVal = parseFloat(document.getElementById('grandT').innerText) || 0;
         const paidVal = parseFloat(document.getElementById('pPaid').value) || 0;
         const dueVal = grandVal - paidVal;
-        const payDate = formatPaymentDate(document.getElementById('invPayDate').value)
-;
+        const payDate = document.getElementById('invPayDate').value;
         const inv = { id: invId, type: document.getElementById('docType').value, date: document.getElementById('curDate').innerText, time: document.getElementById('curTime').innerText, customer: document.getElementById('cName').value, phone: document.getElementById('cPhone').value, address: document.getElementById('cAddr').value, email: document.getElementById('cEmail').value, items: billItems, grand: grandVal.toFixed(2), paid: paidVal.toFixed(2), due: dueVal.toFixed(2), soldBy: currentUser, payDate: payDate };
 
         if(inv.phone) {
@@ -887,31 +886,30 @@ if (dueAmount > 0) {
     }
 
     function saveLedgerEntry() {
-    const name = document.getElementById('lCustName').value;
-    const phone = document.getElementById('lCustPhone').value;
-    const desc = document.getElementById('lDesc').value;
-    const bill = parseFloat(document.getElementById('lBill').value) || 0;
-    const paid = parseFloat(document.getElementById('lPaid').value) || 0;
-    const payDate = document.getElementById('invPayDate').value;
+        const phone = document.getElementById('lCustPhone').value.trim();
+        const name = document.getElementById('lCustName').value.trim();
+        if(!phone || !name) return alert("Phone and Name required!");
+        
+        const lId = Date.now();
+        const entry = {
+            id: lId,
+            phone: phone,
+            name: name,
+            desc: document.getElementById('lDesc').value || "Manual Entry",
+            bill: parseFloat(document.getElementById('lBill').value) || 0,
+            paid: parseFloat(document.getElementById('lPaid').value) || 0,
+            date: new Date().toISOString().split('T')[0],
+            payDate: document.getElementById('lPayDate').value || "",
+            soldBy: currentUser
+        };
 
-    if (!phone) return alert("Mobile number is required!");
-
-    const entry = {
-        date: new Date().toLocaleDateString(),
-        time: new Date().toLocaleTimeString(),
-        desc: desc,
-        bill: bill,
-        paid: paid,
-        payDate: payDate,
-        user: document.getElementById('uId').value
-    };
-
-    // ডাটাবেসে সেভ করা হচ্ছে
-    db.ref('smart_erp/ledger/' + phone).push(entry);
-    
-    alert("Transaction Saved!");
-    closeLedgerModal();
-}
+        db.ref('smart_erp/ledger_transactions/' + lId).set(entry).then(() => {
+            closeLedgerModal();
+            if(!customers.find(x => x.phone === phone)) {
+                db.ref('smart_erp/customers/' + phone).set({name, phone});
+            }
+        });
+    }
 
     function renderLedger() {
         const q = document.getElementById('searchLedger').value.toLowerCase();
@@ -962,12 +960,12 @@ if (dueAmount > 0) {
     }
 
     function sendLedgerSMS(phone, due) {
-        const msg = `Total deu ৳${due} at SMART COMPUTER. Please pay & enjoy existing offer. Thanks for bing with us.`;
+        const msg = `Total deu ৳${due} at SMART COMPUTER. Please pay to retailer. Thanks for bing with us.`;
         window.location.href = `sms:${phone}?body=${encodeURIComponent(msg)}`;
     }
 
     function sendLedgerWA(phone, name, entryDate, desc, payDate) {
-        const msg = `আসসালামু ওয়া আলাইকুম। প্রিয় ${name}। আপনি SMART COMPUTER থেকে ${entryDate} তারিখে ${desc} সেবা/পন্য গ্রহন করেছিলেন। ইহার ইনরোলমেন্ট ${payDate || 'দ্রুততম'} তারিখের মধ্যে করলে আপনি নিয়মিত অফারের আওতায় থাকবেন। বিকাশ পেমেন্ট 01614398989। SMART COMPUTER এর সাথে থাকার জন্য অসংখ্য ধন্যবাদ।`;
+        const msg = `আসসালামু ওয়া আলাইকুম। প্রিয় ${name}। আপনি SMART COMPUTER থেকে ${entryDate} তারিখে যে সেবা/পন্য গ্রহন করেছিলেন তার ইনরোলমেন্ট এখনো বাকি রয়েছে। আপনি ${payDate || 'দ্রুততম'} তারিখের মধ্যে ইনরোলমেন্ট করলে আপনি নিয়মিত অফারের আওতায় থাকবেন। বিকাশ পেমেন্ট 01614398989। SMART COMPUTER এর সাথে থাকার জন্য অসংখ্য ধন্যবাদ।`;
         window.open(`https://wa.me/88${phone}?text=${encodeURIComponent(msg)}`);
     }
 
@@ -1277,8 +1275,7 @@ if (dueAmount > 0) {
         document.getElementById('vP').value = 0;
         document.getElementById('vatInp').value = 0;
         document.getElementById('pPaid').value = inv.paid;
-        formatPaymentDate(document.getElementById('invPayDate').value)
- = inv.payDate || "";
+        document.getElementById('invPayDate').value = inv.payDate || "";
         
         let rows = "";
         inv.items.forEach((item, i) => {
@@ -1448,16 +1445,38 @@ function editP(c){
 function delP(c){
  if(confirm('Delete?')) db.ref('smart_erp/stock/'+c).remove();
 }
+let html5QrCode;
 
-// তারিখকে DD-MMM-YYYY ফরম্যাটে রূপান্তর করার ফাংশন
-function formatPaymentDate(dateStr) {
-    if (!dateStr) return "";
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const d = new Date(dateStr);
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = months[d.getMonth()];
-    const year = d.getFullYear();
-    return `${day}-${month}-${year}`;
+function startScanner(target) {
+    document.getElementById('scannerModal').classList.remove('hidden');
+    document.getElementById('scanTitle').innerText = "Scanning for " + target;
+    
+    html5QrCode = new Html5Qrcode("reader");
+    html5QrCode.start(
+        { facingMode: "environment" }, 
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        (decodedText) => {
+            if(target === 'invoice') {
+                // ইনভয়েসে নতুন রো যোগ করবে (আপনার বিদ্যমান addRow ফাংশন ব্যবহার করে)
+                addRow(decodedText); 
+            } else {
+                // ইনভেন্টরি মডালে কোড বসিয়ে দিবে
+                openAddModal();
+                document.getElementById('sCode').value = decodedText;
+            }
+            stopScanner();
+        }
+    ).catch(err => alert("Camera error: " + err));
+}
+
+function stopScanner() {
+    if (html5QrCode) {
+        html5QrCode.stop().then(() => {
+            document.getElementById('scannerModal').classList.add('hidden');
+        });
+    } else {
+        document.getElementById('scannerModal').classList.add('hidden');
+    }
 }
 
 </script>
