@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Computer | Management System</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js">
 function openAddModal(){document.getElementById('addModal').classList.remove('hidden');}
 function closeAddModal(){document.getElementById('addModal').classList.add('hidden');}
 
@@ -224,7 +223,9 @@ function delP(c){
         /* ডায়নামিক সীলের রং */
 .status-paid { border-color: #2563eb !important; color: #2563eb !important; } /* নীল */
 .status-due { border-color: #dc2626 !important; color: #dc2626 !important; }   /* লাল */
-    </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+    
+</style>
 </head>
 <body onload="document.getElementById('uId').focus()">
 
@@ -312,10 +313,6 @@ function delP(c){
                 <div class="field"><b>Email:</b> <input type="text" id="cEmail" style="flex:1"></div>
                 <datalist id="customerListSource"></datalist>
             </div>
-            <div class="no-print" style="margin-bottom: 10px; display: flex; gap: 10px; align-items: center;">
-    <button onclick="startScanner('invoice')" class="btn btn-primary"><i class="fa-solid fa-camera"></i> Scan to Add</button>
-    <div id="reader-invoice" style="width: 300px; display: none; border: 2px solid var(--primary); border-radius: 8px;"></div>
-</div>
             <table>
                 <thead>
                     <tr>
@@ -568,8 +565,6 @@ function delP(c){
     <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
         <div style="display:flex; gap:10px;">
             <button class="btn btn-success" onclick="openAddModal()"><i class="fa fa-plus"></i> Add New</button>
-            <button class="btn btn-secondary" onclick="startScanner('stock')"><i class="fa fa-barcode"></i> Scan</button>
-<div id="reader-stock" style="width: 300px; display: none; margin-top: 10px;"></div>
             <input type="text" id="searchStock" placeholder="Search by Code / Name / Category..." oninput="renderStock()" style="padding:8px; border-radius:6px;">
         </div>
     </div>
@@ -599,7 +594,8 @@ function delP(c){
     <input id="sPrice" placeholder="Sale Price"><br><br>
     <input id="sQty" placeholder="Stock"><br><br>
     <input id="sAlert" placeholder="Alert"><br><br>
-
+    <button class="btn btn-primary" onclick="startScanner()">📷 Scan Barcode</button>
+    <video id="scanner" class="hidden" width="100%" height="200"></video>
     <button class="btn btn-success" onclick="saveProduct()">Save</button>
     <button class="btn btn-danger" onclick="closeAddModal()">Close</button>
   </div>
@@ -750,7 +746,10 @@ function getFormattedDateTime() {
         });
         let rows = "";
         for(let i=1; i<=13; i++) {
-            rows += `<tr><td>${i}</td><td><input type="text" class="it-c" style="width:90%" onchange="fetchItem(this)"></td><td><input type="text" class="it-n" style="width:95%"></td><td><input type="text" class="it-w" style="width:90%"></td><td><input type="number" class="it-q" value="0" oninput="calc()" style="width:40px"></td><td><input type="number" class="it-p" value="0" oninput="calc()" style="width:60px"></td><td class="it-t">0.00</td></tr>`;
+            rows += `<tr><td>${i}</td><td style="display:flex; align-items:center; gap:5px;">
+    <input type="text" class="it-c" style="flex:1" onchange="fetchItem(this)">
+    <button class="btn btn-secondary" style="padding:2px 6px; font-size:12px;" onclick="startScanner(this)">📷</button>
+</td><input type="text" class="it-n" style="width:95%"></td><td><input type="text" class="it-w" style="width:90%"></td><td><input type="number" class="it-q" value="0" oninput="calc()" style="width:40px"></td><td><input type="number" class="it-p" value="0" oninput="calc()" style="width:60px"></td><td class="it-t">0.00</td></tr>`;
         }
         document.getElementById('billBody').innerHTML = rows;
         calc();
@@ -1441,47 +1440,44 @@ function editP(c){
 function delP(c){
  if(confirm('Delete?')) db.ref('smart_erp/stock/'+c).remove();
 }
-let html5QrCode;
 
-function startScanner(target) {
-    const readerId = "reader-" + target;
-    const readerDiv = document.getElementById(readerId);
-    readerDiv.style.display = 'block';
+function startScanner() {
+    const video = document.getElementById('scanner');
+    video.classList.remove('hidden');
 
-    html5QrCode = new Html5Qrcode(readerId);
-    const config = { fps: 10, qrbox: { width: 250, height: 150 } };
-
-    html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
-        // কোড স্ক্যান হলে যা হবে
-        if (target === 'invoice') {
-            handleInvoiceScan(decodedText);
-        } else {
-            document.getElementById('searchStock').value = decodedText;
-            renderStock();
+    Quagga.init({
+        inputStream : {
+          name : "Live",
+          type : "LiveStream",
+          target: video
+        },
+        decoder : {
+          readers : ["code_128_reader","ean_reader","ean_8_reader","upc_reader"]
         }
-        stopScanner(readerId);
-    }).catch(err => alert("Camera error: " + err));
-}
+    }, function(err) {
+        if (err) { console.error(err); return; }
+        Quagga.start();
+    });
 
-function stopScanner(id) {
-    if (html5QrCode) {
-        html5QrCode.stop().then(() => {
-            document.getElementById(id).style.display = 'none';
-        });
-    }
-}
+    Quagga.onDetected(function(result) {
+        const code = result.codeResult.code;
+        document.getElementById('sCode').value = code;
 
-function handleInvoiceScan(code) {
-    // স্টক থেকে প্রডাক্ট খুঁজে বের করা
-    const product = stock.find(p => p.code === code);
-    if (product) {
-        // আপনার বিদ্যমান বিলিং ফাংশন ব্যবহার করে আইটেম যোগ করুন
-        // উদাহরণ: addItemToBill(product.code); 
-        // (নোট: আপনার ফাইলের addItem ফাংশনের নাম অনুযায়ী এখানে কল করুন)
-        alert("Product Found: " + product.name);
-    } else {
-        alert("Product not found in inventory!");
-    }
+        // যদি স্টক এ আগে থেকে থাকে, ফিল আপ করতে চাইলে:
+        const p = stock.find(x => x.code === code);
+        if(p) {
+            document.getElementById('sName').value = p.name;
+            document.getElementById('sCat').value = p.cat || "";
+            document.getElementById('sWar').value = p.war || "3 Years";
+            document.getElementById('sCost').value = p.cost || "";
+            document.getElementById('sPrice').value = p.price || "";
+            document.getElementById('sQty').value = p.qty || "";
+            document.getElementById('sAlert').value = p.alert || "";
+        }
+
+        Quagga.stop();
+        video.classList.add('hidden');
+    });
 }
 
 </script>
