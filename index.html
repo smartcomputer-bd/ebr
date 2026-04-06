@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Computer | Management System</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js">
 function openAddModal(){document.getElementById('addModal').classList.remove('hidden');}
 function closeAddModal(){document.getElementById('addModal').classList.add('hidden');}
@@ -223,8 +224,6 @@ function delP(c){
         /* ডায়নামিক সীলের রং */
 .status-paid { border-color: #2563eb !important; color: #2563eb !important; } /* নীল */
 .status-due { border-color: #dc2626 !important; color: #dc2626 !important; }   /* লাল */
-<script src="https://unpkg.com/html5-qrcode"></script>
-
     </style>
 </head>
 <body onload="document.getElementById('uId').focus()">
@@ -317,12 +316,7 @@ function delP(c){
                 <thead>
                     <tr>
                         <th class="col-sl">SL</th>
-                       <th class="col-code">
-    <div style="display: flex; align-items: center; gap: 5px; justify-content: center;">
-        <i class="fa-solid fa-camera" onclick="startScanner('invoice')" style="cursor: pointer; color: var(--primary); font-size: 16px;" title="Scan Barcode"></i>
-        <span>Code/Barcode</span>
-    </div>
-</th>
+                        <th class="col-code">Code/Barcode</th>
                         <th class="col-desc">Description</th>
                         <th class="col-war">Warranty</th>
                         <th class="col-qty">Qty</th>
@@ -570,7 +564,7 @@ function delP(c){
     <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
         <div style="display:flex; gap:10px;">
             <button class="btn btn-success" onclick="openAddModal()"><i class="fa fa-plus"></i> Add New</button>
-            <button class="btn btn-primary" onclick="startScanner('inventory')"><i class="fa-solid fa-barcode"></i> Scan Barcode</button>
+            <button class="btn btn-primary" onclick="startScanner('stock')"><i class="fa fa-camera"></i> Scan</button>
             <input type="text" id="searchStock" placeholder="Search by Code / Name / Category..." oninput="renderStock()" style="padding:8px; border-radius:6px;">
         </div>
     </div>
@@ -751,7 +745,7 @@ function getFormattedDateTime() {
         });
         let rows = "";
         for(let i=1; i<=13; i++) {
-            rows += `<tr><td>${i}</td><td><input type="text" class="it-c" style="width:90%" onchange="fetchItem(this)"></td><td><input type="text" class="it-n" style="width:95%"></td><td><input type="text" class="it-w" style="width:90%"></td><td><input type="number" class="it-q" value="0" oninput="calc()" style="width:40px"></td><td><input type="number" class="it-p" value="0" oninput="calc()" style="width:60px"></td><td class="it-t">0.00</td></tr>`;
+            rows += `<tr><td>${i}</td><td><i class="fa fa-camera" onclick="startScanner('pos')" style="cursor:pointer; margin-right:5px;"></i> </td><td><input type="text" class="it-n" style="width:95%"></td><td><input type="text" class="it-w" style="width:90%"></td><td><input type="number" class="it-q" value="0" oninput="calc()" style="width:40px"></td><td><input type="number" class="it-p" value="0" oninput="calc()" style="width:60px"></td><td class="it-t">0.00</td></tr>`;
         }
         document.getElementById('billBody').innerHTML = rows;
         calc();
@@ -1444,37 +1438,49 @@ function delP(c){
 }
 
 let html5QrCode;
+let currentScannerTarget = ''; // 'pos' or 'stock'
 
 function startScanner(target) {
+    currentScannerTarget = target;
     document.getElementById('scannerModal').classList.remove('hidden');
     html5QrCode = new Html5Qrcode("reader");
-    
     const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-    
+
     html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
-        if (target === 'invoice') {
-            // ইনভয়েস এর জন্য প্রডাক্ট সার্চ করে এড করা
-            const p = stock.find(x => x.code === decodedText);
-            if (p) {
-                addItem(p); // আপনার বিদ্যমান addItem ফাংশনটি কল হবে
-                stopScanner();
-            } else {
-                alert("Product not found in stock!");
-            }
-        } else if (target === 'inventory') {
-            // ইনভেন্টরিতে কোড ইনপুট বক্সে বসানো
-            openAddModal();
-            document.getElementById('sCode').value = decodedText;
-            stopScanner();
-        }
-    }).catch(err => console.error(err));
+        handleScanSuccess(decodedText);
+        closeScanner();
+    }).catch(err => {
+        alert("Camera access denied or error: " + err);
+        closeScanner();
+    });
 }
 
-function stopScanner() {
+function handleScanSuccess(code) {
+    if (currentScannerTarget === 'stock') {
+        // Inventory-তে প্রডাক্ট খোঁজা এবং এডিট মোডাল ওপেন করা
+        const p = stock.find(x => x.code === code);
+        if (p) {
+            editP(code);
+        } else {
+            openAddModal();
+            document.getElementById('sCode').value = code;
+        }
+    } else if (currentScannerTarget === 'pos') {
+        // Invoice-এ সরাসরি প্রডাক্ট এড করা
+        const p = stock.find(x => x.code === code);
+        if (p) {
+            addItem(p.code); // আপনার সিস্টেমে প্রডাক্ট এড করার ফাংশনটি এখানে কল হবে
+        } else {
+            alert("Product not found in inventory!");
+        }
+    }
+}
+
+function closeScanner() {
     if (html5QrCode) {
         html5QrCode.stop().then(() => {
             document.getElementById('scannerModal').classList.add('hidden');
-        }).catch(err => console.log(err));
+        });
     } else {
         document.getElementById('scannerModal').classList.add('hidden');
     }
@@ -1484,9 +1490,9 @@ function stopScanner() {
 
 <div id="scannerModal" class="modal-overlay hidden" style="z-index: 3000;">
     <div class="modal-content" style="max-width: 400px; text-align: center;">
-        <h3 id="scannerTitle">Scan QR/Barcode</h3>
-        <div id="reader" style="width: 100%; min-height: 250px; background: #eee; border-radius: 8px;"></div>
-        <button onclick="stopScanner()" class="btn btn-danger" style="width: 100%; margin-top: 15px; justify-content: center;">Close Scanner</button>
+        <h3 id="scannerTitle">Scanning...</h3>
+        <div id="reader" style="width: 100%;"></div>
+        <button onclick="closeScanner()" class="btn btn-danger" style="margin-top: 15px; width: 100%; justify-content: center;">Cancel</button>
     </div>
 </div>
 
