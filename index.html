@@ -223,9 +223,9 @@ function delP(c){
         /* ডায়নামিক সীলের রং */
 .status-paid { border-color: #2563eb !important; color: #2563eb !important; } /* নীল */
 .status-due { border-color: #dc2626 !important; color: #dc2626 !important; }   /* লাল */
-<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
-    
-</style>
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+    </style>
 </head>
 <body onload="document.getElementById('uId').focus()">
 
@@ -317,7 +317,12 @@ function delP(c){
                 <thead>
                     <tr>
                         <th class="col-sl">SL</th>
-                        <th class="col-code">Code/Barcode</th>
+                       <th class="col-code">
+    <div style="display: flex; align-items: center; gap: 5px; justify-content: center;">
+        <i class="fa-solid fa-camera" onclick="startScanner('invoice')" style="cursor: pointer; color: var(--primary); font-size: 16px;" title="Scan Barcode"></i>
+        <span>Code/Barcode</span>
+    </div>
+</th>
                         <th class="col-desc">Description</th>
                         <th class="col-war">Warranty</th>
                         <th class="col-qty">Qty</th>
@@ -565,6 +570,7 @@ function delP(c){
     <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
         <div style="display:flex; gap:10px;">
             <button class="btn btn-success" onclick="openAddModal()"><i class="fa fa-plus"></i> Add New</button>
+            <button class="btn btn-primary" onclick="startScanner('inventory')"><i class="fa-solid fa-barcode"></i> Scan Barcode</button>
             <input type="text" id="searchStock" placeholder="Search by Code / Name / Category..." oninput="renderStock()" style="padding:8px; border-radius:6px;">
         </div>
     </div>
@@ -594,8 +600,7 @@ function delP(c){
     <input id="sPrice" placeholder="Sale Price"><br><br>
     <input id="sQty" placeholder="Stock"><br><br>
     <input id="sAlert" placeholder="Alert"><br><br>
-    <button class="btn btn-primary" onclick="startScanner()">📷 Scan Barcode</button>
-    <video id="scanner" class="hidden" width="100%" height="200"></video>
+
     <button class="btn btn-success" onclick="saveProduct()">Save</button>
     <button class="btn btn-danger" onclick="closeAddModal()">Close</button>
   </div>
@@ -746,10 +751,7 @@ function getFormattedDateTime() {
         });
         let rows = "";
         for(let i=1; i<=13; i++) {
-            rows += `<tr><td>${i}</td><td style="display:flex; align-items:center; gap:5px;">
-    <input type="text" class="it-c" style="flex:1" onchange="fetchItem(this)">
-    <button class="btn btn-secondary" style="padding:2px 6px; font-size:12px;" onclick="startScanner(this)">📷</button>
-</td><input type="text" class="it-n" style="width:95%"></td><td><input type="text" class="it-w" style="width:90%"></td><td><input type="number" class="it-q" value="0" oninput="calc()" style="width:40px"></td><td><input type="number" class="it-p" value="0" oninput="calc()" style="width:60px"></td><td class="it-t">0.00</td></tr>`;
+            rows += `<tr><td>${i}</td><td><input type="text" class="it-c" style="width:90%" onchange="fetchItem(this)"></td><td><input type="text" class="it-n" style="width:95%"></td><td><input type="text" class="it-w" style="width:90%"></td><td><input type="number" class="it-q" value="0" oninput="calc()" style="width:40px"></td><td><input type="number" class="it-p" value="0" oninput="calc()" style="width:60px"></td><td class="it-t">0.00</td></tr>`;
         }
         document.getElementById('billBody').innerHTML = rows;
         calc();
@@ -1441,45 +1443,52 @@ function delP(c){
  if(confirm('Delete?')) db.ref('smart_erp/stock/'+c).remove();
 }
 
-function startScanner() {
-    const video = document.getElementById('scanner');
-    video.classList.remove('hidden');
+let html5QrCode;
 
-    Quagga.init({
-        inputStream : {
-          name : "Live",
-          type : "LiveStream",
-          target: video
-        },
-        decoder : {
-          readers : ["code_128_reader","ean_reader","ean_8_reader","upc_reader"]
+function startScanner(target) {
+    document.getElementById('scannerModal').classList.remove('hidden');
+    html5QrCode = new Html5Qrcode("reader");
+    
+    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+    
+    html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
+        if (target === 'invoice') {
+            // ইনভয়েস এর জন্য প্রডাক্ট সার্চ করে এড করা
+            const p = stock.find(x => x.code === decodedText);
+            if (p) {
+                addItem(p); // আপনার বিদ্যমান addItem ফাংশনটি কল হবে
+                stopScanner();
+            } else {
+                alert("Product not found in stock!");
+            }
+        } else if (target === 'inventory') {
+            // ইনভেন্টরিতে কোড ইনপুট বক্সে বসানো
+            openAddModal();
+            document.getElementById('sCode').value = decodedText;
+            stopScanner();
         }
-    }, function(err) {
-        if (err) { console.error(err); return; }
-        Quagga.start();
-    });
+    }).catch(err => console.error(err));
+}
 
-    Quagga.onDetected(function(result) {
-        const code = result.codeResult.code;
-        document.getElementById('sCode').value = code;
-
-        // যদি স্টক এ আগে থেকে থাকে, ফিল আপ করতে চাইলে:
-        const p = stock.find(x => x.code === code);
-        if(p) {
-            document.getElementById('sName').value = p.name;
-            document.getElementById('sCat').value = p.cat || "";
-            document.getElementById('sWar').value = p.war || "3 Years";
-            document.getElementById('sCost').value = p.cost || "";
-            document.getElementById('sPrice').value = p.price || "";
-            document.getElementById('sQty').value = p.qty || "";
-            document.getElementById('sAlert').value = p.alert || "";
-        }
-
-        Quagga.stop();
-        video.classList.add('hidden');
-    });
+function stopScanner() {
+    if (html5QrCode) {
+        html5QrCode.stop().then(() => {
+            document.getElementById('scannerModal').classList.add('hidden');
+        }).catch(err => console.log(err));
+    } else {
+        document.getElementById('scannerModal').classList.add('hidden');
+    }
 }
 
 </script>
+
+<div id="scannerModal" class="modal-overlay hidden" style="z-index: 3000;">
+    <div class="modal-content" style="max-width: 400px; text-align: center;">
+        <h3 id="scannerTitle">Scan QR/Barcode</h3>
+        <div id="reader" style="width: 100%; min-height: 250px; background: #eee; border-radius: 8px;"></div>
+        <button onclick="stopScanner()" class="btn btn-danger" style="width: 100%; margin-top: 15px; justify-content: center;">Close Scanner</button>
+    </div>
+</div>
+
 </body>
 </html>
