@@ -1437,52 +1437,74 @@ function delP(c){
  if(confirm('Delete?')) db.ref('smart_erp/stock/'+c).remove();
 }
 
-let html5QrCode;
-let currentScannerTarget = ''; // 'pos' or 'stock'
+// --- QR / Barcode Scanner Function ---
+function startScanner(mode) {
+    const config = { fps: 10, qrbox: 250 };
 
-function startScanner(target) {
-    currentScannerTarget = target;
-    document.getElementById('scannerModal').classList.remove('hidden');
-    html5QrCode = new Html5Qrcode("reader");
-    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+    const scannerDivId = 'scannerContainer';
+    let container = document.getElementById(scannerDivId);
+    if(!container) {
+        container = document.createElement('div');
+        container.id = scannerDivId;
+        container.style.position = 'fixed';
+        container.style.top = '0';
+        container.style.left = '0';
+        container.style.width = '100%';
+        container.style.height = '100%';
+        container.style.background = 'rgba(0,0,0,0.8)';
+        container.style.display = 'flex';
+        container.style.alignItems = 'center';
+        container.style.justifyContent = 'center';
+        container.style.zIndex = '5000';
+        document.body.appendChild(container);
+    }
 
-    html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
-        handleScanSuccess(decodedText);
-        closeScanner();
-    }).catch(err => {
-        alert("Camera access denied or error: " + err);
-        closeScanner();
+    container.innerHTML = `<div id="qr-reader" style="width:300px;"></div>
+                           <button onclick="closeScanner()" style="position:absolute; top:20px; right:20px; padding:10px 20px; font-size:16px;">Close</button>`;
+
+    const html5QrCode = new Html5Qrcode("qr-reader");
+
+    html5QrCode.start(
+        { facingMode: "environment" },
+        config,
+        (decodedText) => {
+            // QR / Barcode code পাওয়া গেছে
+            html5QrCode.stop().then(() => {
+                closeScanner();
+                if(mode === 'pos') {
+                    addItemToInvoice(decodedText);
+                } else if(mode === 'stock') {
+                    document.getElementById('sCode').value = decodedText;
+                    saveProduct();
+                }
+            });
+        },
+        (errorMessage) => {
+            // console.log(`Scan error: ${errorMessage}`);
+        }
+    ).catch(err => {
+        alert("Unable to start scanner: " + err);
     });
 }
 
-function handleScanSuccess(code) {
-    if (currentScannerTarget === 'stock') {
-        // Inventory-তে প্রডাক্ট খোঁজা এবং এডিট মোডাল ওপেন করা
-        const p = stock.find(x => x.code === code);
-        if (p) {
-            editP(code);
-        } else {
-            openAddModal();
-            document.getElementById('sCode').value = code;
-        }
-    } else if (currentScannerTarget === 'pos') {
-        // Invoice-এ সরাসরি প্রডাক্ট এড করা
-        const p = stock.find(x => x.code === code);
-        if (p) {
-            addItem(p.code); // আপনার সিস্টেমে প্রডাক্ট এড করার ফাংশনটি এখানে কল হবে
-        } else {
-            alert("Product not found in inventory!");
-        }
-    }
+function closeScanner() {
+    const container = document.getElementById('scannerContainer');
+    if(container) container.remove();
 }
 
-function closeScanner() {
-    if (html5QrCode) {
-        html5QrCode.stop().then(() => {
-            document.getElementById('scannerModal').classList.add('hidden');
-        });
+// --- Add scanned item to POS Invoice ---
+function addItemToInvoice(code) {
+    const row = Array.from(document.querySelectorAll('#billBody tr')).find(r => r.querySelector('.it-c').value === '');
+    const product = stock.find(p => p.code === code);
+    if(row && product) {
+        row.querySelector('.it-c')?.value = product.code;
+        row.querySelector('.it-n')?.value = product.name;
+        row.querySelector('.it-p')?.value = product.price;
+        row.querySelector('.it-w')?.value = product.war || '';
+        row.querySelector('.it-q')?.value = 1;
+        calc();
     } else {
-        document.getElementById('scannerModal').classList.add('hidden');
+        alert('Product not found in stock!');
     }
 }
 
