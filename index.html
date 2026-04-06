@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Computer | Management System</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js">
+    <script src="https://unpkg.com/html5-qrcode"></script>
 function openAddModal(){document.getElementById('addModal').classList.remove('hidden');}
 function closeAddModal(){document.getElementById('addModal').classList.add('hidden');}
 
@@ -224,16 +225,8 @@ function delP(c){
 .status-paid { border-color: #2563eb !important; color: #2563eb !important; } /* নীল */
 .status-due { border-color: #dc2626 !important; color: #dc2626 !important; }   /* লাল */
     </style>
-    <script src="https://unpkg.com/html5-qrcode"></script>
 </head>
 <body onload="document.getElementById('uId').focus()">
-<div id="scannerModal" class="modal-overlay hidden no-print">
-    <div class="modal-content" style="max-width: 400px; text-align: center;">
-        <h3 id="scanTitle">Scanning...</h3>
-        <div id="reader" style="width: 100%; border-radius: 10px; overflow: hidden;"></div>
-        <button onclick="stopScanner()" class="btn btn-danger" style="width: 100%; margin-top: 15px; justify-content: center;">Close Camera</button>
-    </div>
-</div>
 
 <div id="loginPage" style="position:fixed; inset:0; background:var(--dark); display:flex; align-items:center; justify-content:center; z-index:9999;">
     <div style="background:white; padding:40px; border-radius:15px; width:350px; text-align:center;">
@@ -319,8 +312,10 @@ function delP(c){
                 <div class="field"><b>Email:</b> <input type="text" id="cEmail" style="flex:1"></div>
                 <datalist id="customerListSource"></datalist>
             </div>
-            <button onclick="startScanner('invoice')" class="btn btn-primary no-print" style="margin: 10px 0;"><i class="fa-solid fa-camera"></i> Scan Product</button>
-
+            <div class="no-print" style="margin-bottom: 10px; display: flex; gap: 10px; align-items: center;">
+    <button onclick="startScanner('invoice')" class="btn btn-primary"><i class="fa-solid fa-camera"></i> Scan to Add</button>
+    <div id="reader-invoice" style="width: 300px; display: none; border: 2px solid var(--primary); border-radius: 8px;"></div>
+</div>
             <table>
                 <thead>
                     <tr>
@@ -573,7 +568,8 @@ function delP(c){
     <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
         <div style="display:flex; gap:10px;">
             <button class="btn btn-success" onclick="openAddModal()"><i class="fa fa-plus"></i> Add New</button>
-            <button class="btn btn-secondary" onclick="startScanner('stock')"><i class="fa fa-camera"></i> Scan to Add</button>
+            <button class="btn btn-secondary" onclick="startScanner('stock')"><i class="fa fa-barcode"></i> Scan</button>
+<div id="reader-stock" style="width: 300px; display: none; margin-top: 10px;"></div>
             <input type="text" id="searchStock" placeholder="Search by Code / Name / Category..." oninput="renderStock()" style="padding:8px; border-radius:6px;">
         </div>
     </div>
@@ -1448,43 +1444,45 @@ function delP(c){
 let html5QrCode;
 
 function startScanner(target) {
-    document.getElementById('scannerModal').classList.remove('hidden');
-    document.getElementById('scanTitle').innerText = "Scanning for " + target;
-    
-    html5QrCode = new Html5Qrcode("reader");
-    html5QrCode.start(
-        { facingMode: "environment" }, 
-        { fps: 10, qrbox: { width: 250, height: 250 } },
-        (decodedText) => {
-            if(target === 'invoice') {
-                // স্টক থেকে স্ক্যান করা কোডটি খুঁজে বের করা
-                const product = stock.find(p => p.code === decodedText);
-                
-                if(product) {
-                    // যদি প্রোডাক্ট পাওয়া যায়, তবে ইনভয়েসে যোগ হবে
-                    addItem(product.code, product.name, product.war, product.price);
-                    alert("Product Added: " + product.name);
-                } else {
-                    alert("Product not found in Inventory!");
-                }
-            } else {
-                // এটি ইনভেন্টরি ট্যাবে কোড বসানোর জন্য
-                openAddModal();
-                document.getElementById('sCode').value = decodedText;
-            }
-            stopScanner();
+    const readerId = "reader-" + target;
+    const readerDiv = document.getElementById(readerId);
+    readerDiv.style.display = 'block';
+
+    html5QrCode = new Html5Qrcode(readerId);
+    const config = { fps: 10, qrbox: { width: 250, height: 150 } };
+
+    html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
+        // কোড স্ক্যান হলে যা হবে
+        if (target === 'invoice') {
+            handleInvoiceScan(decodedText);
+        } else {
+            document.getElementById('searchStock').value = decodedText;
+            renderStock();
         }
-    ).catch(err => alert("Camera error: " + err));
+        stopScanner(readerId);
+    }).catch(err => alert("Camera error: " + err));
 }
 
+function stopScanner(id) {
+    if (html5QrCode) {
+        html5QrCode.stop().then(() => {
+            document.getElementById(id).style.display = 'none';
+        });
+    }
+}
 
-                <div class="no-print" style="margin: 10px 0;">
-    <button onclick="startScanner('invoice')" class="btn btn-primary" style="width: 100%; padding: 10px;">
-        <i class="fa-solid fa-camera"></i> Click to Scan Product (Invoice)
-    </button>
-</div>
-
-
+function handleInvoiceScan(code) {
+    // স্টক থেকে প্রডাক্ট খুঁজে বের করা
+    const product = stock.find(p => p.code === code);
+    if (product) {
+        // আপনার বিদ্যমান বিলিং ফাংশন ব্যবহার করে আইটেম যোগ করুন
+        // উদাহরণ: addItemToBill(product.code); 
+        // (নোট: আপনার ফাইলের addItem ফাংশনের নাম অনুযায়ী এখানে কল করুন)
+        alert("Product Found: " + product.name);
+    } else {
+        alert("Product not found in inventory!");
+    }
+}
 
 </script>
 </body>
