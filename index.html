@@ -223,6 +223,16 @@ function delP(c){
         /* ডায়নামিক সীলের রং */
 .status-paid { border-color: #2563eb !important; color: #2563eb !important; } /* নীল */
 .status-due { border-color: #dc2626 !important; color: #dc2626 !important; }   /* লাল */
+
+/* ইনভয়েজ টেবিল কলাম সাইজ আপডেট */
+.col-sl { width: 40px !important; }        /* SL কলাম বড় করা হয়েছে */
+.col-code { width: 85px !important; }      /* Code কলাম ছোট করা হয়েছে */
+.col-desc { width: auto !important; }      /* Description কলাম সবচেয়ে বড় করা হয়েছে */
+.col-war { width: 80px !important; }       /* Warranty কলাম ছোট করা হয়েছে */
+.col-qty { width: 50px !important; }       /* Qty কলাম বড় করা হয়েছে */
+.col-price { width: 90px !important; }     /* Price কলাম বড় করা হয়েছে */
+.col-total { width: 100px !important; }    /* Total কলাম বড় করা হয়েছে */
+
     </style>
 </head>
 <body onload="document.getElementById('uId').focus()">
@@ -301,7 +311,8 @@ function delP(c){
                         <option value="Cha">CHALAN</option>
                     </select>
                     <p><b>No:</b> <span id="invId" style="font-weight:bold; color:var(--danger)"></span></p>
-                   <p style="font-size: 13px;"><b>Date:</b> <span id="curDate"></span> | <b>Time:</b> <span id="curTime"></span></p>
+                   <p><b>Date:</b> <span id="curDate"></span></p>
+                   <p><b>Time:</b> <span id="curTime"></span></p>
                 </div>
             </div>
             <div class="cust-box">
@@ -584,10 +595,19 @@ function delP(c){
     <input id="sCode" placeholder="Code"><br><br>
     <input id="sName" placeholder="Product Name"><br><br>
     <input id="sCat" list="catList" placeholder="Category"><datalist id="catList"></datalist><br><br>
-    <select id="sWar">
-      <option>3 Years</option><option>2 Years</option><option>1 Year</option>
-      <option>9 Months</option><option>6 Months</option><option>3 Months</option>
-    </select><br><br>
+   <input id="sWar" list="warList" placeholder="Warranty (e.g. 1 Year)">
+<datalist id="warList">
+  <option value="No Warranty"></option>
+  <option value="1 Month"></option>
+  <option value="2 Months"></option>
+  <option value="3 Months"></option>
+  <option value="6 Months"></option>
+  <option value="9 Months"></option>
+  <option value="1 Year"></option>
+  <option value="2 Years"></option>
+  <option value="3 Years"></option>
+  <option value="Lifetime"></option>
+</datalist><br><br>
     <input id="sCost" placeholder="Buy Price"><br><br>
     <input id="sPrice" placeholder="Sale Price"><br><br>
     <input id="sQty" placeholder="Stock"><br><br>
@@ -743,7 +763,7 @@ function getFormattedDateTime() {
         });
         let rows = "";
         for(let i=1; i<=13; i++) {
-            rows += `<tr><td>${i}</td><td><input type="text" class="it-c" style="width:90%" onchange="fetchItem(this)"></td><td><input type="text" class="it-n" style="width:95%"></td><td><input type="text" class="it-w" style="width:90%"></td><td><input type="number" class="it-q" value="0" oninput="calc()" style="width:40px"></td><td><input type="number" class="it-p" value="0" oninput="calc()" style="width:60px"></td><td class="it-t">0.00</td></tr>`;
+            rows += `<tr><td>${i}</td><td><input type="text" class="it-c" style="width:80%" onchange="fetchItem(this)"></td><td><input type="text" class="it-n" style="width:90%"></td><td><input type="text" class="it-w" style="width:80%"></td><td><input type="number" class="it-q" value="0" oninput="calc()" style="width:40px"></td><td><input type="number" class="it-p" value="0" oninput="calc()" style="width:70px"></td><td class="it-t">0.00</td></tr>`;
         }
         document.getElementById('billBody').innerHTML = rows;
         calc();
@@ -939,7 +959,7 @@ if (dueAmount > 0) {
                     <button onclick="printLedgerInvoice('${c.phone}')" title="Print" style="background:#64748b; color:white; border:none; padding:5px; border-radius:3px; cursor:pointer;"><i class="fa-solid fa-print"></i></button>
                     <button onclick="deleteLedgerGroup('${c.phone}')" title="Delete" style="background:var(--danger); color:white; border:none; padding:5px; border-radius:3px; cursor:pointer;"><i class="fa-solid fa-trash"></i></button>
                     <button onclick="sendLedgerSMS('${c.phone}', '${due.toFixed(2)}')" title="SMS" style="background:#0ea5e9; color:white; border:none; padding:5px; border-radius:3px; cursor:pointer;"><i class="fa-solid fa-comment-sms"></i></button>
-                    <button onclick="sendLedgerWA('${c.phone}', '${c.name}', '${c.lastDate}', '${c.lastDesc}', '${c.payDate}')" title="WhatsApp" style="background:#25d366; color:white; border:none; padding:5px; border-radius:3px; cursor:pointer;"><i class="fa-brands fa-whatsapp"></i></button>
+                    <button onclick="sendDueWhatsApp('${p.phone}', '${p.name}', '${p.due}', ${JSON.stringify(p.transactions || [])})"><i class="fab fa-whatsapp"></i></button>
                     <button onclick="window.location.href='tel:${c.phone}'" title="Call" style="background:#3b82f6; color:white; border:none; padding:5px; border-radius:3px; cursor:pointer;"><i class="fa-solid fa-phone"></i></button>
                 </td>
             </tr>`;
@@ -953,10 +973,50 @@ if (dueAmount > 0) {
         window.location.href = `sms:${phone}?body=${encodeURIComponent(msg)}`;
     }
 
-    function sendLedgerWA(phone, name, entryDate, desc, payDate) {
-        const msg = `আসসালামু ওয়া আলাইকুম। প্রিয় ${name}। আপনি SMART COMPUTER থেকে ${entryDate} তারিখে যে সেবা/পন্য গ্রহন করেছিলেন তার ইনরোলমেন্ট এখনো বাকি রয়েছে। আপনি ${payDate || 'দ্রুততম'} তারিখের মধ্যে ইনরোলমেন্ট করলে আপনি নিয়মিত অফারের আওতায় থাকবেন। বিকাশ পেমেন্ট 01614398989। SMART COMPUTER এর সাথে থাকার জন্য অসংখ্য ধন্যবাদ।`;
-        window.open(`https://wa.me/88${phone}?text=${encodeURIComponent(msg)}`);
+    function sendDueWhatsApp(phone, name, due, transactions) {
+    if (!phone) {
+        alert("অনুগ্রহ করে কাস্টমারের মোবাইল নম্বর চেক করুন।");
+        return;
     }
+
+    // তারিখ ফরম্যাট করার ফাংশন (DD-Mon-YYYY)
+    const formatDate = (dateStr) => {
+        const date = new Date(dateStr);
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        return `${date.getDate() < 10 ? '0' : ''}${date.getDate()}-${months[date.getMonth()]}-${date.getFullYear()}`;
+    };
+
+    // মেসেজ ডিজাইন
+    let message = `*আসসালামু আলাইকুম, প্রিয় ${name.toUpperCase()}* \n`;
+    message += `📞 *মোবাইল নম্বর:* ${phone} \n\n`;
+    message += `আপনি *SMART COMPUTER* থেকে যে পণ্য/সেবা গ্রহণ করেছেন তার বিবরণ নিম্নরূপ: \n`;
+    message += `──────────────────\n`;
+    
+    // ট্রানজেকশন লিস্ট যুক্ত করা
+    message += `📝 *লেনদেনের বিবরণ:* \n`;
+    if (transactions && transactions.length > 0) {
+        transactions.forEach(tr => {
+            message += `🗓️ ${formatDate(tr.date)} | 💰 ${tr.bill} TK | ✅ ${tr.paid} TK\n`;
+        });
+    } else {
+        message += `নির্ধারিত কোনো তথ্য পাওয়া যায়নি।\n`;
+    }
+    
+    message += `──────────────────\n`;
+    message += `🔴 *মোট বকেয়া পরিমাণ:* *${due} TK* \n\n`;
+    
+    message += `✨ আপনি নিয়মিত গ্রাহক হিসেবে নিবন্ধিত রয়েছেন। আপনার জন্য থাকছে পরবর্তী সেবা গ্রহণে স্পেশাল অফার। 🎁 \n\n`;
+    
+    message += `*SMART COMPUTER* এর সাথে থাকার জন্য আপনাকে অসংখ্য ধন্যবাদ। 🌹 আপনার দিনটি শুভ হোক ❤️ \n\n`;
+    
+    message += `🌐 বিস্তারিত জানতে ভিজিট করুন: https://smartcomputer-bd.github.io/com \n`;
+    message += `☎️ অথবা কল করুন: *01614398989*`;
+
+    // WhatsApp লিঙ্কে পাঠানো
+    const encodedMsg = encodeURIComponent(message);
+    window.open(`https://wa.me/88${phone}?text=${encodedMsg}`, '_blank');
+}
+
 
     function printLedgerInvoice(phone) {
         const trans = ledgerTransactions.filter(t => t.phone === phone).sort((a,b) => new Date(a.date) - new Date(b.date));
@@ -1326,15 +1386,6 @@ if (dueAmount > 0) {
         if(confirm("Delete user?")) { users.splice(i, 1); db.ref('smart_erp/users').set(users); }
     }
 
-    function shareInvoice() {
-        const invId = document.getElementById('invId').innerText;
-        const cName = document.getElementById('cName').value || "Customer";
-        const grand = document.getElementById('grandT').innerText;
-        const due = document.getElementById('pDue').innerText;
-        const phone = document.getElementById('cPhone').value;
-        const shareText = `*SMART COMPUTER - Invoice*\nInv: ${invId}\nCust: ${cName}\nTotal: TK ${grand}\nDue: TK ${due}\nThank you!`;
-        window.open(`https://wa.me/88${phone}?text=${encodeURIComponent(shareText)}`);
-    }
 
     function printNoSave() { window.print(); }
 
@@ -1433,6 +1484,69 @@ function editP(c){
 
 function delP(c){
  if(confirm('Delete?')) db.ref('smart_erp/stock/'+c).remove();
+}
+
+function shareInvoice() {
+    const invId = document.getElementById('invId').innerText;
+    const date = document.getElementById('curDate').innerText;
+    const time = document.getElementById('curTime').innerText;
+    const name = document.getElementById('cName').value || "সম্মানিত গ্রাহক";
+    const phone = document.getElementById('cPhone').value;
+    const addr = document.getElementById('cAddr').value || "ঠিকানা নেই";
+    const grandT = document.getElementById('grandT').innerText;
+    const paid = document.getElementById('pPaid').value || 0;
+    const due = document.getElementById('pDue').innerText;
+    const payDateInput = document.getElementById('invPayDate').value;
+
+    // তারিখ ফরম্যাট পরিবর্তন (20-Mar-2026)
+    const formatDate = (dateStr) => {
+        if(!dateStr) return "শীঘ্রই";
+        const d = new Date(dateStr);
+        return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, '-');
+    };
+
+    const formattedPayDate = formatDate(payDateInput);
+    const webLink = "https://smartcomputer-bd.github.io/com"; // আপনার ওয়েব লিঙ্ক
+    const businessPhone = "01XXXXXXXXX"; // আপনার প্রতিষ্ঠানের মোবাইল নম্বর
+
+    if (!phone) {
+        alert("দয়া করে কাস্টমারের মোবাইল নম্বর দিন।");
+        return;
+    }
+
+    // মেসেজ ডিজাইন ও ফরম্যাট
+    let message = `*আসসালামু আলাইকুম প্রিয় ${name.toUpperCase()}* \n`;
+    message += `📞 *মোবাইল নম্বর:* ${phone} \n`;
+    message += `📍 *ঠিকানা:* ${addr} \n\n`;
+    message += `আপনি *SMART COMPUTER* থেকে যে পণ্য/সেবা গ্রহণ করেছেন তার ডিজিটাল ইনভয়েজটি নিম্নরূপ: \n\n`;
+    message += `🆔 *ইনভয়েজ নং:* ${invId} \n`;
+    message += `📅 *তারিখ:* ${date} \n`;
+    message += `⏰ *সময়:* ${time} \n`;
+    message += `──────────────────\n`;
+    message += `💰 *মোট বিল:* ${grandT} TK \n`;
+    message += `💵 *জমা:* ${paid} TK \n`;
+    
+    if (parseFloat(due) > 0) {
+        message += `🔴 *বাকি:* ${due} TK \n`;
+        message += `🗓️ *পরিশোধের তারিখ:* ${formattedPayDate} \n`;
+    } else {
+        message += `✅ *স্ট্যাটাস:* পূর্ণ পরিশোধিত \n`;
+    }
+    message += `──────────────────\n\n`;
+    
+    message += `✨ আপনি নিয়মিত গ্রাহক হিসেবে নিবন্ধিত হয়েছেন। আপনার জন্য থাকছে পরবর্তী সেবা গ্রহণে স্পেশাল অফার। 🎁\n\n`;
+    
+    message += `*SMART COMPUTER* এর সাথে থাকার জন্য আপনাকে অসংখ্য ধন্যবাদ। 🌹 আপনার দিনটি শুভ হোক ❤️\n\n`;
+    
+    message += `🌐 *বিস্তারিত জানতে ভিজিট করুন:* ${webLink} \n`;
+    message += `📞 *কল করুন: 01614398989`;
+
+    // WhatsApp URL তৈরি
+    const encodedMsg = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/88${phone}?text=${encodedMsg}`;
+
+    // নতুন ট্যাবে ওপেন করা
+    window.open(whatsappUrl, '_blank');
 }
 
 </script>
