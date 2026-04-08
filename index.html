@@ -304,6 +304,26 @@ function delP(c){
 .invoice-table tbody tr {
     animation: fadeRow 0.4s ease;
 }
+
+@keyframes fadeRow {
+    from {opacity: 0; transform: translateX(-10px);}
+    to {opacity: 1; transform: translateX(0);}
+}
+
+/* Gradient Border */
+.invoice-sheet::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 15px;
+    padding: 2px;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6, #06b6d4);
+    -webkit-mask: 
+        linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+}
 		
 /* QR BOX */
 .qr-box {
