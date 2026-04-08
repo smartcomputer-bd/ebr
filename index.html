@@ -230,15 +230,6 @@ function delP(c){
 .status-paid { border-color: #2563eb !important; color: #2563eb !important; } /* নীল */
 .status-due { border-color: #dc2626 !important; color: #dc2626 !important; }   /* লাল */
 
-/* ====== NEW INVOICE TABLE DESIGN ====== */
-.invoice-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    overflow: hidden;
-    border-radius: 10px;
-}
-
 /* Gradient Header */
 .invoice-table th {
     background: linear-gradient(135deg, #1e40af, #3b82f6);
@@ -319,17 +310,6 @@ function delP(c){
     to {opacity: 1; transform: translateX(0);}
 }
 
-/* ===== PRO GLASS INVOICE ===== */
-.invoice-sheet {
-    background: rgba(255,255,255,0.85);
-    backdrop-filter: blur(10px);
-    border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-    border: 2px solid transparent;
-    background-clip: padding-box;
-    position: relative;
-}
-
 /* Gradient Border */
 .invoice-sheet::before {
     content: "";
@@ -345,6 +325,7 @@ function delP(c){
     mask-composite: exclude;
 }
 
+
 /* Table Premium */
 .invoice-table th {
     background: linear-gradient(135deg, #2563eb, #7c3aed);
@@ -353,7 +334,6 @@ function delP(c){
 
 .invoice-table tbody tr:hover {
     box-shadow: 0 0 15px rgba(59,130,246,0.3);
-}
 
 /* ===== PRO DARK MODE ===== */
 body.dark-mode .invoice-sheet {
@@ -368,7 +348,6 @@ body.dark-mode .invoice-table th {
 body.dark-mode .cust-box {
     background: linear-gradient(135deg, #1e293b, #334155);
 }
-
 
 /* Smooth Load */
 .invoice-sheet {
