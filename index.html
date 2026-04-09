@@ -657,14 +657,10 @@ body.dark-mode .cust-box {
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 3px solid var(--primary); padding-bottom: 15px;">
             <h3 style="margin: 0; color: var(--primary); font-size: 24px;"><i class="fa-solid fa-users-gear"></i> Customer Database</h3>
             <button onclick="openCustomerModal()" class="btn btn-primary" style="box-shadow: 0 4px 10px rgba(30, 64, 175, 0.3);"><i class="fa-solid fa-user-plus"></i> Add New Customer</button>
-            <div style="display:flex; gap:10px;">
-    <button onclick="backupCustomers()" class="btn btn-success">
-        <i class="fa fa-download"></i> Backup
-    </button>
-
-    <button onclick="document.getElementById('importCustFile').click()" class="btn btn-secondary">
-        <i class="fa fa-upload"></i> Restore
-    </button>
+	    <button onclick="deleteAllCustomers()" class="btn btn-primary"> Delete</button>
+	    <button onclick="undoCustomers()" class="btn">Undo</button><div style="display:flex; gap:10px;">
+            <button onclick="backupCustomers()" class="btn btn-primary"><i class="fa fa-download"></i> Backup</button>
+	    <button onclick="document.getElementById('importCustFile').click()" class="btn btn-primary"><i class="fa fa-upload"></i> Restore</button>
 
     <input type="file" id="importCustFile" accept=".xlsx" style="display:none" onchange="restoreCustomers(event)">
 </div>
@@ -899,6 +895,7 @@ function getFormattedDateTime() {
     let stock = [];
     let invoices = [];
     let customers = [];
+    let deletedCustomersBackup = [];
     let ledgerTransactions = [];
     let currentUser = "";
     let activeStatementPhone = "";
@@ -1328,6 +1325,7 @@ if (dueAmount > 0) {
                 <td style="color: #475569;">${c.email || '--'}</td>
                 <td>
                     <button onclick="window.location.href='tel:${c.phone}'" class="cust-action-btn" style="background: #10b981;" title="Call"><i class="fa-solid fa-phone"></i></button>
+                    <button onclick="sendCustomerWhatsApp('${c.phone}')"class="cust-action-btn" style="background: #10b981;" title="Call"><i class="fa-brands fa-whatsapp"></i></button>
                     <button onclick="editCustomer('${c.phone}')" class="cust-action-btn" style="background: #f59e0b;" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
                     <button onclick="deleteCustomer('${c.phone}')" class="cust-action-btn admin-only" style="background: #ef4444;" title="Delete"><i class="fa-solid fa-trash"></i></button>
                 </td>
@@ -1797,6 +1795,96 @@ function restoreCustomers(e){
     };
 
     reader.readAsArrayBuffer(file);
+}
+
+function sendCustomerWhatsApp(phone){
+
+    // 🔹 phone normalize
+    function normalizePhone(p){
+        return (p || "").replace(/[^0-9]/g,'');
+    }
+
+    // 🔹 customer find
+    const customer = customers.find(c => 
+        normalizePhone(c.phone) === normalizePhone(phone)
+    );
+
+    if(!customer){
+        alert("Customer not found!");
+        return;
+    }
+
+    const name = customer.name || "";
+    const addr = customer.addr || "উল্লেখ নেই";
+
+    // 🔹 USER INPUT (Offer)
+    let offer = prompt("🎁 কাস্টমারের জন্য স্পেশাল অফার লিখুন:");
+
+    if(offer === null) return; // cancel করলে stop
+    if(offer.trim() === "") offer = "আপনার জন্য বিশেষ আকর্ষণীয় অফার রয়েছে!";
+
+    // 🔹 MESSAGE BUILD (৫ ধাপ)
+    let msg = "";
+
+    // ✅ Step 1
+    msg += "🌿 আসসালামু ওয়া আলাইকুম 🌿\n\n";
+    msg += `👤 প্রিয় ${name},\n`;
+    msg += `📱 মোবাইল: ${phone}\n`;
+    msg += `🏠 ঠিকানা: ${addr}\n\n`;
+
+    // ✅ Step 2
+    msg += "🌟 আপনি SMART COMPUTER এর নিয়মিত গ্রাহক হিসেবে নিবন্ধিত রয়েছেন।\n\n";
+
+    // ✅ Step 3 (Dynamic Offer)
+    msg += "🎁 আপনার জন্য স্পেশাল অফার:\n";
+    msg += `👉 ${offer}\n\n`;
+
+    // ✅ Step 4
+    msg += "🙏 SMART COMPUTER এর সাথে থাকার জন্য আপনাকে অসংখ্য ধন্যবাদ 🌹🫶\n";
+    msg += "❤️ আপনার দিনটি শুভ হোক ❤️❤️\n\n";
+
+    // ✅ Step 5
+    msg += "🔗 বিস্তারিত তথ্য জানতে ভিজিট করুন:\n";
+    msg += "🌐 www.smartcomputer-bd.github.io/com\n";
+    msg += "📞 প্রয়োজনে কল করুন: 01614-398989\n";
+
+    // 🔹 WhatsApp URL
+    const url = "https://wa.me/88" + normalizePhone(phone) + "?text=" + encodeURIComponent(msg);
+
+    window.open(url, '_blank');
+}
+
+function deleteAllCustomers(){
+
+    if(!confirm("⚠️ আপনি কি সকল কাস্টমার ডিলিট করতে চান?")) return;
+
+    // 🔹 backup রাখা
+    deletedCustomersBackup = [...customers];
+
+    // 🔹 firebase থেকে delete
+    db.ref('smart_erp/customers').remove();
+
+    // 🔹 local clear
+    customers = [];
+
+    // 🔹 UI update
+    renderCustomers();
+
+    alert("✅ সকল কাস্টমার ডিলিট হয়েছে");
+}
+
+function undoCustomers(){
+
+    if(deletedCustomersBackup.length === 0){
+        alert("❌ Restore করার মতো কোনো ডাটা নেই");
+        return;
+    }
+
+    deletedCustomersBackup.forEach(c => {
+        db.ref('smart_erp/customers/' + c.phone).set(c);
+    });
+
+    alert("✅ ডাটা সফলভাবে Restore হয়েছে");
 }
 
 </script>
