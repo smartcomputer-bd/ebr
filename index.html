@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Computer | Management System</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js">
 function openAddModal(){document.getElementById('addModal').classList.remove('hidden');}
 function closeAddModal(){document.getElementById('addModal').classList.add('hidden');}
@@ -656,6 +657,17 @@ body.dark-mode .cust-box {
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 3px solid var(--primary); padding-bottom: 15px;">
             <h3 style="margin: 0; color: var(--primary); font-size: 24px;"><i class="fa-solid fa-users-gear"></i> Customer Database</h3>
             <button onclick="openCustomerModal()" class="btn btn-primary" style="box-shadow: 0 4px 10px rgba(30, 64, 175, 0.3);"><i class="fa-solid fa-user-plus"></i> Add New Customer</button>
+            <div style="display:flex; gap:10px;">
+    <button onclick="backupCustomers()" class="btn btn-success">
+        <i class="fa fa-download"></i> Backup
+    </button>
+
+    <button onclick="document.getElementById('importCustFile').click()" class="btn btn-secondary">
+        <i class="fa fa-upload"></i> Restore
+    </button>
+
+    <input type="file" id="importCustFile" accept=".xlsx" style="display:none" onchange="restoreCustomers(event)">
+</div>
         </div>
 
         <div id="customerFormBox" class="hidden" style="margin-bottom: 30px; background: linear-gradient(to right, #f8fafc, #ffffff); padding: 25px; border-radius: 15px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
@@ -789,6 +801,58 @@ body.dark-mode .cust-box {
 </div>
 
 <script>
+	
+	/* ===== GLOBAL PHONE SYSTEM (FINAL) ===== */
+function formatPhoneBD(num){
+    if(!num) return "";
+
+    num = num.toString().replace(/\D/g,'');
+
+    // last 11 digit keep
+    if(num.length > 11){
+        num = num.slice(-11);
+    }
+
+    if(num.length === 11){
+        return num.slice(0,5) + "-" + num.slice(5);
+    }
+
+    return num;
+}
+
+function normalizePhoneBD(num){
+    return (num || "").replace(/\D/g,'').slice(-11);
+}
+
+/* AUTO FORMAT EVERY INPUT (ALL TABS) */
+document.addEventListener("input", function(e){
+    const el = e.target;
+
+    if(
+        el.id?.toLowerCase().includes("phone") ||
+        el.name?.toLowerCase().includes("phone") ||
+        el.classList.contains("phone")
+    ){
+        el.value = formatPhoneBD(el.value);
+    }
+});
+
+/* FORCE FORMAT BEFORE ANY SAVE */
+function fixPhoneBeforeSave(obj){
+    if(!obj) return obj;
+
+    if(obj.phone){
+        obj.phone = formatPhoneBD(obj.phone);
+    }
+
+    return obj;
+}
+
+/* SAFE PHONE MATCH */
+function matchPhone(a,b){
+    return normalizePhoneBD(a) === normalizePhoneBD(b);
+}
+	
 	function formatCustomDate(date) {
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const d = new Date(date);
@@ -1053,8 +1117,8 @@ if (dueAmount > 0) {
 
         db.ref('smart_erp/ledger_transactions/' + lId).set(entry).then(() => {
             closeLedgerModal();
-            if(!customers.find(x => x.phone === phone)) {
-                db.ref('smart_erp/customers/' + phone).set({name, phone});
+            if(!customers.find(x => matchPhone(x.phone, phone))) {
+                saveCustomerSafe('smart_erp/customers/' + phone, {name, phone});
             }
         });
     }
@@ -1108,7 +1172,7 @@ if (dueAmount > 0) {
     }
 
     function sendLedgerSMS(phone, due) {
-        const msg = `Total deu ৳${due} at SMART COMPUTER. Please pay to retailer. Thanks for bing with us.`;
+        const msg = `Total deu ৳${due} at SMART COMPUTER. Please pay soon. Thanks for bing with us.`;
         window.location.href = `sms:${phone}?body=${encodeURIComponent(msg)}`;
     }
 
@@ -1119,7 +1183,7 @@ if (dueAmount > 0) {
 
     function printLedgerInvoice(phone) {
         const trans = ledgerTransactions.filter(t => t.phone === phone).sort((a,b) => new Date(a.date) - new Date(b.date));
-        const cust = customers.find(x => x.phone === phone) || {name: trans[0].name, phone: phone};
+        const cust = customers.find(x => matchPhone(x.phone, phone)) || {name: trans[0].name, phone: phone};
         let rows = ""; let subT = 0; let paidT = 0; let runningBalance = 0;
         
         trans.forEach((t, i) => {
@@ -1186,7 +1250,7 @@ if (dueAmount > 0) {
     function viewStatement(phone) {
         activeStatementPhone = phone;
         const trans = ledgerTransactions.filter(t => t.phone === phone);
-        const cust = customers.find(x => x.phone === phone) || {name: trans[0].name, phone: phone};
+        const cust = customers.find(x => matchPhone(x.phone, phone)) || {name: trans[0].name, phone: phone};
         
         document.getElementById('statementHeader').innerHTML = `
             <div><b>Name:</b> ${cust.name}<br><b>Phone:</b> ${phone}</div>
@@ -1277,7 +1341,7 @@ if (dueAmount > 0) {
     }
 
     function editCustomer(phone) {
-        const c = customers.find(x => x.phone === phone);
+        const c = customers.find(x => matchPhone(x.phone, phone));
         if(!c) return;
         document.getElementById('customerFormBox').classList.remove('hidden');
         document.getElementById('custFormTitle').innerText = "Update Customer Information";
@@ -1356,7 +1420,7 @@ if (dueAmount > 0) {
     }
 
     function autoFillCustomer(phone) {
-        const c = customers.find(x => x.phone === phone);
+        const c = customers.find(x => matchPhone(x.phone, phone));
         if(c) {
             document.getElementById('cName').value = c.name;
             document.getElementById('cAddr').value = c.addr || "";
@@ -1615,7 +1679,7 @@ function shareInvoice() {
     const formattedPayDate = (payDateRaw && payDateRaw !== "") ? formatDate(payDateRaw) : "N/A";
 
     // মেসেজ ডিজাইন
-    let message = `*আসসালামু আলাইকুম, প্রিয় ${name.toUpperCase()}*\n`;
+    let message = `*আসসালামু ওয়া আলাইকুম, প্রিয় ${name.toUpperCase()}*\n`;
     message += `📞 *মোবাইল নম্বর:* ${phone}\n`;
     message += `📍 *ঠিকানা:* ${addr}\n\n`;
     message += `আপনি *SMART COMPUTER* থেকে যে পণ্য/সেবা গ্রহণ করেছেন তার ডিজিটাল ইনভয়েজটি নিম্নরূপ:\n\n`;
@@ -1657,8 +1721,8 @@ function shareInvoice() {
     message += `১-খুবই খারাপ: ⭐\n\n`;
     
     message += `*SMART COMPUTER* এর সাথে থাকার জন্য আপনাকে অসংখ্য ধন্যবাদ। 🌹 আপনার দিনটি শুভ হোক ❤️।\n\n`;
-    message += `🌐 *বিস্তারিত জানতে:* https://smartcomputer-bd.github.io/com\n`;
-    message += `📞 *কল করুন:* 01614398989`;
+    message += `🌐 *বিস্তারিত জানতে ভিজিট করুন:* https://smartcomputer-bd.github.io/com\n`;
+    message += `📞 *যে কোনো প্রয়োজনে কল করুন:* 01614398989`;
 
     const encodedMsg = encodeURIComponent(message);
     window.open(`https://wa.me/88${phone}?text=${encodedMsg}`, '_blank');
@@ -1675,6 +1739,65 @@ function fixInvoiceLayout(){
 /* Call after loading invoice */
 setTimeout(fixInvoiceLayout, 300);
 
+/* AUTO FORMAT DISPLAY AFTER LOAD */
+setTimeout(()=>{
+    document.querySelectorAll('*').forEach(el=>{
+        if(el.innerText && el.innerText.match(/^01\d{9}$/)){
+            el.innerText = formatPhoneBD(el.innerText);
+        }
+    });
+}, 1500);
+
+// BACKUP CUSTOMER TO EXCEL
+function backupCustomers(){
+    if(!customers.length){
+        alert("No Customer Data");
+        return;
+    }
+
+    const data = customers.map(c => ({
+        Name: c.name || "",
+        Phone: c.phone || "",
+        Address: c.addr || "",
+        Email: c.email || ""
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Customers");
+
+    XLSX.writeFile(wb, "Customer_Backup.xlsx");
+}
+
+// RESTORE CUSTOMER FROM EXCEL
+function restoreCustomers(e){
+    const file = e.target.files[0];
+    if(!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function(evt){
+        const data = new Uint8Array(evt.target.result);
+        const wb = XLSX.read(data, {type:'array'});
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(sheet);
+
+        json.forEach(c => {
+            if(c.Phone){
+                db.ref('smart_erp/customers/' + c.Phone).set({
+                    name: c.Name || "",
+                    phone: c.Phone,
+                    addr: c.Address || "",
+                    email: c.Email || ""
+                });
+            }
+        });
+
+        alert("Customer Data Restored Successfully");
+    };
+
+    reader.readAsArrayBuffer(file);
+}
 
 </script>
 </body>
