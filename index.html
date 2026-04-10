@@ -992,17 +992,18 @@ function getFormattedDateTime() {
         document.querySelectorAll('#billBody tr').forEach(r => {
             const q = parseFloat(r.querySelector('.it-q').value) || 0;
             const p = parseFloat(r.querySelector('.it-p').value) || 0;
-            const t = q * p; r.querySelector('.it-t').innerText = t.toFixed(2);
+            const t = q * p; r.querySelector('.it-t').innerText = t.toFixed(0);
             sub += t;
         });
         const grand = Math.round(sub - (sub * (document.getElementById('vP').value/100)) + (sub * (document.getElementById('vatInp').value/100)));
         const paid = parseFloat(document.getElementById('pPaid').value) || 0;
         const due = grand - paid;
-        document.getElementById('subT').innerText = sub.toFixed(2);
-        document.getElementById('grandT').innerText = grand.toFixed(2);
-        document.getElementById('pDue').innerText = due.toFixed(2);
+        document.getElementById('subT').innerText = sub.toFixed(0);
+        document.getElementById('grandT').innerText = grand.toFixed(0);
+        document.getElementById('pDue').innerText = due.toFixed(0);
         document.getElementById('inWords').innerText = numberToWords(grand) + " Taka Only";
-        // ডিজিটাল সীল ডায়নামিক করার কোড
+       
+   // ডিজিটাল সীল ডায়নামিক করার কোড
 const statusSeal = document.getElementById('statusSeal');
 const dueAmount = parseFloat(document.getElementById('pDue').innerText) || 0;
 
@@ -1027,7 +1028,7 @@ if (dueAmount > 0) {
             document.getElementById('invPayDate').value = "";
         }
 
-        const qrText = `Customer: ${document.getElementById('cName').value}\nInv No: ${document.getElementById('invId').innerText}\nTotal: ${grand.toFixed(2)}\nDue: ${due.toFixed(2)}`;
+        const qrText = `Customer: ${document.getElementById('cName').value}\nInv No: ${document.getElementById('invId').innerText}\nTotal: ${grand.toFixed(0)}\nDue: ${due.toFixed(0)}`;
         document.getElementById('qrcode').innerHTML = "";
         new QRCode(document.getElementById("qrcode"), { text: qrText, width: 70, height: 70 });
     }
@@ -1049,7 +1050,7 @@ if (dueAmount > 0) {
         const paidVal = parseFloat(document.getElementById('pPaid').value) || 0;
         const dueVal = grandVal - paidVal;
         const payDate = document.getElementById('invPayDate').value;
-        const inv = { id: invId, type: document.getElementById('docType').value, date: document.getElementById('curDate').innerText, time: document.getElementById('curTime').innerText, customer: document.getElementById('cName').value, phone: document.getElementById('cPhone').value, address: document.getElementById('cAddr').value, email: document.getElementById('cEmail').value, items: billItems, grand: grandVal.toFixed(2), paid: paidVal.toFixed(2), due: dueVal.toFixed(2), soldBy: currentUser, payDate: payDate };
+        const inv = { id: invId, type: document.getElementById('docType').value, date: document.getElementById('curDate').innerText, time: document.getElementById('curTime').innerText, customer: document.getElementById('cName').value, phone: document.getElementById('cPhone').value, address: document.getElementById('cAddr').value, email: document.getElementById('cEmail').value, items: billItems, grand: grandVal.toFixed(0), paid: paidVal.toFixed(0), due: dueVal.toFixed(0), soldBy: currentUser, payDate: payDate };
 
         if(inv.phone) {
             db.ref('smart_erp/customers/' + inv.phone).update({ name: inv.customer, phone: inv.phone, addr: inv.address, email: inv.email });
@@ -1151,31 +1152,26 @@ if (dueAmount > 0) {
             h += `<tr class="ledger-row">
                 <td onclick="viewStatement('${c.phone}')"><b>${c.name}</b></td>
                 <td onclick="viewStatement('${c.phone}')">${c.phone}</td>
-                <td onclick="viewStatement('${c.phone}')" style="color:var(--danger); font-weight:bold;">${due.toFixed(2)}</td>
+                <td onclick="viewStatement('${c.phone}')" style="color:var(--danger); font-weight:bold;">${due.toFixed(0)}</td>
                 <td onclick="viewStatement('${c.phone}')">${c.lastDate}</td>
                 <td onclick="viewStatement('${c.phone}')">${c.payDate || '-'}</td>
                 <td onclick="viewStatement('${c.phone}')">${c.soldBy}</td>
                 <td class="admin-only">
                     <button onclick="printLedgerInvoice('${c.phone}')" title="Print" style="background:#64748b; color:white; border:none; padding:5px; border-radius:3px; cursor:pointer;"><i class="fa-solid fa-print"></i></button>
                     <button onclick="deleteLedgerGroup('${c.phone}')" title="Delete" style="background:var(--danger); color:white; border:none; padding:5px; border-radius:3px; cursor:pointer;"><i class="fa-solid fa-trash"></i></button>
-                    <button onclick="sendLedgerSMS('${c.phone}', '${due.toFixed(2)}')" title="SMS" style="background:#0ea5e9; color:white; border:none; padding:5px; border-radius:3px; cursor:pointer;"><i class="fa-solid fa-comment-sms"></i></button>
-                    <button onclick="sendLedgerWA('${c.phone}', '${c.name}', '${c.lastDate}', '${c.lastDesc}', '${c.payDate}')" title="WhatsApp" style="background:#25d366; color:white; border:none; padding:5px; border-radius:3px; cursor:pointer;"><i class="fa-brands fa-whatsapp"></i></button>
+                    <button onclick="sendWhatsAppMsg('${c.name}','${c.phone}','${encodeURIComponent(c.address || '')}')"class="cust-action-btn" style="background: #10b981;" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></button>
+                    <button onclick="sendLedgerSMS('${c.phone}', '${due.toFixed(0)}')" title="SMS" style="background:#0ea5e9; color:white; border:none; padding:5px; border-radius:3px; cursor:pointer;"><i class="fa-solid fa-comment-sms"></i></button>
                     <button onclick="window.location.href='tel:${c.phone}'" title="Call" style="background:#3b82f6; color:white; border:none; padding:5px; border-radius:3px; cursor:pointer;"><i class="fa-solid fa-phone"></i></button>
                 </td>
             </tr>`;
         });
         document.getElementById('ledgerBody').innerHTML = h;
-        document.getElementById('totalLedgerDue').innerText = "TK " + totalOutstanding.toFixed(2);
+        document.getElementById('totalLedgerDue').innerText = "TK " + totalOutstanding.toFixed(0);
     }
 
     function sendLedgerSMS(phone, due) {
-        const msg = `Total deu ৳${due} at SMART COMPUTER. Please pay soon. Thanks for bing with us.`;
+        const msg = `Total deu ৳${due} at SMART COMPUTER. Bkash/Nagad/Rocket 01919-336660.`;
         window.location.href = `sms:${phone}?body=${encodeURIComponent(msg)}`;
-    }
-
-    function sendLedgerWA(phone, name, entryDate, desc, payDate) {
-        const msg = `আসসালামু ওয়া আলাইকুম। প্রিয় ${name}। আপনি SMART COMPUTER থেকে ${entryDate} তারিখে যে সেবা/পন্য গ্রহন করেছিলেন তার ইনরোলমেন্ট এখনো বাকি রয়েছে। আপনি ${payDate || 'দ্রুততম'} তারিখের মধ্যে ইনরোলমেন্ট করলে আপনি নিয়মিত অফারের আওতায় থাকবেন। বিকাশ পেমেন্ট 01614398989। SMART COMPUTER এর সাথে থাকার জন্য অসংখ্য ধন্যবাদ।`;
-        window.open(`https://wa.me/88${phone}?text=${encodeURIComponent(msg)}`);
     }
 
     function printLedgerInvoice(phone) {
@@ -1190,9 +1186,9 @@ if (dueAmount > 0) {
             rows += `<tr>
                 <td>${t.date}</td>
                 <td>${t.desc}</td>
-                <td>${parseFloat(t.bill).toFixed(2)}</td>
-                <td>${parseFloat(t.paid).toFixed(2)}</td>
-                <td style="font-weight:bold;">${runningBalance.toFixed(2)}</td>
+                <td>${parseFloat(t.bill).toFixed(0)}</td>
+                <td>${parseFloat(t.paid).toFixed(0)}</td>
+                <td style="font-weight:bold;">${runningBalance.toFixed(0)}</td>
             </tr>`;
         });
 
@@ -1227,9 +1223,9 @@ if (dueAmount > 0) {
                 </table>
                 <div style="display:flex; justify-content:flex-end; margin-top:10px;">
                     <div style="width:250px; text-align:right;">
-                        <div style="display:flex; justify-content:space-between;"><span>Total Bill:</span> <span>${subT.toFixed(2)}</span></div>
-                        <div style="display:flex; justify-content:space-between;"><span>Total Paid:</span> <span>${paidT.toFixed(2)}</span></div>
-                        <div style="display:flex; justify-content:space-between; color:red; font-weight:bold; border-top:1px solid #000; padding-top:5px;"><span>Net Due:</span> <span>${dueT.toFixed(2)}</span></div>
+                        <div style="display:flex; justify-content:space-between;"><span>Total Bill:</span> <span>${subT.toFixed(0)}</span></div>
+                        <div style="display:flex; justify-content:space-between;"><span>Total Paid:</span> <span>${paidT.toFixed(0)}</span></div>
+                        <div style="display:flex; justify-content:space-between; color:red; font-weight:bold; border-top:1px solid #000; padding-top:5px;"><span>Net Due:</span> <span>${dueT.toFixed(0)}</span></div>
                     </div>
                 </div>
                 <div style="margin-top:auto; display:flex; justify-content:flex-end; padding-top:50px;">
@@ -1260,14 +1256,14 @@ if (dueAmount > 0) {
             h += `<tr>
                 <td>${t.date}</td>
                 <td>${t.desc}</td>
-                <td>${parseFloat(t.bill).toFixed(2)}</td>
-                <td>${parseFloat(t.paid).toFixed(2)}</td>
-                <td style="font-weight:bold;">${bal.toFixed(2)}</td>
+                <td>${parseFloat(t.bill).toFixed(0)}</td>
+                <td>${parseFloat(t.paid).toFixed(0)}</td>
+                <td style="font-weight:bold;">${bal.toFixed(0)}</td>
                 <td><button onclick="deleteTransaction('${t.id}')" style="background:none; border:none; color:red; cursor:pointer;"><i class="fa-solid fa-times"></i></button></td>
             </tr>`;
         });
         document.getElementById('statementBody').innerHTML = h;
-        document.getElementById('stBalance').innerText = bal.toFixed(2);
+        document.getElementById('stBalance').innerText = bal.toFixed(0);
         document.getElementById('statementModal').classList.remove('hidden');
     }
 
@@ -1294,7 +1290,7 @@ if (dueAmount > 0) {
             totalVal += (parseFloat(item.price) * parseInt(item.qty));
             if(parseInt(item.qty) <= (parseInt(item.alert) || 5)) lowStock++;
         });
-        document.getElementById('todaySales').innerText = "TK " + salesToday.toFixed(2);
+        document.getElementById('todaySales').innerText = "TK " + salesToday.toFixed(0);
         document.getElementById('totalInvCount').innerText = invoices.length;
         document.getElementById('totalStockVal').innerText = "TK " + totalVal.toLocaleString();
         document.getElementById('lowStockCount').innerText = lowStock;
@@ -1325,7 +1321,7 @@ if (dueAmount > 0) {
                 <td style="color: #475569;">${c.email || '--'}</td>
                 <td>
                     <button onclick="window.location.href='tel:${c.phone}'" class="cust-action-btn" style="background: #10b981;" title="Call"><i class="fa-solid fa-phone"></i></button>
-                    <button onclick="sendCustomerWhatsApp('${c.phone}')"class="cust-action-btn" style="background: #10b981;" title="Call"><i class="fa-brands fa-whatsapp"></i></button>
+                    <button onclick="sendCustomerWhatsApp('${c.phone}')"class="cust-action-btn" style="background: #10b981;" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></button>
                     <button onclick="editCustomer('${c.phone}')" class="cust-action-btn" style="background: #f59e0b;" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
                     <button onclick="deleteCustomer('${c.phone}')" class="cust-action-btn admin-only" style="background: #ef4444;" title="Delete"><i class="fa-solid fa-trash"></i></button>
                 </td>
@@ -1453,7 +1449,7 @@ if (dueAmount > 0) {
                 <td style="font-weight: bold; color: var(--primary);">${x.id}</td>
                 <td style="font-weight: 600;">${x.customer}</td>
                 <td style="color: #64748b;">${x.phone}</td>
-                <td style="font-weight: bold;">TK ${parseFloat(x.grand).toFixed(2)}</td>
+                <td style="font-weight: bold;">TK ${parseFloat(x.grand).toFixed(0)}</td>
                 <td style="font-size: 11px; color: #475569;">${x.soldBy}</td>
                 <td>
                     <div style="display: flex; justify-content: center;">
@@ -1828,12 +1824,12 @@ function sendCustomerWhatsApp(phone){
 
     // ✅ Step 1
     msg += "🌿 আসসালামু ওয়া আলাইকুম 🌿\n\n";
-    msg += `👤 প্রিয় ${name},\n`;
+    msg += `👤 প্রিয় ${name.toUpperCase()},\n`;
     msg += `📱 মোবাইল: ${phone}\n`;
     msg += `🏠 ঠিকানা: ${addr}\n\n`;
 
     // ✅ Step 2
-    msg += "🌟 আপনি SMART COMPUTER এর নিয়মিত গ্রাহক হিসেবে নিবন্ধিত রয়েছেন।\n\n";
+    msg += "🌟 আপনি SMART COMPUTER এর নিয়মিত গ্রাহক হিসেবে নিবন্ধিত রয়েছেন।বছর জুড়ে বিভিন্ন অফার/ডিসকাউন্ট পেতে SMART COMPUTER থেকে নিয়মিত সেবা/পন্য গ্রহন করুন।\n\n";
 
     // ✅ Step 3 (Dynamic Offer)
     msg += "🎁 আপনার জন্য স্পেশাল অফার:\n";
@@ -1846,7 +1842,7 @@ function sendCustomerWhatsApp(phone){
     // ✅ Step 5
     msg += "🔗 বিস্তারিত তথ্য জানতে ভিজিট করুন:\n";
     msg += "🌐 www.smartcomputer-bd.github.io/com\n";
-    msg += "📞 প্রয়োজনে কল করুন: 01614-398989\n";
+    msg += "📞 যেকোনো প্রয়োজনে কল করুন: 01614-398989\n";
 
     // 🔹 WhatsApp URL
     const url = "https://wa.me/88" + normalizePhone(phone) + "?text=" + encodeURIComponent(msg);
@@ -1885,6 +1881,53 @@ function undoCustomers(){
     });
 
     alert("✅ ডাটা সফলভাবে Restore হয়েছে");
+}
+
+function sendWhatsAppMsg(name, phone, address) {
+    // ধাপ ৫: ইউজারের মেসেজ ইনপুট নেওয়া
+    const userMsg = prompt("বাকি টাকা পরিশোধ সম্পর্কিত আপনার মেসেজ লিখুন:");
+
+    // কাস্টমারের ট্রানজেকশন ডাটা
+    const custTrans = ledgerTransactions.filter(t => t.phone === phone);
+
+    // ধাপ ৩: Transaction Statement (তারিখ ফরম্যাট = 20-Mar-2026)
+    let transDetails = '';
+    custTrans.forEach((t, idx) => {
+        const d = new Date(t.date);
+        const formattedDate = `${d.getDate().toString().padStart(2,'0')}-${["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()]}-${d.getFullYear()}`;
+        transDetails += `\n${idx+1}. 📅 ${formattedDate} | 📝 ${t.description || '-'} | 💰 Bill: ${t.bill || 0} | ✅ Paid: ${t.paid || 0} | 🔴 Balance: ${(t.bill)-(t.paid) || 0}`;
+    });
+
+    // ধাপ ৪: Total due
+    const totalDue = custTrans.reduce((sum, t) => {
+    const balance = (t.balance !== undefined) ? t.balance : ((t.bill || 0) - (t.paid || 0));
+    return sum + balance;
+}, 0).toFixed(0);
+
+    // ধাপ ১-৮: সম্পূর্ণ মেসেজ
+    const msg = `
+    🌿 আসসালামু ওয়া আলাইকুম 🌿
+    👨‍⚕️ প্রিয় ${name.toUpperCase()}
+    📱 মোবাইল: ${phone}
+
+🌟 আপনি SMART COMPUTER থেকে যে পন্য/সেবা গ্রহণ করেছেন তার সকল ডিজিটাল বিবরণী নিচে দেওয়া হলো:
+${transDetails}
+
+📕 আপনার মোট বাকি : 💵 ${totalDue} TK
+
+🔔 : 💬 ${userMsg}
+
+👑 আপনি আমাদের নিয়মিত গ্রাহক 👨‍🦱 হিসেবে নিবন্ধিত রয়েছেন। আপনার জন্য থাকছে পরবর্তী সেবা/পন্য গ্রহণে স্পেশাল অফার। 🎁✨
+
+🏅 SMART COMPUTER এর সাথে থাকার জন্য আপনাকে অসংখ্য ধন্যবাদ 🫶❤️। আপনার দিনটি শুভ হোক....🌹🌹
+
+🌐 smartcomputer-bd.github.io/com  
+📞 কল করুন: 01614-398989
+`;
+
+    // WhatsApp URL এবং নতুন ট্যাবে খোলা
+    const waURL = `https://wa.me/88${phone.replace(/[^0-9]/g,'')}?text=${encodeURIComponent(msg)}`;
+    window.open(waURL, '_blank');
 }
 
 </script>
