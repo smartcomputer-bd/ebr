@@ -1814,7 +1814,7 @@ function sendCustomerWhatsApp(phone){
     const addr = customer.addr || "উল্লেখ নেই";
 
     // 🔹 USER INPUT (Offer)
-    let offer = prompt("🎁 কাস্টমারের জন্য স্পেশাল অফার লিখুন:");
+    let offer = prompt("🎁 কাস্টমারের জন্য স্পেশাল অফার লিখুন");
 
     if(offer === null) return; // cancel করলে stop
     if(offer.trim() === "") offer = " ";
@@ -1838,7 +1838,7 @@ function sendCustomerWhatsApp(phone){
 
     // ✅ Step 4
     msg += "🙏 SMART COMPUTER এর সাথে থাকার জন্য আপনাকে অসংখ্য ধন্যবাদ 🌹🫶\n";
-    msg += "❤️ আপনার দিনটি শুভ হোক ❤️❤️\n\n";
+    msg += "❤️ আপনার দিনটি শুভ হোক ❤️\n\n";
 
     // ✅ Step 5
     msg += "🌐 smartcomputer-bd.github.io/com\n";
