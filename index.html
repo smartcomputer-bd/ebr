@@ -1817,7 +1817,7 @@ function sendCustomerWhatsApp(phone){
     let offer = prompt("🎁 কাস্টমারের জন্য স্পেশাল অফার লিখুন:");
 
     if(offer === null) return; // cancel করলে stop
-    if(offer.trim() === "") offer = "আপনার জন্য বিশেষ আকর্ষণীয় অফার রয়েছে!";
+    if(offer.trim() === "") offer = " ";
 
     // 🔹 MESSAGE BUILD (৫ ধাপ)
     let msg = "";
@@ -1828,12 +1828,14 @@ function sendCustomerWhatsApp(phone){
     msg += `📱 মোবাইল: ${phone}\n`;
     msg += `🏠 ঠিকানা: ${addr}\n\n`;
 
-    // ✅ Step 2
-    msg += "🌟 আপনি SMART COMPUTER এর নিয়মিত গ্রাহক হিসেবে নিবন্ধিত রয়েছেন।বছর জুড়ে বিভিন্ন অফার/ডিসকাউন্ট পেতে SMART COMPUTER থেকে নিয়মিত সেবা/পন্য গ্রহন করুন।\n\n";
-
+    
     // ✅ Step 3 (Dynamic Offer)
-    msg += "🎁 আপনার জন্য স্পেশাল অফার:\n";
+    msg += " :\n";
     msg += `👉 ${offer}\n\n`;
+
+	// ✅ Step 2
+    msg += "🌟 আপনি SMART COMPUTER এর নিয়মিত গ্রাহক হিসেবে নিবন্ধিত হয়েছেন। বছর জুড়ে বিভিন্ন অফার/ডিসকাউন্ট পেতে SMART COMPUTER থেকে নিয়মিত সেবা/পন্য গ্রহন করুন।\n\n";
+
 
     // ✅ Step 4
     msg += "🙏 SMART COMPUTER এর সাথে থাকার জন্য আপনাকে অসংখ্য ধন্যবাদ 🌹🫶\n";
