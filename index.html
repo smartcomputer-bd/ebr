@@ -1715,8 +1715,8 @@ function shareInvoice() {
     message += `১-খুবই খারাপ: ⭐\n\n`;
     
     message += `*SMART COMPUTER* এর সাথে থাকার জন্য আপনাকে অসংখ্য ধন্যবাদ। 🌹 আপনার দিনটি শুভ হোক ❤️।\n\n`;
-    message += `🌐 *বিস্তারিত জানতে ভিজিট করুন:* https://smartcomputer-bd.github.io/com\n`;
-    message += `📞 *যে কোনো প্রয়োজনে কল করুন:* 01614398989`;
+    message += `🌐 *smartcomputer-bd.github.io/com\n`;
+    message += `📞 *কল করুন:* 01614398989`;
 
     const encodedMsg = encodeURIComponent(message);
     window.open(`https://wa.me/88${phone}?text=${encodedMsg}`, '_blank');
@@ -1840,9 +1840,8 @@ function sendCustomerWhatsApp(phone){
     msg += "❤️ আপনার দিনটি শুভ হোক ❤️❤️\n\n";
 
     // ✅ Step 5
-    msg += "🔗 বিস্তারিত তথ্য জানতে ভিজিট করুন:\n";
-    msg += "🌐 www.smartcomputer-bd.github.io/com\n";
-    msg += "📞 যেকোনো প্রয়োজনে কল করুন: 01614-398989\n";
+    msg += "🌐 smartcomputer-bd.github.io/com\n";
+    msg += "📞 কল করুন: 01614-398989\n";
 
     // 🔹 WhatsApp URL
     const url = "https://wa.me/88" + normalizePhone(phone) + "?text=" + encodeURIComponent(msg);
