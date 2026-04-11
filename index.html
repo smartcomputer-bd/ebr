@@ -1823,9 +1823,9 @@ function sendCustomerWhatsApp(phone){
     let msg = "";
 
     // ✅ Step 1
-    msg += "🌿 আসসালামু ওয়া আলাইকুম 🌿\n\n";
-    msg += `👤 প্রিয় ${name.toUpperCase()},\n`;
-    msg += `📱 মোবাইল: ${phone}\n`;
+    msg += "🌿 আসসালামু ওয়া আলাইকুম 🌿\n";
+    msg += `*👤Dear Customer*\n`;
+    msg += `📱 Mobile: ${phone}\n`;
 
     
     // ✅ Step 3 (Dynamic Offer)
@@ -1833,16 +1833,15 @@ function sendCustomerWhatsApp(phone){
     msg += `👉 ${offer}\n\n`;
 
 	// ✅ Step 2
-    msg += "🌟 আপনি SMART COMPUTER এর নিয়মিত গ্রাহক হিসেবে নিবন্ধিত হয়েছেন। বছর জুড়ে বিভিন্ন অফার/ডিসকাউন্ট পেতে SMART COMPUTER থেকে নিয়মিত সেবা/পন্য গ্রহন করুন।\n\n";
+    msg += "🌟 অভিনন্দন! আপনি SMART COMPUTER এর গ্রাহক হিসেবে নিবন্ধিত হয়েছেন।\n";
 
 
     // ✅ Step 4
     msg += "🙏 SMART COMPUTER এর সাথে থাকার জন্য আপনাকে অসংখ্য ধন্যবাদ 🌹🫶\n";
-    msg += "❤️ আপনার দিনটি শুভ হোক ❤️\n\n";
+    msg += "❤️ আপনার দিনটি শুভ হোক ❤️\n";
 
     // ✅ Step 5
-    msg += "🌐 smartcomputer-bd.github.io/com\n";
-    msg += "📞 কল করুন: 01614-398989\n";
+    msg += "📞 প্রয়োজনে কল করুন: 01614-398989\n";
 
     // 🔹 WhatsApp URL
     const url = "https://wa.me/88" + normalizePhone(phone) + "?text=" + encodeURIComponent(msg);
