@@ -896,6 +896,37 @@ function getFormattedDateTime() {
 
     let users = [{id:'admin', pass:'724672'}];
     let stock = [];
+    // 🔥 CATEGORY SYSTEM (FIXED + DYNAMIC)
+function updateCategoryList(){
+    const datalist = document.getElementById("catList");
+    if(!datalist) return;
+
+    // Fixed Category
+    const fixed = ["System Software","Maintenance"];
+
+    // Dynamic Category (from DB)
+    const dynamic = [];
+
+    stock.forEach(p=>{
+        if(p && p.cat){
+            const c = p.cat.trim();
+            if(c && !dynamic.includes(c)){
+                dynamic.push(c);
+            }
+        }
+    });
+
+    // Merge
+    const all = [...new Set([...fixed, ...dynamic])];
+
+    // Render
+    datalist.innerHTML = "";
+    all.forEach(cat=>{
+        const op = document.createElement("option");
+        op.value = cat;
+        datalist.appendChild(op);
+    });
+}
     let invoices = [];
     let customers = [];
     let deletedCustomersBackup = [];
@@ -913,6 +944,7 @@ function getFormattedDateTime() {
             ledgerTransactions = data.ledger_transactions ? Object.values(data.ledger_transactions) : [];
             
             renderHistory(); renderStock(); renderUsers(); renderCustomers();
+            updateCategoryList(); // 🔥 MUST
             renderLedger(); updateDashboard(); updateCustomerListSource();
             if(activeStatementPhone) viewStatement(activeStatementPhone);
         }
@@ -1606,7 +1638,10 @@ if (dueAmount > 0) {
         showSec('stock');
     }
 
-function openAddModal(){document.getElementById('addModal').classList.remove('hidden');}
+function openAddModal(){
+    document.getElementById('addModal').classList.remove('hidden');
+    setTimeout(updateCategoryList, 100); // 🔥 force refresh
+}
 function closeAddModal(){document.getElementById('addModal').classList.add('hidden');}
 
 function saveProduct(){
