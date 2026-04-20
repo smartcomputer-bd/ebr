@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Computer | Management System</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Barcode/QR Scanner Library -->
+<script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js">
 function openAddModal(){document.getElementById('addModal').classList.remove('hidden');}
 function closeAddModal(){document.getElementById('addModal').classList.add('hidden');}
@@ -130,8 +132,6 @@ function editP(c){
 function delP(c){
  if(confirm('Delete?')) db.ref('smart_erp/stock/'+c).remove();
 }
-		
-<script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
 
 </script>
     <style>
@@ -726,7 +726,6 @@ body.dark-mode .cust-box {
     <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
         <div style="display:flex; gap:10px;">
             <button class="btn btn-success" onclick="openAddModal()"><i class="fa fa-plus"></i> Add New</button>
-            <button class="btn btn-success" onclick="scanProduct()"><i class="fa fa-qrcode"></i> Scan</button>
             <input type="text" id="searchStock" placeholder="Search by Code / Name / Category..." oninput="renderStock()" style="padding:8px; border-radius:6px;">
         </div>
     </div>
@@ -767,6 +766,8 @@ body.dark-mode .cust-box {
     <input id="sAlert" placeholder="Alert"><br><br>
 
     <button class="btn btn-success" onclick="saveProduct()">Save</button>
+    <!-- Save বাটনের পাশে -->
+<button id="scanBtn" class="btn btn-primary">Scan</button>
     <button class="btn btn-danger" onclick="closeAddModal()">Close</button>
   </div>
 </div>
@@ -1441,6 +1442,61 @@ if (dueAmount > 0) {
         });
         document.getElementById('stockBody').innerHTML = h;
     }
+    
+    document.getElementById("scanBtn").addEventListener("click", function() {
+    const html5QrCode = new Html5Qrcode("qr-reader");
+    
+    // মোডাল এর ভিতরে একটি div যেখানে ক্যামেরা দেখানো হবে
+    let qrDiv = document.getElementById("qr-reader");
+    if (!qrDiv) {
+        qrDiv = document.createElement("div");
+        qrDiv.id = "qr-reader";
+        qrDiv.style.width = "100%";
+        qrDiv.style.marginTop = "10px";
+        document.querySelector(".modal-body").appendChild(qrDiv);
+    }
+
+    html5QrCode.start(
+        { facingMode: "environment" }, // মূল ক্যামেরা
+        {
+            fps: 10,    // ফ্রেম প্রতি সেকেন্ড
+            qrbox: 250  // স্ক্যানিং বক্স সাইজ
+        },
+        (decodedText, decodedResult) => {
+            console.log(`Decoded text: ${decodedText}`);
+            
+            // Ajax call বা local data lookup করে ফিল্ডগুলো পূরণ
+            fetchProductDetails(decodedText);
+            
+            // স্ক্যান শেষ হলে ক্যামেরা বন্ধ করা
+            html5QrCode.stop().then(() => {
+                qrDiv.remove();
+            }).catch(err => console.error(err));
+        },
+        (errorMessage) => {
+            console.warn(`QR scan error: ${errorMessage}`);
+        }
+    );
+});
+
+// প্রডাক্ট ডিটেইলস ফিল্ডে পূরণ করা
+function fetchProductDetails(code) {
+    // উদাহরণ: local JS array বা Ajax call
+    const products = [
+        { code: "P001", name: "Product 1", category: "Cat A", warranty: "12 months" },
+        { code: "P002", name: "Product 2", category: "Cat B", warranty: "6 months" },
+    ];
+
+    const product = products.find(p => p.code === code);
+    if (product) {
+        document.getElementById("productCode").value = product.code;
+        document.getElementById("productName").value = product.name;
+        document.getElementById("category").value = product.category;
+        document.getElementById("warranty").value = product.warranty;
+    } else {
+        alert("Product not found!");
+    }
+}
 
     function autoFillCustomerByName(name) {
         const c = customers.find(x => x.name === name);
@@ -1968,49 +2024,6 @@ ${transDetails}
     // WhatsApp URL এবং নতুন ট্যাবে খোলা
     const waURL = `https://wa.me/88${phone.replace(/[^0-9]/g,'')}?text=${encodeURIComponent(msg)}`;
     window.open(waURL, '_blank');
-}
-
-function scanProduct() {
-    // Add modal ওপেন
-    openAddModal();
-
-    // ক্যামেরা চালু
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-    .then(stream => {
-        const video = document.createElement('video');
-        video.srcObject = stream;
-        video.setAttribute('playsinline', true);
-        video.play();
-
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-
-        function tick() {
-            if(video.readyState === video.HAVE_ENOUGH_DATA) {
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                ctx.drawImage(video, 0, 0);
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const code = jsQR(imageData.data, canvas.width, canvas.height);
-                if(code) {
-                    const p = stock.find(x => x.code === code.data);
-                    if(p) {
-                        document.getElementById('sCode').value = p.code;
-                        document.getElementById('sName').value = p.name;
-                        document.getElementById('sCat').value = p.cat || '';
-                        document.getElementById('sWar').value = p.war || '';
-                    } else {
-                        document.getElementById('sCode').value = code.data;
-                    }
-                    stream.getTracks().forEach(t => t.stop());
-                    return;
-                }
-            }
-            requestAnimationFrame(tick);
-        }
-        tick();
-    })
-    .catch(err => alert("Camera not accessible"));
 }
 
 </script>
