@@ -374,6 +374,8 @@ body.dark-mode .cust-box {
     background: #fff;
 }
 
+<script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+
     </style>
 </head>
 <body onload="document.getElementById('uId').focus()">
@@ -722,10 +724,11 @@ body.dark-mode .cust-box {
     <h2 style="color:var(--primary); margin-bottom:15px;">🎯 Smart Inventory</h2>
 
     <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-        <div style="display:flex; gap:10px;">
-            <button class="btn btn-success" onclick="openAddModal()"><i class="fa fa-plus"></i> Add New</button>
-            <input type="text" id="searchStock" placeholder="Search by Code / Name / Category..." oninput="renderStock()" style="padding:8px; border-radius:6px;">
-        </div>
+    <div style="display:flex; gap:10px;">
+    <button class="btn btn-success" onclick="openAddModal()"><i class="fa fa-plus"></i> Add New</button>
+    <button class="btn btn-success" onclick="openScanModal()"><i class="fa fa-qrcode"></i> Scan</button>
+    <input type="text" id="searchStock" placeholder="Search by Code / Name / Category..." oninput="renderStock()" style="padding:8px; border-radius:6px;">
+</div>
     </div>
 
     <table style="width:100%">
@@ -1967,6 +1970,81 @@ ${transDetails}
     window.open(waURL, '_blank');
 }
 
+let scannerStream = null;
+
+function openScanModal() {
+    document.getElementById('scanModal').classList.remove('hidden');
+    startScanner();
+}
+
+function closeScanModal() {
+    document.getElementById('scanModal').classList.add('hidden');
+    if(scannerStream) {
+        scannerStream.getTracks().forEach(track => track.stop());
+        scannerStream = null;
+    }
+}
+
+async function startScanner() {
+    const video = document.getElementById('scannerVideo');
+    try {
+        scannerStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        video.srcObject = scannerStream;
+        video.setAttribute("playsinline", true);
+        video.play();
+        requestAnimationFrame(tick);
+    } catch (err) {
+        alert("Camera access denied or not available.");
+    }
+
+    function tick() {
+        if(video.readyState === video.HAVE_ENOUGH_DATA) {
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+            const code = jsQR(imageData.data, canvas.width, canvas.height);
+            if(code) {
+                fillProductFromScan(code.data);
+                closeScanModal();
+                return;
+            }
+        }
+        requestAnimationFrame(tick);
+    }
+}
+
+function fillProductFromScan(scannedCode) {
+    const p = stock.find(x => x.code === scannedCode);
+    openAddModal();
+    if(p) {
+        document.getElementById('sCode').value = p.code;
+        document.getElementById('sName').value = p.name;
+        document.getElementById('sCat').value = p.cat || '';
+        document.getElementById('sWar').value = p.war || '';
+    } else {
+        document.getElementById('sCode').value = scannedCode;
+        document.getElementById('sName').value = '';
+        document.getElementById('sCat').value = '';
+        document.getElementById('sWar').value = '';
+    }
+}
+
 </script>
+
+<div id="scanModal" class="modal-overlay hidden">
+  <div class="modal-content">
+    <h3>Scan Product</h3>
+    <video id="scannerVideo" width="100%" height="300" style="border:1px solid #ccc; border-radius:8px;"></video>
+    <p style="font-size:12px; margin-top:5px;">Point your camera to the barcode/QR code</p>
+    <div style="margin-top:10px; display:flex; justify-content:flex-end; gap:10px;">
+        <button onclick="closeScanModal()" class="btn btn-danger">Close</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
