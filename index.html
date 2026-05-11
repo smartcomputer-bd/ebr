@@ -206,6 +206,10 @@ function delP(c){
         .customer-card-list th:last-child { border-radius: 0 10px 10px 0; text-align: center; }
         .cust-row { background: white; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: 0.3s; }
         .cust-row:hover { transform: scale(1.01); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
+#meterTableBody tr:hover{
+    background:#f1f5f9 !important;
+    transition:0.3s;
+}
         .cust-row td { border: none; padding: 15px; font-size: 14px; border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; }
         .cust-row td:first-child { border-left: 1px solid #f1f5f9; border-radius: 10px 0 0 10px; border-left: 5px solid var(--secondary); }
         .cust-row td:last-child { border-right: 1px solid #f1f5f9; border-radius: 0 10px 10px 0; text-align: center; }
@@ -399,6 +403,7 @@ body.dark-mode .cust-box {
             <button id="navLedger" onclick="showSec('ledger')">Ledger</button>
             <button id="navCustomer" onclick="showSec('customer')">Customer</button>
             <button onclick="showSec('stock')">Inventory</button>
+	    <button id="navMeter" onclick="showSec('meter')">Meter</button>
             <button id="navSettings" onclick="showSec('settings')">Admin</button>
             <button onclick="location.reload()" style="background:var(--danger)">Logout</button>
         </div>
@@ -767,7 +772,131 @@ body.dark-mode .cust-box {
     <button class="btn btn-danger" onclick="closeAddModal()">Close</button>
   </div>
 </div>
+<!-- METER SECTION START -->
+<div id="meterSec" class="hidden panel">
 
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; border-bottom:3px solid var(--primary); padding-bottom:15px; flex-wrap:wrap; gap:10px;">
+
+        <h3 style="margin:0; color:var(--primary); font-size:24px;">
+            <i class="fa-solid fa-gauge-high"></i> Meter Database
+        </h3>
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+
+            <button onclick="openMeterModal()" class="btn btn-primary">
+                <i class="fa fa-plus"></i> Add New Meter
+            </button>
+
+            <button onclick="deleteSelectedMeters()" class="btn btn-danger">
+                <i class="fa fa-trash"></i> Delete
+            </button>
+
+            <button onclick="undoMeterDelete()" class="btn btn-secondary">
+                <i class="fa fa-rotate-left"></i> Undo
+            </button>
+
+            <button onclick="backupMeters()" class="btn btn-success">
+                <i class="fa fa-download"></i> Backup
+            </button>
+
+            <button onclick="document.getElementById('meterRestoreFile').click()" class="btn btn-primary">
+                <i class="fa fa-upload"></i> Restore
+            </button>
+
+            <input type="file"
+                   id="meterRestoreFile"
+                   accept=".xlsx"
+                   style="display:none"
+                   onchange="restoreMeters(event)">
+        </div>
+    </div>
+
+    <!-- SEARCH -->
+    <div style="margin-bottom:20px;">
+        <input type="text"
+               id="searchMeter"
+               placeholder="Search by Name, Mobile, Address or Meter No..."
+               oninput="renderMeters()"
+               style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1;">
+    </div>
+
+    <!-- TABLE -->
+    <div style="overflow-x:auto;">
+        <table class="customer-card-list">
+            <thead>
+                <tr>
+                    <th>Select</th>
+                    <th>Mobile No</th>
+                    <th>Client Name</th>
+                    <th>Address</th>
+                    <th>Meter No</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody id="meterTableBody"></tbody>
+        </table>
+    </div>
+
+</div>
+
+<!-- METER MODAL -->
+<div id="meterModal" class="modal-overlay hidden">
+
+    <div class="modal-content">
+
+        <h3 id="meterModalTitle">Add New Meter</h3>
+
+        <input type="hidden" id="editMeterNo">
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-top:20px;">
+
+            <div>
+                <label>Client Name</label>
+                <input type="text" id="mClientName" style="width:95%;">
+            </div>
+
+            <div>
+                <label>Mobile No</label>
+                <input type="text"
+                       id="mMobile"
+                       maxlength="12"
+                       placeholder="00000-000000"
+                       style="width:95%;">
+            </div>
+
+            <div>
+                <label>Address</label>
+                <input type="text" id="mAddress" style="width:95%;">
+            </div>
+
+            <div>
+                <label>Meter No</label>
+                <input type="text"
+                       id="mMeterNo"
+                       maxlength="12"
+                       placeholder="12 Digit Meter No"
+                       style="width:95%;">
+            </div>
+
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:25px;">
+
+            <button onclick="closeMeterModal()" class="btn btn-secondary">
+                Cancel
+            </button>
+
+            <button onclick="saveMeter()" class="btn btn-success">
+                Save Meter
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+<!-- METER SECTION END -->
 <div id="settingsSec" class="hidden panel">
     <h3>Admin Panel - User Management</h3>
     <div style="display:grid; grid-template-columns: 1fr 1.5fr; gap:20px;">
@@ -929,6 +1058,8 @@ function updateCategoryList(){
 }
     let invoices = [];
     let customers = [];
+    let meters = [];
+    let deletedMeterBackup = [];
     let deletedCustomersBackup = [];
     let ledgerTransactions = [];
     let currentUser = "";
@@ -941,9 +1072,10 @@ function updateCategoryList(){
             stock = data.stock ? Object.values(data.stock).filter(item => item && item.code && item.name) : [];
             invoices = data.invoices ? Object.values(data.invoices) : [];
             customers = data.customers ? Object.values(data.customers) : [];
+	    meters = data.meters ? Object.values(data.meters) : [];
             ledgerTransactions = data.ledger_transactions ? Object.values(data.ledger_transactions) : [];
             
-            renderHistory(); renderStock(); renderUsers(); renderCustomers();
+            renderHistory();renderStock();renderUsers();renderCustomers();renderMeters();
             updateCategoryList(); // 🔥 MUST
             renderLedger(); updateDashboard(); updateCustomerListSource();
             if(activeStatementPhone) viewStatement(activeStatementPhone);
@@ -971,7 +1103,7 @@ function updateCategoryList(){
     }
 
     function showSec(id) {
-        ['posSec','historySec','stockSec','settingsSec','ledgerSec','customerSec','dashSec'].forEach(s => document.getElementById(s).classList.add('hidden'));
+        ['posSec','historySec','stockSec','settingsSec','ledgerSec','customerSec','meterSec','dashSec'].forEach(s => document.getElementById(s).classList.add('hidden'));
         if(id === 'pos') {
             document.getElementById('posSec').classList.remove('hidden');
             document.getElementById('dashSec').classList.remove('hidden');
@@ -983,6 +1115,7 @@ function updateCategoryList(){
         if(id=='settings') renderUsers();
         if(id=='ledger') renderLedger();
         if(id=='customer') renderCustomers();
+	if(id=='meter') renderMeters();
     }
 
     // --- POS & INVOICE CORE FUNCTIONS ---
@@ -1330,6 +1463,340 @@ if (dueAmount > 0) {
         document.getElementById('totalStockVal').innerText = "TK " + totalVal.toLocaleString();
         document.getElementById('lowStockCount').innerText = lowStock;
     }
+
+/* =========================
+   METER MODULE START
+========================= */
+
+function openMeterModal(){
+    document.getElementById('meterModal').classList.remove('hidden');
+
+    document.getElementById('meterModalTitle').innerText = "Add New Meter";
+
+    document.getElementById('editMeterNo').value = "";
+
+    document.getElementById('mClientName').value = "";
+    document.getElementById('mMobile').value = "";
+    document.getElementById('mAddress').value = "";
+    document.getElementById('mMeterNo').value = "";
+}
+
+function closeMeterModal(){
+    document.getElementById('meterModal').classList.add('hidden');
+}
+
+function formatMeterMobile(v){
+
+    v = v.replace(/\D/g,'');
+
+    if(v.length > 11){
+        v = v.slice(0,11);
+    }
+
+    if(v.length > 5){
+        v = v.slice(0,5) + "-" + v.slice(5);
+    }
+
+    return v;
+}
+
+document.addEventListener("input", function(e){
+
+    if(e.target.id === "mMobile"){
+        e.target.value = formatMeterMobile(e.target.value);
+    }
+
+    if(e.target.id === "mMeterNo"){
+
+        e.target.value = e.target.value.replace(/\D/g,'');
+
+        if(e.target.value.length > 12){
+            e.target.value = e.target.value.slice(0,12);
+        }
+    }
+});
+
+function saveMeter(){
+
+    const clientName = document.getElementById('mClientName').value.trim();
+    const mobile = document.getElementById('mMobile').value.trim();
+    const address = document.getElementById('mAddress').value.trim();
+    const meterNo = document.getElementById('mMeterNo').value.trim();
+
+    if(!clientName || !mobile || !meterNo){
+        alert("সব তথ্য পূরণ করুন");
+        return;
+    }
+
+    if(meterNo.length !== 12){
+        alert("Meter No অবশ্যই 12 সংখ্যার হতে হবে");
+        return;
+    }
+
+    const oldMeterNo = document.getElementById('editMeterNo').value;
+
+    const duplicate = meters.find(x =>
+        x.meterNo === meterNo &&
+        x.meterNo !== oldMeterNo
+    );
+
+    if(duplicate){
+        alert("এই Meter No পূর্বে যুক্ত করা হয়েছে");
+        return;
+    }
+
+    const data = {
+        clientName,
+        mobile,
+        address,
+        meterNo
+    };
+
+    db.ref('smart_erp/meters/' + meterNo).set(data);
+
+    closeMeterModal();
+}
+
+function renderMeters(){
+
+    const q = document.getElementById('searchMeter').value.toLowerCase();
+
+    let list = [...meters];
+
+    list.sort((a,b)=>
+        a.clientName.localeCompare(b.clientName)
+    );
+
+    let h = "";
+
+    list.filter(m =>
+
+        m.clientName.toLowerCase().includes(q) ||
+        m.mobile.toLowerCase().includes(q) ||
+        (m.address || '').toLowerCase().includes(q) ||
+        m.meterNo.toLowerCase().includes(q)
+
+    ).forEach(m=>{
+
+        h += `
+        <tr class="cust-row">
+
+            <td>
+                <input type="checkbox"
+                       class="meterCheck"
+                       value="${m.meterNo}">
+            </td>
+
+            <td>${m.mobile}</td>
+
+            <td>${m.clientName}</td>
+
+            <td>${m.address || ''}</td>
+
+            <td>${m.meterNo}</td>
+
+            <td>
+
+                <button
+                    onclick="window.open('https://wa.me/88${m.mobile.replace(/-/g,'')}')"
+                    class="cust-action-btn"
+                    style="background:#10b981;"
+                    title="WhatsApp">
+
+                    <i class="fa-brands fa-whatsapp"></i>
+
+                </button>
+
+                <button
+                    onclick="window.location.href='sms:${m.mobile.replace(/-/g,'')}'"
+                    class="cust-action-btn"
+                    style="background:#0ea5e9;"
+                    title="SMS">
+
+                    <i class="fa-solid fa-comment"></i>
+
+                </button>
+
+                <button
+                    onclick="window.location.href='tel:${m.mobile.replace(/-/g,'')}'"
+                    class="cust-action-btn"
+                    style="background:#3b82f6;"
+                    title="Call">
+
+                    <i class="fa-solid fa-phone"></i>
+
+                </button>
+
+                <button
+                    onclick="editMeter('${m.meterNo}')"
+                    class="cust-action-btn"
+                    style="background:#f59e0b;"
+                    title="Edit">
+
+                    <i class="fa-solid fa-pen"></i>
+
+                </button>
+
+                <button
+                    onclick="deleteSingleMeter('${m.meterNo}')"
+                    class="cust-action-btn"
+                    style="background:#dc2626;"
+                    title="Delete">
+
+                    <i class="fa-solid fa-trash"></i>
+
+                </button>
+
+            </td>
+
+        </tr>
+        `;
+    });
+
+    document.getElementById('meterTableBody').innerHTML = h;
+}
+
+function editMeter(meterNo){
+
+    const m = meters.find(x => x.meterNo === meterNo);
+
+    if(!m) return;
+
+    openMeterModal();
+
+    document.getElementById('meterModalTitle').innerText = "Edit Meter";
+
+    document.getElementById('editMeterNo').value = meterNo;
+
+    document.getElementById('mClientName').value = m.clientName;
+    document.getElementById('mMobile').value = m.mobile;
+    document.getElementById('mAddress').value = m.address;
+    document.getElementById('mMeterNo').value = m.meterNo;
+}
+
+function deleteSingleMeter(meterNo){
+
+    if(!confirm("Delete এই Meter তথ্য?")) return;
+
+    const m = meters.find(x => x.meterNo === meterNo);
+
+    if(m){
+        deletedMeterBackup.push(m);
+    }
+
+    db.ref('smart_erp/meters/' + meterNo).remove();
+}
+
+function deleteSelectedMeters(){
+
+    const checked = document.querySelectorAll('.meterCheck:checked');
+
+    if(checked.length === 0){
+        alert("Select করুন");
+        return;
+    }
+
+    if(!confirm("Delete Selected Meter?")) return;
+
+    checked.forEach(c=>{
+
+        const meterNo = c.value;
+
+        const m = meters.find(x => x.meterNo === meterNo);
+
+        if(m){
+            deletedMeterBackup.push(m);
+        }
+
+        db.ref('smart_erp/meters/' + meterNo).remove();
+    });
+}
+
+function undoMeterDelete(){
+
+    if(deletedMeterBackup.length === 0){
+        alert("No backup found");
+        return;
+    }
+
+    deletedMeterBackup.forEach(m=>{
+
+        db.ref('smart_erp/meters/' + m.meterNo).set(m);
+    });
+
+    deletedMeterBackup = [];
+
+    alert("Undo Complete");
+}
+
+function backupMeters(){
+
+    const data = meters.map(m=>({
+        "Mobile No": m.mobile,
+        "Client Name": m.clientName,
+        "Address": m.address,
+        "Meter No": m.meterNo
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+
+    const wb = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(wb, ws, "Meters");
+
+    const now = new Date();
+
+    const fileName =
+        `Meter_Backup_${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}_${now.getHours()}-${now.getMinutes()}.xlsx`;
+
+    XLSX.writeFile(wb, fileName);
+}
+
+function restoreMeters(event){
+
+    const file = event.target.files[0];
+
+    if(!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function(e){
+
+        const data = new Uint8Array(e.target.result);
+
+        const workbook = XLSX.read(data,{type:'array'});
+
+        const sheet =
+            workbook.Sheets[workbook.SheetNames[0]];
+
+        const json =
+            XLSX.utils.sheet_to_json(sheet);
+
+        json.forEach(r=>{
+
+            const meterNo = String(r["Meter No"] || '').trim();
+
+            if(!meterNo) return;
+
+            db.ref('smart_erp/meters/' + meterNo).set({
+
+                mobile: String(r["Mobile No"] || ''),
+                clientName: String(r["Client Name"] || ''),
+                address: String(r["Address"] || ''),
+                meterNo: meterNo
+
+            });
+        });
+
+        alert("Restore Complete");
+    };
+
+    reader.readAsArrayBuffer(file);
+}
+
+/* =========================
+   METER MODULE END
+========================= */
 
     // UPDATED RENDER CUSTOMERS
     function renderCustomers() {
