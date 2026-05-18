@@ -366,17 +366,7 @@ body.dark-mode .cust-box {
     to {opacity:1; transform: scale(1);}
 }
 		
-/* QR BOX */
-.qr-box {
-    width: 90px;
-    height: 90px;
-    border: 2px solid #3b82f6;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 10px;
-    background: #fff;
-}
+
 
     </style>
 </head>
@@ -492,9 +482,11 @@ body.dark-mode .cust-box {
                             3. Product must be returned with original invoice and packaging.<br>
                             4. Warranty period starts from the date of purchase.
                         </p>
-                        <div class="qr-box">
+                        
+               <div class="qr-box" id="qrBoundary" style="border: 2px solid #3b82f6; padding: 5px; display: inline-block;">
     <div id="qrcode"></div>
 </div>
+
                     </div>
                     <div class="status-seal-container" style="padding-top: 10px;">
                       <div id="statusSeal" class="status-seal status-paid">PAID</div>
@@ -1140,7 +1132,8 @@ function updateCategoryList(){
     function genId() {
         const type = document.getElementById('docType').value;
         document.getElementById('invId').innerText = type + "-" + Math.floor(100000 + Math.random() * 900000);
-    }
+  setTimeout(updateInvoiceQR, 500); 
+  }
 
     function fetchItem(input) {
         const code = input.value.trim(); if(!code) return;
@@ -1196,9 +1189,7 @@ if (dueAmount > 0) {
             document.getElementById('invPayDate').value = "";
         }
 
-        const qrText = `Customer: ${document.getElementById('cName').value}\nInv No: ${document.getElementById('invId').innerText}\nTotal: ${grand.toFixed(0)}\nDue: ${due.toFixed(0)}`;
-        document.getElementById('qrcode').innerHTML = "";
-        new QRCode(document.getElementById("qrcode"), { text: qrText, width: 70, height: 70 });
+        updateInvoiceQR();
     }
 
     async function saveAndPrint() {
@@ -2433,6 +2424,45 @@ ${transDetails}
     const waURL = `https://wa.me/88${phone.replace(/[^0-9]/g,'')}?text=${encodeURIComponent(msg)}`;
     window.open(waURL, '_blank');
 }
+
+function updateInvoiceQR() {
+    const qrcodeElement = document.getElementById("qrcode");
+    qrcodeElement.innerHTML = ""; // আগের কিউআর কোড মুছে ফেলা
+
+    // তথ্য সংগ্রহ
+    const invNo = document.getElementById('invId').innerText;
+    const date = document.getElementById('curDate').innerText;
+    const time = document.getElementById('curTime').innerText;
+    const name = document.getElementById('cName').value;
+    const total = document.getElementById('grandT').innerText;
+    const vat = document.getElementById('vatInp').value;
+    const discount = document.getElementById('vP').value;
+    const due = document.getElementById('pDue').innerText;
+    
+
+    // কিউআর কন্টেন্ট তৈরি
+    let qrText = `Invoice: ${invNo}\nDate: ${date}\nTime: ${time}\nCustomer: ${name}\nTotal: ${total} TK`;
+    if(vat > 0) qrText += `\nVAT: ${vat}%`;
+    if(discount > 0) qrText += `\nDiscount: ${discount}%`;
+    if(parseFloat(due) > 0) {
+        qrText += `\nDue: ${due} TK`;
+    }
+
+    // কিউআর কোড জেনারেট করা
+    new QRCode(qrcodeElement, {
+        text: qrText,
+        width: 70,
+        height: 70,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+    });
+
+    // ডাইনামিক বাউন্ডারি (বাকি থাকলে লাল, পরিশোধ থাকলে নীল)
+    const boundary = document.getElementById('qrBoundary');
+    boundary.style.borderColor = parseFloat(due) > 0 ? "#dc2626" : "#1e40af";
+}
+
 
 </script>
 </body>
