@@ -394,6 +394,7 @@ body.dark-mode .cust-box {
             <button id="navCustomer" onclick="showSec('customer')">Customer</button>
             <button onclick="showSec('stock')">Inventory</button>
 	    <button id="navMeter" onclick="showSec('meter')">Meter</button>
+	    <button id="navVata" onclick="showSec('vata')">Vata</button>
             <button id="navSettings" onclick="showSec('settings')">Admin</button>
             <button onclick="location.reload()" style="background:var(--danger)">Logout</button>
         </div>
@@ -852,7 +853,7 @@ body.dark-mode .cust-box {
                 <label>Mobile No</label>
                 <input type="text"
                        id="mMobile"
-                       maxlength="12"
+                       maxlength="13"
                        placeholder="00000-000000"
                        style="width:95%;">
             </div>
@@ -866,7 +867,7 @@ body.dark-mode .cust-box {
                 <label>Meter No</label>
                 <input type="text"
                        id="mMeterNo"
-                       maxlength="12"
+                       maxlength="13"
                        placeholder="12 Digit Meter No"
                        style="width:95%;">
             </div>
@@ -889,6 +890,182 @@ body.dark-mode .cust-box {
 
 </div>
 <!-- METER SECTION END -->
+<!-- VATA SECTION START -->
+<div id="vataSec" class="hidden panel">
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; border-bottom:3px solid var(--primary); padding-bottom:15px; flex-wrap:wrap; gap:10px;">
+
+        <div>
+            <h3 style="margin:0; color:var(--primary); font-size:24px;">
+                <i class="fa-solid fa-hand-holding-heart"></i> Vata Database
+            </h3>
+
+            <div style="margin-top:10px; display:flex; gap:15px; flex-wrap:wrap; font-size:13px;">
+
+                <div style="background:#eff6ff; padding:8px 12px; border-radius:8px;">
+                    Total: <b id="vataTotalCount">0</b>
+                </div>
+
+                <div style="background:#f0fdf4; padding:8px 12px; border-radius:8px;">
+                    Nagad: <b id="vataNagadCount">0</b>
+                </div>
+
+                <div style="background:#fefce8; padding:8px 12px; border-radius:8px;">
+                    Bkash: <b id="vataBkashCount">0</b>
+                </div>
+
+                <div style="background:#fdf4ff; padding:8px 12px; border-radius:8px;">
+                    Rocket: <b id="vataRocketCount">0</b>
+                </div>
+
+                <div style="background:#fee2e2; padding:8px 12px; border-radius:8px;">
+                    Disability: <b id="vataDisabilityCount">0</b>
+                </div>
+
+                <div style="background:#ede9fe; padding:8px 12px; border-radius:8px;">
+                    Oldest: <b id="vataOldestCount">0</b>
+                </div>
+
+                <div style="background:#ecfccb; padding:8px 12px; border-radius:8px;">
+                    Widow: <b id="vataWidowCount">0</b>
+                </div>
+
+            </div>
+        </div>
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+
+            <button onclick="openVataModal()" class="btn btn-primary">
+                <i class="fa fa-plus"></i> Add New Vata
+            </button>
+
+            <button onclick="deleteSelectedVata()" class="btn btn-danger">
+                <i class="fa fa-trash"></i> Delete
+            </button>
+
+            <button onclick="undoVataDelete()" class="btn btn-secondary">
+                <i class="fa fa-rotate-left"></i> Undo
+            </button>
+
+            <button onclick="backupVata()" class="btn btn-success">
+                <i class="fa fa-download"></i> Backup
+            </button>
+
+            <button onclick="document.getElementById('vataRestoreFile').click()" class="btn btn-primary">
+                <i class="fa fa-upload"></i> Restore
+            </button>
+
+            <input type="file"
+                   id="vataRestoreFile"
+                   accept=".xlsx"
+                   style="display:none"
+                   onchange="restoreVata(event)">
+        </div>
+    </div>
+
+    <div style="margin-bottom:20px;">
+        <input type="text"
+               id="searchVata"
+               placeholder="Search by Mobile, Name, MFS Category or Vata Category..."
+               oninput="renderVata()"
+               style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1;">
+    </div>
+
+    <div style="overflow-x:auto;">
+        <table class="customer-card-list">
+
+            <thead>
+                <tr>
+                    <th>Select</th>
+                    <th>Mobile No</th>
+                    <th>Name</th>
+                    <th>MFS Category</th>
+                    <th>Vata Category</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody id="vataTableBody"></tbody>
+
+        </table>
+    </div>
+
+</div>
+
+<!-- VATA MODAL -->
+<div id="vataModal" class="modal-overlay hidden">
+
+    <div class="modal-content">
+
+        <h3 id="vataModalTitle">Add New Vata</h3>
+
+        <input type="hidden" id="editVataPhone">
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-top:20px;">
+
+            <div>
+                <label>Name</label>
+                <input type="text" id="vataName" style="width:95%;">
+            </div>
+
+            <div>
+                <label>Mobile No</label>
+                <input type="text"
+                       id="vataMobile"
+                       maxlength="13"
+                       placeholder="01919-336660"
+                       style="width:95%;">
+            </div>
+
+            <div>
+                <label>MFS Category</label>
+
+                <input type="text"
+                       id="vataMfs"
+                       list="mfsList"
+                       style="width:95%;">
+
+                <datalist id="mfsList">
+                    <option value="Nagad">
+                    <option value="Bkash">
+                    <option value="Rocket">
+                </datalist>
+            </div>
+
+            <div>
+                <label>Vata Category</label>
+
+                <input type="text"
+                       id="vataCategory"
+                       list="vataCategoryList"
+                       style="width:95%;">
+
+                <datalist id="vataCategoryList">
+                    <option value="Disability">
+                    <option value="Oldest">
+                    <option value="Widow">
+                </datalist>
+            </div>
+
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:25px;">
+
+            <button onclick="closeVataModal()" class="btn btn-secondary">
+                Cancel
+            </button>
+
+            <button onclick="saveVata()" class="btn btn-success">
+                Save Vata
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+<!-- VATA SECTION END -->
+
 <div id="settingsSec" class="hidden panel">
     <h3>Admin Panel - User Management</h3>
     <div style="display:grid; grid-template-columns: 1fr 1.5fr; gap:20px;">
@@ -1051,6 +1228,8 @@ function updateCategoryList(){
     let invoices = [];
     let customers = [];
     let meters = [];
+    let vataList = [];
+    let deletedVataBackup = [];
     let deletedMeterBackup = [];
     let deletedCustomersBackup = [];
     let ledgerTransactions = [];
@@ -1065,9 +1244,15 @@ function updateCategoryList(){
             invoices = data.invoices ? Object.values(data.invoices) : [];
             customers = data.customers ? Object.values(data.customers) : [];
 	    meters = data.meters ? Object.values(data.meters) : [];
+	    vataList = data.vata ? Object.values(data.vata) : [];
             ledgerTransactions = data.ledger_transactions ? Object.values(data.ledger_transactions) : [];
             
-            renderHistory();renderStock();renderUsers();renderCustomers();renderMeters();
+            renderHistory();
+	    renderStock();
+	    renderUsers();
+	    renderCustomers();
+	    renderMeters();
+	    renderVata();
             updateCategoryList(); // 🔥 MUST
             renderLedger(); updateDashboard(); updateCustomerListSource();
             if(activeStatementPhone) viewStatement(activeStatementPhone);
@@ -1095,7 +1280,7 @@ function updateCategoryList(){
     }
 
     function showSec(id) {
-        ['posSec','historySec','stockSec','settingsSec','ledgerSec','customerSec','meterSec','dashSec'].forEach(s => document.getElementById(s).classList.add('hidden'));
+        ['posSec','historySec','stockSec','settingsSec','ledgerSec','customerSec','meterSec','vataSec','dashSec'].forEach(s => document.getElementById(s).classList.add('hidden'));
         if(id === 'pos') {
             document.getElementById('posSec').classList.remove('hidden');
             document.getElementById('dashSec').classList.remove('hidden');
@@ -1108,6 +1293,7 @@ function updateCategoryList(){
         if(id=='ledger') renderLedger();
         if(id=='customer') renderCustomers();
 	if(id=='meter') renderMeters();
+	if(id=='vata') renderVata();
     }
 
     // --- POS & INVOICE CORE FUNCTIONS ---
@@ -2461,6 +2647,296 @@ function updateInvoiceQR() {
     // ডাইনামিক বাউন্ডারি (বাকি থাকলে লাল, পরিশোধ থাকলে নীল)
     const boundary = document.getElementById('qrBoundary');
     boundary.style.borderColor = parseFloat(due) > 0 ? "#dc2626" : "#1e40af";
+}
+
+/* =========================
+   VATA DATABASE SYSTEM
+========================= */
+
+function openVataModal(){
+    document.getElementById('vataModal').classList.remove('hidden');
+}
+
+function closeVataModal(){
+    document.getElementById('vataModal').classList.add('hidden');
+
+    document.getElementById('editVataPhone').value='';
+    document.getElementById('vataName').value='';
+    document.getElementById('vataMobile').value='';
+    document.getElementById('vataMfs').value='';
+    document.getElementById('vataCategory').value='';
+}
+
+function saveVata(){
+
+    const phone = formatPhoneBD(document.getElementById('vataMobile').value.trim());
+
+    if(!phone){
+        return alert("Mobile Number Required!");
+    }
+
+    const oldPhone = document.getElementById('editVataPhone').value;
+
+    if(
+        !oldPhone &&
+        vataList.find(x=>matchPhone(x.mobile,phone))
+    ){
+        return alert("Mobile Number Already Exists!");
+    }
+
+    const data = {
+        mobile: phone,
+        name: document.getElementById('vataName').value.trim(),
+        mfs: document.getElementById('vataMfs').value.trim(),
+        category: document.getElementById('vataCategory').value.trim()
+    };
+
+    db.ref('smart_erp/vata/'+normalizePhoneBD(phone)).set(data);
+
+    closeVataModal();
+}
+
+function renderVata(){
+
+    const q = document.getElementById('searchVata')
+        ? document.getElementById('searchVata').value.toLowerCase()
+        : '';
+
+    let html='';
+
+    let total=0;
+    let nagad=0;
+    let bkash=0;
+    let rocket=0;
+    let disability=0;
+    let oldest=0;
+    let widow=0;
+
+    vataList
+    .filter(v=>
+
+        (v.mobile||'').toLowerCase().includes(q) ||
+        (v.name||'').toLowerCase().includes(q) ||
+        (v.mfs||'').toLowerCase().includes(q) ||
+        (v.category||'').toLowerCase().includes(q)
+
+    )
+    .forEach(v=>{
+
+        total++;
+
+        if((v.mfs||'').toLowerCase()==='nagad') nagad++;
+        if((v.mfs||'').toLowerCase()==='bkash') bkash++;
+        if((v.mfs||'').toLowerCase()==='rocket') rocket++;
+
+        if((v.category||'').toLowerCase()==='disability') disability++;
+        if((v.category||'').toLowerCase()==='oldest') oldest++;
+        if((v.category||'').toLowerCase()==='widow') widow++;
+
+        html += `
+        <tr class="cust-row">
+
+            <td>
+                <input type="checkbox" class="vataCheck" value="${v.mobile}">
+            </td>
+
+            <td>${v.mobile||''}</td>
+
+            <td>${v.name||''}</td>
+
+            <td>${v.mfs||''}</td>
+
+            <td>${v.category||''}</td>
+
+            <td>
+
+                <button class="cust-action-btn"
+                        style="background:#25D366;"
+                        onclick="window.open('https://wa.me/88${normalizePhoneBD(v.mobile)}','_blank')">
+
+                    <i class="fab fa-whatsapp"></i>
+
+                </button>
+
+                <button class="cust-action-btn"
+                        style="background:#0ea5e9;"
+                        onclick="window.location.href='sms:${normalizePhoneBD(v.mobile)}'">
+
+                    <i class="fa fa-comment"></i>
+
+                </button>
+
+                <button class="cust-action-btn"
+                        style="background:#22c55e;"
+                        onclick="window.location.href='tel:${normalizePhoneBD(v.mobile)}'">
+
+                    <i class="fa fa-phone"></i>
+
+                </button>
+
+                <button class="cust-action-btn"
+                        style="background:#f59e0b;"
+                        onclick="editVata('${v.mobile}')">
+
+                    <i class="fa fa-edit"></i>
+
+                </button>
+
+                <button class="cust-action-btn"
+                        style="background:#ef4444;"
+                        onclick="deleteSingleVata('${v.mobile}')">
+
+                    <i class="fa fa-trash"></i>
+
+                </button>
+
+            </td>
+
+        </tr>
+        `;
+    });
+
+    document.getElementById('vataTableBody').innerHTML = html;
+
+    document.getElementById('vataTotalCount').innerText = total;
+    document.getElementById('vataNagadCount').innerText = nagad;
+    document.getElementById('vataBkashCount').innerText = bkash;
+    document.getElementById('vataRocketCount').innerText = rocket;
+
+    document.getElementById('vataDisabilityCount').innerText = disability;
+    document.getElementById('vataOldestCount').innerText = oldest;
+    document.getElementById('vataWidowCount').innerText = widow;
+}
+
+function editVata(phone){
+
+    const v = vataList.find(x=>matchPhone(x.mobile,phone));
+
+    if(!v) return;
+
+    openVataModal();
+
+    document.getElementById('editVataPhone').value=v.mobile;
+    document.getElementById('vataName').value=v.name||'';
+    document.getElementById('vataMobile').value=v.mobile||'';
+    document.getElementById('vataMfs').value=v.mfs||'';
+    document.getElementById('vataCategory').value=v.category||'';
+}
+
+function deleteSingleVata(phone){
+
+    if(!confirm('Delete This Data?')) return;
+
+    const item = vataList.find(x=>matchPhone(x.mobile,phone));
+
+    if(item){
+        deletedVataBackup.push(item);
+    }
+
+    db.ref('smart_erp/vata/'+normalizePhoneBD(phone)).remove();
+}
+
+function deleteSelectedVata(){
+
+    const checks = document.querySelectorAll('.vataCheck:checked');
+
+    if(checks.length===0){
+        return alert("Select Data First!");
+    }
+
+    if(!confirm('Delete Selected Data?')) return;
+
+    checks.forEach(c=>{
+
+        const phone = c.value;
+
+        const item = vataList.find(x=>matchPhone(x.mobile,phone));
+
+        if(item){
+            deletedVataBackup.push(item);
+        }
+
+        db.ref('smart_erp/vata/'+normalizePhoneBD(phone)).remove();
+
+    });
+}
+
+function undoVataDelete(){
+
+    if(deletedVataBackup.length===0){
+        return alert("No Backup Found!");
+    }
+
+    deletedVataBackup.forEach(v=>{
+
+        db.ref('smart_erp/vata/'+normalizePhoneBD(v.mobile)).set(v);
+
+    });
+
+    deletedVataBackup=[];
+}
+
+function backupVata(){
+
+    const data = vataList.map(v=>({
+        "Mobile No":v.mobile||'',
+        "Name":v.name||'',
+        "MFS Category":v.mfs||'',
+        "Vata Category":v.category||''
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+
+    const wb = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(wb,ws,"Vata");
+
+    XLSX.writeFile(wb,'Vata_Backup.xlsx');
+}
+
+function restoreVata(event){
+
+    const file = event.target.files[0];
+
+    if(!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function(e){
+
+        const data = new Uint8Array(e.target.result);
+
+        const wb = XLSX.read(data,{type:'array'});
+
+        const ws = wb.Sheets[wb.SheetNames[0]];
+
+        const json = XLSX.utils.sheet_to_json(ws);
+
+        json.forEach(v=>{
+
+            const item = {
+
+                mobile: formatPhoneBD(v["Mobile No"] || ''),
+                name: v["Name"] || '',
+                mfs: v["MFS Category"] || '',
+                category: v["Vata Category"] || ''
+
+            };
+
+            if(item.mobile){
+
+                db.ref('smart_erp/vata/'+normalizePhoneBD(item.mobile))
+                .set(item);
+
+            }
+
+        });
+
+        alert("Restore Complete!");
+
+    };
+
+    reader.readAsArrayBuffer(file);
 }
 
 
