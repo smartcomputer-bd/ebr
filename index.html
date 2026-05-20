@@ -2166,7 +2166,7 @@ function restoreMeters(event){
         inv.items.forEach((item, i) => {
             rows += `<tr><td>${i+1}</td><td><input type="text" class="it-c" value="${item.code}"></td><td><input type="text" class="it-n" value="${item.name}"></td><td><input type="text" class="it-w" value="${item.war}"></td><td><input type="number" class="it-q" value="${item.q}" oninput="calc()"></td><td><input type="number" class="it-p" value="${item.p}" oninput="calc()"></td><td class="it-t">${item.t}</td></tr>`;
         });
-        for(let i=inv.items.length+1; i<=13; i++) {
+        for(let i=inv.items.length+1; i<=12; i++) {
             rows += `<tr><td>${i}</td><td><input type="text" class="it-c"></td><td><input type="text" class="it-n"></td><td><input type="text" class="it-w"></td><td><input type="number" class="it-q" value="0"></td><td><input type="number" class="it-p" value="0"></td><td class="it-t">0.00</td></tr>`;
         }
         document.getElementById('billBody').innerHTML = rows;
