@@ -823,7 +823,6 @@ body.dark-mode .cust-box {
                     <th>Client Name</th>
                     <th>Address</th>
                     <th>Meter No</th>
-		    <th>Last Recharge</th> <th>Action</th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -1646,21 +1645,6 @@ if (dueAmount > 0) {
    METER MODULE START
 ========================= */
 
-// Last Recharge এর তারিখ Firebase ডাটাবেজে সরাসরি সেভ করার ফাংশন
-function updateMeterRecharge(meterNo, selectedDate) {
-    if (!meterNo) return;
-    db.ref('smart_erp/meters/' + meterNo).update({
-        lastRecharge: selectedDate
-    }).then(() => {
-        // ডাটাবেজে সফলভাবে আপডেট হলে লোকাল মিটারের ডাটাও আপডেট করে রাখা
-        const m = meters.find(x => x.meterNo === meterNo);
-        if (m) m.lastRecharge = selectedDate;
-    }).catch((error) => {
-        console.error("Recharge date update failed: ", error);
-        alert("তারিখ সেভ করতে সমস্যা হয়েছে!");
-    });
-}
-
 function openMeterModal(){
     document.getElementById('meterModal').classList.remove('hidden');
 
@@ -1711,14 +1695,15 @@ document.addEventListener("input", function(e){
 
 function saveMeter(){
 
-    const existingMeter = meters.find(x => x.meterNo === document.getElementById('mMeterNo').value.trim());
-const m = {
-    clientName: document.getElementById('mClientName').value.trim(),
-    mobile: document.getElementById('mMobile').value.trim(),
-    address: document.getElementById('mAddress').value.trim(),
-    meterNo: document.getElementById('mMeterNo').value.trim(),
-    lastRecharge: existingMeter ? (existingMeter.lastRecharge || '') : '' // নতুন যুক্ত হলো
-};
+    const clientName = document.getElementById('mClientName').value.trim();
+    const mobile = document.getElementById('mMobile').value.trim();
+    const address = document.getElementById('mAddress').value.trim();
+    const meterNo = document.getElementById('mMeterNo').value.trim();
+
+    if(!clientName || !mobile || !meterNo){
+        alert("সব তথ্য পূরণ করুন");
+        return;
+    }
 
     if(meterNo.length !== 12){
         alert("Meter No অবশ্যই 12 সংখ্যার হতে হবে");
@@ -1786,9 +1771,6 @@ function renderMeters(){
             <td>${m.address || ''}</td>
 
             <td>${m.meterNo}</td>
-<td>
-    <input type="date" value="${m.lastRecharge || ''}" onchange="updateMeterRecharge('${m.meterNo}', this.value)" style="padding:4px; font-size:12px; border:1px solid #ccc; border-radius:4px;">
-</td>
 
             <td>
 
