@@ -823,6 +823,7 @@ body.dark-mode .cust-box {
                     <th>Client Name</th>
                     <th>Address</th>
                     <th>Meter No</th>
+		    <th>Last Recharge</th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -871,6 +872,11 @@ body.dark-mode .cust-box {
                        placeholder="12 Digit Meter No"
                        style="width:95%;">
             </div>
+
+<div>
+    <label>Last Recharge Date</label>
+    <input type="date" id="mLastRecharge" style="width:95%;">
+</div>
 
         </div>
 
@@ -1699,6 +1705,7 @@ function saveMeter(){
     const mobile = document.getElementById('mMobile').value.trim();
     const address = document.getElementById('mAddress').value.trim();
     const meterNo = document.getElementById('mMeterNo').value.trim();
+    const lastRecharge = document.getElementById('mLastRecharge').value.trim();
 
     if(!clientName || !mobile || !meterNo){
         alert("সব তথ্য পূরণ করুন");
@@ -1726,7 +1733,8 @@ function saveMeter(){
         clientName,
         mobile,
         address,
-        meterNo
+        meterNo,
+	lastRecharge
     };
 
     db.ref('smart_erp/meters/' + meterNo).set(data);
@@ -1771,6 +1779,8 @@ function renderMeters(){
             <td>${m.address || ''}</td>
 
             <td>${m.meterNo}</td>
+
+	    <td>${m.lastRecharge || 'N/A'}</td>
 
             <td>
 
@@ -1849,6 +1859,7 @@ function editMeter(meterNo){
     document.getElementById('mMobile').value = m.mobile;
     document.getElementById('mAddress').value = m.address;
     document.getElementById('mMeterNo').value = m.meterNo;
+    document.getElementById('mLastRecharge').value = m.lastRecharge || "";
 }
 
 function deleteSingleMeter(meterNo){
