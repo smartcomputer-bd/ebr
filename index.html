@@ -1748,9 +1748,11 @@ function renderMeters(){
 
     let list = [...meters];
 
-    list.sort((a,b)=>
-        a.clientName.localeCompare(b.clientName)
-    );
+    list.sort((a,b) => {
+        const dateA = a.lastRecharge ? new Date(a.lastRecharge) : new Date(0);
+        const dateB = b.lastRecharge ? new Date(b.lastRecharge) : new Date(0);
+        return dateB - dateA; // বড় থেকে ছোট (নতুন থেকে পুরাতন)
+    });
 
     let h = "";
 
