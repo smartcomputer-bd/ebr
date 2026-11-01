@@ -39,7 +39,38 @@
         }
         .hidden { display: none !important; }
         
-        /* Colorful & Glassmorphism Login Page with Bubble Animation */
+        /* Dynamic Toast Notification */
+        #toastContainer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toast {
+            min-width: 280px;
+            padding: 12px 18px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            font-size: 13px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.3s ease-in-out;
+        }
+        .toast-success { background: #059669; }
+        .toast-danger { background: #dc2626; }
+        .toast-info { background: #2563eb; }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Colorful & Glassmorphism Login Page */
         #loginPage {
             position: fixed;
             inset: 0;
@@ -83,18 +114,18 @@
             box-shadow: 0 20px 40px rgba(0,0,0,0.2);
             z-index: 2;
         }
-        .login-card input {
+        .login-card input, .login-card select {
             background: rgba(255, 255, 255, 0.9);
             border: 1px solid #cbd5e1;
             transition: all 0.3s;
         }
-        .login-card input:focus {
+        .login-card input:focus, .login-card select:focus {
             border-color: var(--primary);
             box-shadow: 0 0 10px rgba(37, 99, 235, 0.3);
             background: #ffffff;
         }
 
-        /* Navbar & Navigation Grid - 3 Rows */
+        /* Navbar & Navigation Grid */
         .navbar { 
             background: var(--dark); 
             color: white; 
@@ -107,24 +138,23 @@
             z-index: 1000; 
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
-        .nav-brand { font-size: 20px; font-weight: bold; display: flex; align-items: center; gap: 8px; }
+        .nav-brand { font-size: 20px; font-weight: bold; display: flex; align-items: center; justify-content: space-between; }
         .nav-links { 
             display: grid; 
             grid-template-columns: repeat(4, 1fr); 
-            grid-template-rows: repeat(3, auto); 
             gap: 8px; 
             width: 100%; 
-            max-width: 1000px; 
+            max-width: 1100px; 
         }
         
         .nav-card-btn { 
             background: linear-gradient(135deg, #334155, #475569); 
             color: white; 
             border: none; 
-            padding: 12px 10px; 
+            padding: 10px 8px; 
             cursor: pointer; 
             border-radius: 12px; 
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 700;
             transition: all 0.2s; 
             display: flex;
@@ -138,11 +168,9 @@
         }
         .nav-card-btn:hover { background: var(--primary-gradient); transform: translateY(-3px); box-shadow: 0 6px 12px rgba(59, 130, 246, 0.4); }
 
-        /* Grid for Page Action Buttons */
         .action-btn-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-            grid-template-rows: repeat(2, auto);
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             gap: 8px;
             margin-bottom: 15px;
         }
@@ -153,20 +181,19 @@
             .nav-card-btn { padding: 8px 4px; font-size: 11px; }
             .nav-card-btn i { font-size: 14px; }
             .tile-list { grid-template-columns: 1fr !important; }
-            .cust-box { grid-template-columns: 1fr 1fr !important; grid-template-rows: repeat(2, auto) !important; }
+            .cust-box { grid-template-columns: 1fr 1fr !important; }
             .action-btn-grid { grid-template-columns: repeat(3, 1fr); }
         }
 
-        /* Dashboard UI Tiles - Large Cards */
         .dashboard-grid { 
             display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); 
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); 
             gap: 16px; 
             margin-bottom: 20px; 
         }
         .dash-card { 
             background: var(--card-bg); 
-            padding: 24px; 
+            padding: 20px; 
             border-radius: 16px; 
             box-shadow: 0 6px 18px rgba(0,0,0,0.08); 
             text-align: center; 
@@ -179,11 +206,10 @@
             align-items: center;
         }
         .dash-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.12); }
-        .dash-card i { font-size: 32px; color: var(--primary); margin-bottom: 10px; }
-        .dash-card h4 { margin: 0; color: #64748b; font-size: 13px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
-        .dash-card h2 { margin: 8px 0 0 0; font-size: 26px; font-weight: 900; }
+        .dash-card i { font-size: 28px; color: var(--primary); margin-bottom: 8px; }
+        .dash-card h4 { margin: 0; color: #64748b; font-size: 12px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+        .dash-card h2 { margin: 6px 0 0 0; font-size: 24px; font-weight: 900; }
 
-        /* External Actions Bar */
         .external-actions { 
             position: sticky; 
             top: 60px; 
@@ -217,8 +243,8 @@
         .btn-success { background: var(--success); color: white; }
         .btn-danger { background: var(--danger); color: white; }
         .btn-secondary { background: #64748b; color: white; }
+        .btn-purple { background: var(--purple); color: white; }
 
-        /* Panels & Cards */
         .panel { 
             padding: 16px; 
             max-width: 1100px; 
@@ -250,7 +276,6 @@
         .cust-box { 
             display: grid !important; 
             grid-template-columns: 1fr 1fr !important; 
-            grid-template-rows: repeat(2, auto) !important;
             gap: 6px !important; 
             margin-bottom: 5px !important; 
             padding: 8px !important; 
@@ -270,7 +295,7 @@
         .invoice-table td { border: none; padding: 3px; }
         .invoice-table tbody tr { background: #ffffff; border-bottom: 1px solid #e2e8f0; }
 
-        .tile-list { display: flex; flex-direction: column-reverse; gap: 12px; margin-top: 12px; }
+        .tile-list { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
         .tile-card { background: var(--card-bg); border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); transition: 0.2s; border-left: 5px solid var(--secondary); }
         .tile-card:hover { transform: translateY(-2px); box-shadow: 0 5px 12px rgba(0,0,0,0.08); }
         .tile-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
@@ -300,6 +325,19 @@
         @keyframes pulse-red {
             0% { opacity: 0.4; transform: scale(0.9); }
             100% { opacity: 1; transform: scale(1.3); }
+        }
+
+        .recharge-warning-badge {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecdd3;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
 
         .footer-icons { display: flex; justify-content: center; gap: 10px; margin-top: auto; padding: 5px 0; border-top: 2px solid var(--primary); flex-wrap: wrap; }
@@ -344,9 +382,11 @@
 </head>
 <body onload="document.getElementById('uId').focus()">
 
-<!-- Colorful & Glassmorphism Login Page -->
+<!-- Container for Dynamic Toast Notifications -->
+<div id="toastContainer"></div>
+
+<!-- Colorful Login Page -->
 <div id="loginPage">
-    <!-- Bubble Animation Elements -->
     <div class="bubble" style="left: 10%; width: 60px; height: 60px; animation-delay: 0s;"></div>
     <div class="bubble" style="left: 30%; width: 40px; height: 40px; animation-delay: 2s;"></div>
     <div class="bubble" style="left: 50%; width: 80px; height: 80px; animation-delay: 1s;"></div>
@@ -372,7 +412,10 @@
 <!-- Main Application -->
 <div id="app" class="hidden">
     <nav class="navbar no-print">
-        <div class="nav-brand"><i class="fa-solid fa-laptop-code"></i> SMART COMPUTER</div>
+        <div class="nav-brand">
+            <span><i class="fa-solid fa-laptop-code"></i> SMART COMPUTER</span>
+            <span id="userRoleBadge" style="font-size: 11px; background: rgba(255,255,255,0.2); padding: 3px 8px; border-radius: 12px;">Role: Admin</span>
+        </div>
         <div class="nav-links">
             <button class="nav-card-btn" onclick="showSec('dash')"><i class="fa-solid fa-chart-line"></i> Dashboard</button>
             <button class="nav-card-btn" onclick="showSec('pos')"><i class="fa-solid fa-receipt"></i> Invoice</button>
@@ -382,8 +425,9 @@
             <button class="nav-card-btn" onclick="showSec('stock')"><i class="fa-solid fa-boxes-stacked"></i> Inventory</button>
             <button class="nav-card-btn" onclick="showSec('meter')"><i class="fa-solid fa-gauge-high"></i> Meter</button>
             <button class="nav-card-btn" onclick="showSec('vata')"><i class="fa-solid fa-hand-holding-heart"></i> Vata</button>
-            <button class="nav-card-btn" onclick="showSec('settings')"><i class="fa-solid fa-gear"></i> Settings</button>
-            <button class="nav-card-btn" onclick="showSec('admin')"><i class="fa-solid fa-user-shield"></i> Admin</button>
+            <button class="nav-card-btn admin-only" onclick="showSec('profit')"><i class="fa-solid fa-chart-pie"></i> Profit/Loss</button>
+            <button class="nav-card-btn admin-only" onclick="showSec('settings')"><i class="fa-solid fa-gear"></i> Settings</button>
+            <button class="nav-card-btn admin-only" onclick="showSec('admin')"><i class="fa-solid fa-user-shield"></i> Admin</button>
             <button class="nav-card-btn" onclick="location.reload()" style="background:var(--danger)"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
         </div>
     </nav>
@@ -405,7 +449,12 @@
             <div class="dash-card" style="border-bottom-color: var(--danger);" onclick="showSec('due')">
                 <i class="fa-solid fa-hand-holding-dollar" style="color:var(--danger)"></i>
                 <h4>Total Due</h4>
-                <h2 id="dashTotalDueVal" style="color:var(--danger); font-size:26px; font-weight:900;">TK 0</h2>
+                <h2 id="dashTotalDueVal" style="color:var(--danger); font-size:24px; font-weight:900;">TK 0</h2>
+            </div>
+            <div class="dash-card admin-only" style="border-bottom-color: var(--purple);" onclick="showSec('profit')">
+                <i class="fa-solid fa-chart-line" style="color:var(--purple)"></i>
+                <h4>Estimated Net Profit</h4>
+                <h2 id="dashNetProfitVal" style="color:var(--purple); font-size:24px; font-weight:900;">TK 0</h2>
             </div>
             <div class="dash-card" style="border-bottom-color: orange;" onclick="showSec('stock')">
                 <i class="fa-solid fa-boxes-packing" style="color:orange"></i>
@@ -435,13 +484,23 @@
         </div>
     </div>
 
-    <!-- POS SECTION -->
+    <!-- POS SECTION WITH BARCODE SCANNER SUPPORT -->
     <div id="posSec" class="hidden">
         <div class="external-actions no-print">
             <button onclick="saveAndPrint()" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save & Print</button>
             <button onclick="openPrintMenu()" class="btn btn-secondary"><i class="fa-solid fa-print"></i> Print (No Save)</button>
             <button onclick="shareInvoice()" class="btn btn-secondary" style="background: #8b5cf6;"><i class="fa-solid fa-share-nodes"></i> Share</button> 
             <button onclick="resetPOS()" class="btn btn-success"><i class="fa-solid fa-circle-plus"></i> New Record</button>
+        </div>
+
+        <div style="max-width:1100px; margin: 10px auto;" class="no-print">
+            <div style="background:#e0f2fe; border:1px solid #7dd3fc; border-radius:10px; padding:10px; display:flex; gap:10px; align-items:center;">
+                <i class="fa-solid fa-barcode" style="font-size:24px; color:var(--primary);"></i>
+                <div style="flex:1;">
+                    <label style="font-size:11px; font-weight:bold; color:#0369a1;">Fast Barcode Scanner Input:</label>
+                    <input type="text" id="barcodeScanInp" placeholder="⚡ Scan barcode here to auto-add item..." onkeypress="handleBarcodeScan(event)" style="border-color:#38bdf8; background:#fff;">
+                </div>
+            </div>
         </div>
 
         <div class="invoice-container">
@@ -587,8 +646,8 @@
             <h3 style="margin: 0; color: var(--primary);"><i class="fa-solid fa-users-gear"></i> Customer Directory</h3>
             <div class="action-btn-grid" style="margin-bottom:0;">
                 <button onclick="openCustomerModal()" class="btn btn-primary"><i class="fa-solid fa-user-plus"></i> Add</button>
-                <button onclick="deleteAllCustomers()" class="btn btn-danger"><i class="fa-solid fa-trash"></i> Delete All</button>
-                <button onclick="undoCustomers()" class="btn btn-secondary"><i class="fa-solid fa-rotate-left"></i> Undo</button>
+                <button onclick="deleteAllCustomers()" class="btn btn-danger admin-only"><i class="fa-solid fa-trash"></i> Delete All</button>
+                <button onclick="undoCustomers()" class="btn btn-secondary admin-only"><i class="fa-solid fa-rotate-left"></i> Undo</button>
                 <button onclick="backupCustomers()" class="btn btn-success"><i class="fa-solid fa-file-excel"></i> Backup</button>
                 <button onclick="document.getElementById('importCustFile').click()" class="btn btn-primary"><i class="fa-solid fa-file-import"></i> Restore</button>
                 <input type="file" id="importCustFile" accept=".xlsx" style="display:none" onchange="restoreCustomers(event)">
@@ -609,10 +668,10 @@
         <div id="stockTileList" class="tile-list"></div>
     </div>
 
-    <!-- METER DATABASE SECTION -->
+    <!-- METER DATABASE SECTION WITH RECHARGE REMINDER BADGES -->
     <div id="meterSec" class="hidden panel">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:2px solid var(--primary); padding-bottom:10px; flex-wrap:wrap; gap:8px;">
-            <h3 style="margin:0; color:var(--primary);"><i class="fa-solid fa-gauge-high"></i> Meter Database</h3>
+            <h3 style="margin:0; color:var(--primary);"><i class="fa-solid fa-gauge-high"></i> Meter Database & Recharge Alerts</h3>
             <div class="action-btn-grid" style="margin-bottom:0;">
                 <button onclick="openMeterModal()" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Add Meter</button>
                 <button onclick="backupMeters()" class="btn btn-success"><i class="fa-solid fa-file-excel"></i> Backup</button>
@@ -647,8 +706,42 @@
         <div id="vataTileList" class="tile-list"></div>
     </div>
 
+    <!-- PROFIT & LOSS ANALYTICS SECTION (ADMIN ONLY) -->
+    <div id="profitSec" class="hidden panel admin-only">
+        <h3 style="color:var(--primary); margin-top:0;"><i class="fa-solid fa-chart-pie"></i> Profit & Loss Financial Report</h3>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin-bottom:15px;">
+            <div style="background:#eff6ff; border:1px solid #bfdbfe; padding:15px; border-radius:10px; text-align:center;">
+                <span style="font-size:12px; font-weight:bold; color:#1e40af;">Total Revenue</span>
+                <h3 id="pnlRevenue" style="margin:5px 0 0 0; color:#1d4ed8;">TK 0</h3>
+            </div>
+            <div style="background:#fef2f2; border:1px solid #fecdd3; padding:15px; border-radius:10px; text-align:center;">
+                <span style="font-size:12px; font-weight:bold; color:#991b1b;">Total Cost of Goods</span>
+                <h3 id="pnlCost" style="margin:5px 0 0 0; color:#dc2626;">TK 0</h3>
+            </div>
+            <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:15px; border-radius:10px; text-align:center;">
+                <span style="font-size:12px; font-weight:bold; color:#166534;">Estimated Net Profit</span>
+                <h3 id="pnlProfit" style="margin:5px 0 0 0; color:#059669;">TK 0</h3>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Invoice ID</th>
+                        <th>Date</th>
+                        <th>Customer</th>
+                        <th>Revenue</th>
+                        <th>Estimated Cost</th>
+                        <th>Net Profit</th>
+                    </tr>
+                </thead>
+                <tbody id="pnlTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
     <!-- SETTINGS SECTION -->
-    <div id="settingsSec" class="hidden panel">
+    <div id="settingsSec" class="hidden panel admin-only">
         <h3><i class="fa-solid fa-gear"></i> Application Settings</h3>
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:15px;">
             <div style="border:1px solid #cbd5e1; padding:15px; border-radius:10px; background:#f8fafc;">
@@ -676,14 +769,18 @@
     </div>
 
     <!-- ADMIN SETTINGS SECTION -->
-    <div id="adminSec" class="hidden panel">
-        <h3><i class="fa-solid fa-user-shield"></i> Admin System Controls</h3>
+    <div id="adminSec" class="hidden panel admin-only">
+        <h3><i class="fa-solid fa-user-shield"></i> Admin System Controls & Role Management</h3>
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:15px;">
             <div style="border:1px solid #cbd5e1; padding:15px; border-radius:10px; background:#f8fafc;">
                 <h4 id="userFormTitle" style="margin-top:0;">Add / Edit User</h4>
                 <input type="hidden" id="editUserIndex" value="-1">
                 <input type="text" id="newUId" placeholder="Login ID" style="margin-bottom:10px;">
-                <input type="password" id="newUPass" placeholder="Password" style="margin-bottom:12px;">
+                <input type="password" id="newUPass" placeholder="Password" style="margin-bottom:10px;">
+                <select id="newUserRole" style="margin-bottom:12px;">
+                    <option value="admin">Administrator (Full Access)</option>
+                    <option value="staff">Staff / Operator (Restricted)</option>
+                </select>
                 <button id="userBtn" onclick="saveUser()" class="btn btn-primary" style="width:100%;">Save User</button>
                 <button id="cancelUserEdit" onclick="resetUserForm()" class="btn btn-danger hidden" style="width:100%; margin-top:5px;">Cancel</button>
             </div>
@@ -843,7 +940,7 @@
             <button id="custModalEditBtn" class="btn btn-secondary"><i class="fa-solid fa-pen"></i> Edit</button>
             <button id="custModalWaBtn" class="btn btn-success"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
             <button id="custModalCallBtn" class="btn btn-primary"><i class="fa-solid fa-phone"></i> Call</button>
-            <button id="custModalDelBtn" class="btn btn-danger"><i class="fa-solid fa-trash"></i> Delete</button>
+            <button id="custModalDelBtn" class="btn btn-danger admin-only"><i class="fa-solid fa-trash"></i> Delete</button>
         </div>
     </div>
 </div>
@@ -860,7 +957,7 @@
             <button id="meterModalEditBtn" class="btn btn-secondary"><i class="fa-solid fa-pen"></i> Edit</button>
             <button id="meterModalWaBtn" class="btn btn-success"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
             <button id="meterModalCallBtn" class="btn btn-primary"><i class="fa-solid fa-phone"></i> Call</button>
-            <button id="meterModalDelBtn" class="btn btn-danger"><i class="fa-solid fa-trash"></i> Delete</button>
+            <button id="meterModalDelBtn" class="btn btn-danger admin-only"><i class="fa-solid fa-trash"></i> Delete</button>
         </div>
     </div>
 </div>
@@ -877,7 +974,7 @@
             <button id="vataModalEditBtn" class="btn btn-secondary"><i class="fa-solid fa-pen"></i> Edit</button>
             <button id="vataModalWaBtn" class="btn btn-success"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
             <button id="vataModalCallBtn" class="btn btn-primary"><i class="fa-solid fa-phone"></i> Call</button>
-            <button id="vataModalDelBtn" class="btn btn-danger"><i class="fa-solid fa-trash"></i> Delete</button>
+            <button id="vataModalDelBtn" class="btn btn-danger admin-only"><i class="fa-solid fa-trash"></i> Delete</button>
         </div>
     </div>
 </div>
@@ -958,9 +1055,31 @@
 </div>
 
 <script>
+    /* Dynamic Notification Toast */
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        
+        let icon = 'fa-info-circle';
+        if(type === 'success') icon = 'fa-circle-check';
+        if(type === 'danger') icon = 'fa-triangle-exclamation';
+
+        toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${message}</span>`;
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(100%)';
+            toast.style.transition = 'all 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
     /* STANDARDIZED DATE & TIME FORMATTERS */
     function getStandardFormattedDate(dateObj = new Date()) {
         const d = new Date(dateObj);
+        if (isNaN(d.getTime())) return 'N/A';
         const day = String(d.getDate()).padStart(2, '0');
         const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
         return `${day}-${months[d.getMonth()]}-${d.getFullYear()}`;
@@ -975,7 +1094,7 @@
         return `${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
     }
 
-    /* PHONE SYSTEM HELPER */
+    /* PHONE HELPER */
     function formatPhoneBD(num){
         if(!num) return "";
         num = num.toString().replace(/\D/g,'');
@@ -1004,9 +1123,11 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let users = [{id:'admin', pass:'724672'}];
+    let users = [{id:'admin', pass:'724672', role:'admin'}];
     let stock = [], invoices = [], customers = [], meters = [], vataList = [], dueLedgers = [];
+    let lastDeletedCustomers = [];
     let currentUser = "";
+    let currentUserRole = "staff";
 
     db.ref('smart_erp/').on('value', (snapshot) => {
         const data = snapshot.val();
@@ -1020,7 +1141,7 @@
             dueLedgers = data.dueLedgers ? Object.values(data.dueLedgers) : [];
             
             renderHistory(); renderStock(); renderUsers(); renderCustomers(); renderMeters(); renderVata(); renderDueList();
-            updateCategoryList(); updateDashboard(); updateCustomerListSource(); checkDueWarningSignals();
+            updateCategoryList(); updateDashboard(); updateCustomerListSource(); checkDueWarningSignals(); renderProfitLossReport();
         }
     });
 
@@ -1033,14 +1154,28 @@
         const u = users.find(x => x.id === id && x.pass === pass);
         if(u) {
             currentUser = id;
+            currentUserRole = u.role || 'admin';
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('app').classList.remove('hidden');
+            applyUserRolePermissions();
             showSec('dash');
-        } else alert("Invalid Credentials!");
+            showToast(`Welcome back ${currentUser} (${currentUserRole.toUpperCase()})!`, 'success');
+        } else showToast("Invalid Credentials!", 'danger');
+    }
+
+    function applyUserRolePermissions() {
+        document.getElementById('userRoleBadge').innerText = `Role: ${currentUserRole.toUpperCase()}`;
+        document.querySelectorAll('.admin-only').forEach(el => {
+            if(currentUserRole === 'admin') el.classList.remove('hidden');
+            else el.classList.add('hidden');
+        });
     }
 
     function showSec(id) {
-        ['dashSec','posSec','historySec','dueSec','stockSec','settingsSec','adminSec','customerSec','meterSec','vataSec'].forEach(s => {
+        if(currentUserRole !== 'admin' && (id === 'admin' || id === 'settings' || id === 'profit')) {
+            return showToast("Access Denied: Admin Privilege Required!", 'danger');
+        }
+        ['dashSec','posSec','historySec','dueSec','stockSec','settingsSec','adminSec','customerSec','meterSec','vataSec','profitSec'].forEach(s => {
             const el = document.getElementById(s);
             if(el) el.classList.add('hidden');
         });
@@ -1060,7 +1195,6 @@
 
     function checkDueWarningSignals() {
         const hasDuePhone = (phone) => getCustomerDueBalance(phone) > 0;
-        
         const posPhone = document.getElementById('cPhone').value;
         const cPhoneWrap = document.getElementById('posPhoneWrap');
         if(cPhoneWrap) {
@@ -1077,12 +1211,54 @@
         return dot;
     }
 
+    /* BARCODE SCANNER SUPPORT */
+    function handleBarcodeScan(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const code = e.target.value.trim();
+            if(!code) return;
+            const product = stock.find(p => p.code === code);
+            if(product) {
+                let existingRow = null;
+                document.querySelectorAll('#billBody tr').forEach(row => {
+                    if(row.querySelector('.it-c').value === code) existingRow = row;
+                });
+                if(existingRow) {
+                    const qInput = existingRow.querySelector('.it-q');
+                    qInput.value = (parseInt(qInput.value) || 0) + 1;
+                } else {
+                    let emptyRow = null;
+                    document.querySelectorAll('#billBody tr').forEach(row => {
+                        if(!emptyRow && !row.querySelector('.it-c').value) emptyRow = row;
+                    });
+                    if(!emptyRow) {
+                        const tr = document.createElement('tr');
+                        const sl = document.querySelectorAll('#billBody tr').length + 1;
+                        tr.innerHTML = `<td>${sl}</td><td><input type="text" class="it-c" style="width:100%" onchange="fetchItem(this)"></td><td><input type="text" class="it-n" style="width:100%"></td><td><input type="text" class="it-w" style="width:100%"></td><td><input type="number" class="it-q" value="" oninput="calc()" style="width:100%"></td><td><input type="number" class="it-p" value="" oninput="calc()" style="width:100%"></td><td class="it-t"></td>`;
+                        document.getElementById('billBody').appendChild(tr);
+                        emptyRow = tr;
+                    }
+                    emptyRow.querySelector('.it-c').value = product.code;
+                    emptyRow.querySelector('.it-n').value = product.name;
+                    emptyRow.querySelector('.it-p').value = product.price;
+                    emptyRow.querySelector('.it-w').value = product.war || "";
+                    emptyRow.querySelector('.it-q').value = 1;
+                }
+                calc();
+                showToast(`Added: ${product.name}`, 'success');
+                e.target.value = "";
+            } else {
+                showToast("Product not found in Inventory!", 'danger');
+            }
+        }
+    }
+
     function resetPOS() {
         document.getElementById('curDate').innerText = getStandardFormattedDate();
         document.getElementById('curTime').innerText = getStandardFormattedTime();
         genId();
         document.getElementById('soldBy').innerText = currentUser;
-        ['cName','cPhone','cAddr','cEmail','vP','vatInp','pPaid','invPayDate'].forEach(id => {
+        ['cName','cPhone','cAddr','cEmail','vP','vatInp','pPaid','invPayDate','barcodeScanInp'].forEach(id => {
             const el = document.getElementById(id);
             if(el) el.value = (id.length > 5 && id !== 'invPayDate') ? 0 : "";
         });
@@ -1186,12 +1362,13 @@
             const code = r.querySelector('.it-c').value;
             const q = parseInt(r.querySelector('.it-q').value) || 0;
             if(code && q > 0) {
-                billItems.push({code, name: r.querySelector('.it-n').value, war: r.querySelector('.it-w').value, q, p: r.querySelector('.it-p').value, t: r.querySelector('.it-t').innerText});
                 const product = stock.find(x => x.code === code);
+                const costPrice = product ? (parseFloat(product.cost) || 0) : 0;
+                billItems.push({code, name: r.querySelector('.it-n').value, war: r.querySelector('.it-w').value, q, p: r.querySelector('.it-p').value, cost: costPrice, t: r.querySelector('.it-t').innerText});
                 if(product) updates['smart_erp/stock/' + code + '/qty'] = parseInt(product.qty) - q;
             }
         });
-        if(billItems.length === 0) return alert("No items added!");
+        if(billItems.length === 0) return showToast("No items added!", 'danger');
         const grandVal = parseFloat(document.getElementById('grandT').innerText) || 0;
         const paidVal = parseFloat(document.getElementById('pPaid').value) || 0;
         const dueVal = grandVal - paidVal;
@@ -1221,7 +1398,10 @@
         }
 
         updates['smart_erp/invoices/' + invId] = inv;
-        db.ref().update(updates).then(() => { executePrint('default'); });
+        db.ref().update(updates).then(() => { 
+            showToast("Invoice saved successfully!", 'success');
+            executePrint('default'); 
+        });
     }
 
     function renderDueList() {
@@ -1254,7 +1434,6 @@
             cDue = Math.max(0, cDue);
             grandDueTotal += cDue;
 
-            // Updated Comprehensive WhatsApp SMS Reminder Format with Emojis, Icons, Symbols, Bullets, and Numbering
             const sendReminderWA = () => {
                 const msg = `🔔 *SMART COMPUTER - DUE REMINDER* 🔔\n\n` +
                             `👋 প্রিয় গ্রাহক, *${c.name}*\n` +
@@ -1294,7 +1473,7 @@
                     <button class="btn btn-secondary" onclick="openStatementModal('${c.phone}')"><i class="fa-solid fa-file-invoice"></i> Statement</button>
                     <button class="btn btn-success" onclick="window['wa_remind_${normalizePhoneBD(c.phone)}']()"><i class="fa-brands fa-whatsapp"></i> SMS Reminder</button>
                     <button class="btn btn-primary" onclick="window.location.href='tel:${c.phone}'"><i class="fa-solid fa-phone"></i> Call</button>
-                    <button class="btn btn-danger" onclick="deleteDueCustomerRecords('${c.phone}')"><i class="fa-solid fa-trash"></i> Delete</button>
+                    <button class="btn btn-danger admin-only" onclick="deleteDueCustomerRecords('${c.phone}')"><i class="fa-solid fa-trash"></i> Delete</button>
                 </div>
             </div>`;
         });
@@ -1400,7 +1579,7 @@
         const editId = document.getElementById('editDueTransId').value;
         const phone = formatPhoneBD(document.getElementById('dueCustPhone').value.trim());
         const name = document.getElementById('dueCustName').value.trim();
-        if(!phone || !name) return alert("Customer name and mobile number are required!");
+        if(!phone || !name) return showToast("Name and mobile required!", 'danger');
 
         const items = [];
         document.querySelectorAll('#dueItemsBody tr').forEach(tr => {
@@ -1410,7 +1589,7 @@
             if(desc && q > 0) items.push({ desc, qty: q, price: p, total: q * p });
         });
 
-        if(items.length === 0) return alert("Add at least one product/service!");
+        if(items.length === 0) return showToast("Add at least one item!", 'danger');
 
         let grandTot = 0; items.forEach(i => grandTot += i.total);
         const paid = parseFloat(document.getElementById('duePaidInput').value) || 0;
@@ -1430,7 +1609,8 @@
         
         db.ref('smart_erp/dueLedgers/' + txId).set(txData).then(() => {
             closeNewDueModal();
-            if(confirm("Due transaction saved successfully. Do you want to print the receipt?")) {
+            showToast("Due record saved!", 'success');
+            if(confirm("Print due receipt?")) {
                 printDueReceipt(txId);
             }
         });
@@ -1486,7 +1666,7 @@
     function saveDuePayment() {
         const phone = document.getElementById('payCustPhone').value;
         const amt = parseFloat(document.getElementById('payAmountInp').value) || 0;
-        if(amt <= 0) return alert("Enter a valid payment amount!");
+        if(amt <= 0) return showToast("Enter a valid payment amount!", 'danger');
 
         const c = customers.find(x => matchPhone(x.phone, phone)) || { name: 'Customer', phone };
         const txId = "TX-PAY-" + Date.now();
@@ -1499,7 +1679,8 @@
 
         db.ref('smart_erp/dueLedgers/' + txId).set(payTx).then(() => {
             closeDuePayModal();
-            if(confirm("Payment saved successfully. Print payment receipt?")) {
+            showToast("Payment received successfully!", 'success');
+            if(confirm("Print payment receipt?")) {
                 printPayReceipt(txId);
             }
         });
@@ -1556,7 +1737,7 @@
                     <div style="font-size:12px; margin-top:4px;">Total: ${tx.total} TK | Paid: ${tx.paid} TK</div>
                     <div style="display:flex; gap:6px; justify-content:flex-end; margin-top:6px;">
                         <button class="btn btn-secondary" style="padding:2px 6px; font-size:10px;" onclick="closeDueCustViewModal(); editDueTransaction('${tx.id}')">Edit</button>
-                        <button class="btn btn-danger" style="padding:2px 6px; font-size:10px;" onclick="deleteDueTx('${tx.id}')">Delete</button>
+                        <button class="btn btn-danger admin-only" style="padding:2px 6px; font-size:10px;" onclick="deleteDueTx('${tx.id}')">Delete</button>
                     </div>
                 </div>`;
             } else {
@@ -1566,13 +1747,14 @@
                         <span>Paid: ${tx.amount} TK</span>
                     </div>
                     <div style="display:flex; gap:6px; justify-content:flex-end; margin-top:6px;">
-                        <button class="btn btn-danger" style="padding:2px 6px; font-size:10px;" onclick="deleteDueTx('${tx.id}')">Delete</button>
+                        <button class="btn btn-danger admin-only" style="padding:2px 6px; font-size:10px;" onclick="deleteDueTx('${tx.id}')">Delete</button>
                     </div>
                 </div>`;
             }
         });
 
         document.getElementById('dueCustTxList').innerHTML = h || "<p>No transactions found.</p>";
+        applyUserRolePermissions();
         document.getElementById('dueCustViewModal').classList.remove('hidden');
     }
     function closeDueCustViewModal() { document.getElementById('dueCustViewModal').classList.add('hidden'); }
@@ -1594,7 +1776,12 @@
     }
 
     function deleteDueTx(txId) {
-        if(confirm("Do you want to delete this transaction?")) db.ref('smart_erp/dueLedgers/' + txId).remove().then(() => closeDueCustViewModal());
+        if(confirm("Do you want to delete this transaction?")) {
+            db.ref('smart_erp/dueLedgers/' + txId).remove().then(() => {
+                showToast("Transaction deleted!", 'danger');
+                closeDueCustViewModal();
+            });
+        }
     }
 
     function deleteDueCustomerRecords(phone) {
@@ -1603,6 +1790,7 @@
             dueLedgers.forEach(tx => {
                 if(normalizePhoneBD(tx.phone) === norm) db.ref('smart_erp/dueLedgers/' + tx.id).remove();
             });
+            showToast("Customer due records deleted!", 'danger');
         }
     }
 
@@ -1701,6 +1889,7 @@
         document.getElementById('custModalWaBtn').onclick = () => { window.open(`https://wa.me/88${normalizePhoneBD(c.phone)}`,'_blank'); };
         document.getElementById('custModalCallBtn').onclick = () => { window.location.href = `tel:${c.phone}`; };
         document.getElementById('custModalDelBtn').onclick = () => { closeCustViewModal(); deleteCustomer(c.phone); };
+        applyUserRolePermissions();
         document.getElementById('custViewModal').classList.remove('hidden');
     }
     function closeCustViewModal() { document.getElementById('custViewModal').classList.add('hidden'); }
@@ -1714,13 +1903,14 @@
                 <div><b>Meter Number:</b> <span class="card-highlight-large" style="color:var(--secondary);">${m.meterNo}</span> <i class="fa-solid fa-copy copy-btn" onclick="copyText('${m.meterNo}')" title="Copy Meter"></i></div>
                 <div><b>Mobile Number:</b> <span class="card-highlight-sub">${m.mobile}</span> <i class="fa-solid fa-copy copy-btn" onclick="copyText('${m.mobile}')" title="Copy Phone"></i></div>
                 <div><b>Address:</b> <span class="card-highlight-detail">${m.address || 'N/A'}</span></div>
-                <div><b>Last Recharge Date:</b> <span class="card-highlight-detail">${m.lastRecharge || 'N/A'}</span></div>
+                <div><b>Last Recharge Date:</b> <span class="card-highlight-detail">${m.lastRecharge ? getStandardFormattedDate(m.lastRecharge) : 'N/A'}</span></div>
             </div>
         `;
         document.getElementById('meterModalEditBtn').onclick = () => { closeMeterViewModal(); editMeter(m.meterNo); };
         document.getElementById('meterModalWaBtn').onclick = () => { window.open(`https://wa.me/88${normalizePhoneBD(m.mobile)}`,'_blank'); };
         document.getElementById('meterModalCallBtn').onclick = () => { window.location.href = `tel:${m.mobile}`; };
         document.getElementById('meterModalDelBtn').onclick = () => { closeMeterViewModal(); deleteSingleMeter(m.meterNo); };
+        applyUserRolePermissions();
         document.getElementById('meterViewModal').classList.remove('hidden');
     }
     function closeMeterViewModal() { document.getElementById('meterViewModal').classList.add('hidden'); }
@@ -1740,13 +1930,14 @@
         document.getElementById('vataModalWaBtn').onclick = () => { window.open(`https://wa.me/88${normalizePhoneBD(v.mobile)}`,'_blank'); };
         document.getElementById('vataModalCallBtn').onclick = () => { window.location.href = `tel:${v.mobile}`; };
         document.getElementById('vataModalDelBtn').onclick = () => { closeVataViewModal(); deleteSingleVata(v.mobile); };
+        applyUserRolePermissions();
         document.getElementById('vataViewModal').classList.remove('hidden');
     }
     function closeVataViewModal() { document.getElementById('vataViewModal').classList.add('hidden'); }
 
     function copyText(txt) {
         navigator.clipboard.writeText(txt);
-        alert(`Copied: ${txt}`);
+        showToast(`Copied: ${txt}`, 'info');
     }
 
     function renderCustomers() {
@@ -1770,36 +1961,67 @@
         });
         document.getElementById('customerTileList').innerHTML = h || "<p>No customers registered.</p>";
         document.getElementById('dashCustCount').innerText = customers.length;
+        applyUserRolePermissions();
     }
 
-    /* Meter List Sorted by Last Recharge Date (Latest first at the top) */
+    /* METER RENDER FUNCTION WITH REMINDER SYSTEM */
     function renderMeters() {
         const q = document.getElementById('searchMeter').value.toLowerCase();
         let h = "";
+        
+        // সর্বশেষ আপডেট/রিচার্জ করা প্রোফাইল সবার উপরে থাকবে।
+        // নতুন timestamp না থাকলে পুরোনো ডাটার lastRecharge ব্যবহার হবে।
         const sortedMeters = [...meters].sort((a, b) => {
-            const dateA = a.lastRecharge ? new Date(a.lastRecharge) : new Date(0);
-            const dateB = b.lastRecharge ? new Date(b.lastRecharge) : new Date(0);
-            return dateB - dateA; // Latest date first
+            const timeA = new Date(a.lastUpdated || a.lastRecharge || 0).getTime() || 0;
+            const timeB = new Date(b.lastUpdated || b.lastRecharge || 0).getTime() || 0;
+            return timeB - timeA;
         });
 
-        sortedMeters.filter(m => m.clientName.toLowerCase().includes(q) || m.mobile.toLowerCase().includes(q) || m.meterNo.toLowerCase().includes(q)).forEach(m => {
+        const now = new Date().getTime();
+        const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+
+        sortedMeters.filter(m => (m.clientName||'').toLowerCase().includes(q) || (m.mobile||'').toLowerCase().includes(q) || (m.meterNo||'').toLowerCase().includes(q) || (m.address||'').toLowerCase().includes(q)).forEach(m => {
             const dueDot = getCustomerDueBalance(m.mobile) > 0 ? createDot().outerHTML : '';
-            h += `<div class="tile-card">
+            const rechargeTime = m.lastRecharge ? new Date(m.lastRecharge).getTime() : 0;
+            const isRechargeExpired = (now - rechargeTime) > thirtyDaysMs;
+
+            const sendRechargeReminderWA = () => {
+                const msg = `⚡ *SMART COMPUTER - METER RECHARGE REMINDER* ⚡\n\n` +
+                            `👋 প্রিয় গ্রাহক, *${m.clientName}*\n` +
+                            `📟 মিটার নং: ${m.meterNo}\n` +
+                            `📞 মোবাইল: ${m.mobile}\n` +
+                            `📅 সর্বশেষ রিচার্জ তারিখ: ${m.lastRecharge ? getStandardFormattedDate(m.lastRecharge) : 'N/A'}\n\n` +
+                            `━━━━━━━━━━━━━━━━━━━\n` +
+                            `⚠️ আপনার মিটারের রিচার্জ সম্পন্ন করার ৩০ দিন অতিবাহিত হয়েছে। সার্ভিস সচল রাখতে অতি শীঘ্রই রিচার্জ করুন। 🙏\n\n` +
+                            `📍 *স্মার্ট কম্পিউটার* | ☎️ 01614-398989`;
+                window.open(`https://wa.me/88${normalizePhoneBD(m.mobile)}?text=${encodeURIComponent(msg)}`, '_blank');
+            };
+
+            window[`wa_meter_remind_${m.meterNo}`] = sendRechargeReminderWA;
+
+            h += `<div class="tile-card" style="border-left-color:${isRechargeExpired ? 'var(--danger)' : 'var(--secondary)'}">
                 <div class="tile-header">
-                    <span class="card-highlight-large">${m.clientName} ${dueDot}</span>
-                    <span class="card-highlight-large" style="font-size:16px; color:var(--secondary);">Meter: ${m.meterNo}</span>
+                    <span class="card-highlight-large"><i class="fa-solid fa-user"></i> ${m.clientName} ${dueDot}</span>
+                    <span class="card-highlight-large" style="font-size:16px; color:var(--secondary);"><i class="fa-solid fa-gauge"></i> Meter: ${m.meterNo}</span>
                 </div>
                 <div class="tile-body">
-                    <div class="card-highlight-detail"><b>Mobile:</b> ${m.mobile}</div>
-                    <div class="card-highlight-detail"><b>Last Recharge:</b> ${m.lastRecharge || 'N/A'}</div>
+                    <div class="card-highlight-detail"><i class="fa-solid fa-phone"></i> <b>Mobile:</b> ${m.mobile}</div>
+                    <div class="card-highlight-detail"><i class="fa-solid fa-location-dot"></i> <b>Address:</b> ${m.address || 'N/A'}</div>
+                    <div class="card-highlight-detail" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:5px;">
+                        <span><i class="fa-solid fa-calendar-days"></i> <b>Last Recharge:</b> ${m.lastRecharge ? getStandardFormattedDate(m.lastRecharge) : 'N/A'}</span>
+                        ${isRechargeExpired ? `<span class="recharge-warning-badge"><i class="fa-solid fa-bell"></i> Recharge Due (>30 Days)</span>` : ''}
+                    </div>
+                    <div class="card-highlight-detail"><i class="fa-solid fa-clock"></i> <b>Last Updated:</b> ${m.lastUpdated ? getStandardFormattedDate(m.lastUpdated) + ' ' + getStandardFormattedTime(m.lastUpdated) : (m.lastRecharge ? getStandardFormattedDate(m.lastRecharge) : 'N/A')}</div>
                 </div>
                 <div class="tile-actions">
-                    <button class="btn btn-primary" style="width:100%; padding:6px; font-size:12px;" onclick="viewMeterModal('${m.meterNo}')"><i class="fa-solid fa-eye"></i> View Profile</button>
+                    ${isRechargeExpired ? `<button class="btn btn-purple" onclick="window['wa_meter_remind_${m.meterNo}']()"><i class="fa-brands fa-whatsapp"></i> Send Alert</button>` : ''}
+                    <button class="btn btn-primary" onclick="viewMeterModal('${m.meterNo}')"><i class="fa-solid fa-eye"></i> View Profile</button>
                 </div>
             </div>`;
         });
         document.getElementById('meterTileList').innerHTML = h || "<p>No meters found.</p>";
         document.getElementById('dashMeterCount').innerText = meters.length;
+        applyUserRolePermissions();
     }
 
     function renderVata() {
@@ -1837,6 +2059,7 @@
         });
         document.getElementById('vataTileList').innerHTML = h || "<p>No vata records.</p>";
         document.getElementById('dashVataCount').innerText = vataList.length;
+        applyUserRolePermissions();
     }
 
     function renderStock() {
@@ -1848,11 +2071,12 @@
                 <div class="tile-body"><div><b>Category:</b> ${p.cat || 'N/A'} | <b>Warranty:</b> ${p.war || 'N/A'}</div><div><b>Cost:</b> TK ${p.cost} | <b>Price:</b> TK ${p.price}</div></div>
                 <div class="tile-actions">
                     <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="editStock('${p.code}')"><i class="fa-solid fa-pen"></i> Edit</button>
-                    <button class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="delP('${p.code}')"><i class="fa-solid fa-trash"></i> Delete</button>
+                    <button class="btn btn-danger admin-only" style="padding:4px 8px; font-size:11px;" onclick="delP('${p.code}')"><i class="fa-solid fa-trash"></i> Delete</button>
                 </div>
             </div>`;
         });
         document.getElementById('stockTileList').innerHTML = h || "<p>No products in stock.</p>";
+        applyUserRolePermissions();
     }
 
     function renderHistory() {
@@ -1865,12 +2089,58 @@
                 <div class="tile-body"><div><b>Customer:</b> ${x.customer} (${x.phone})</div><div><b>Grand Total:</b> TK ${x.grand}</div></div>
                 <div class="tile-actions">
                     <button class="btn btn-primary" style="padding:4px 8px; font-size:11px;" onclick="viewInvoice('${x.id}')"><i class="fa-solid fa-eye"></i> View</button>
-                    <button class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteInvoice('${x.id}')"><i class="fa-solid fa-trash"></i> Delete</button>
+                    <button class="btn btn-danger admin-only" style="padding:4px 8px; font-size:11px;" onclick="deleteInvoice('${x.id}')"><i class="fa-solid fa-trash"></i> Delete</button>
                 </div>
             </div>`;
         });
         document.getElementById('historyTileList').innerHTML = h || "<p>No records found.</p>";
         document.getElementById('historyCount').innerText = filtered.length;
+        applyUserRolePermissions();
+    }
+
+    /* PROFIT & LOSS ANALYTICS LOGIC */
+    function renderProfitLossReport() {
+        let totalRev = 0;
+        let totalCostSum = 0;
+        let rows = "";
+
+        invoices.forEach(inv => {
+            const rev = parseFloat(inv.grand) || 0;
+            let costSum = 0;
+
+            if(inv.items && Array.isArray(inv.items)) {
+                inv.items.forEach(item => {
+                    const q = parseFloat(item.q) || 0;
+                    let itemCost = parseFloat(item.cost) || 0;
+                    if(!itemCost) {
+                        const st = stock.find(s => s.code === item.code);
+                        if(st) itemCost = parseFloat(st.cost) || 0;
+                    }
+                    costSum += (q * itemCost);
+                });
+            }
+
+            const netProfit = rev - costSum;
+            totalRev += rev;
+            totalCostSum += costSum;
+
+            rows += `<tr>
+                <td><b>${inv.id}</b></td>
+                <td>${inv.date}</td>
+                <td>${inv.customer}</td>
+                <td>TK ${rev.toFixed(0)}</td>
+                <td>TK ${costSum.toFixed(0)}</td>
+                <td style="font-weight:bold; color:${netProfit >= 0 ? 'var(--success)' : 'var(--danger)'};">TK ${netProfit.toFixed(0)}</td>
+            </tr>`;
+        });
+
+        const grandNetProfit = totalRev - totalCostSum;
+
+        document.getElementById('pnlRevenue').innerText = "TK " + totalRev.toLocaleString();
+        document.getElementById('pnlCost').innerText = "TK " + totalCostSum.toLocaleString();
+        document.getElementById('pnlProfit').innerText = "TK " + grandNetProfit.toLocaleString();
+        document.getElementById('dashNetProfitVal').innerText = "TK " + grandNetProfit.toLocaleString();
+        document.getElementById('pnlTableBody').innerHTML = rows || "<tr><td colspan='6'>No sales invoices calculated yet.</td></tr>";
     }
 
     function updateDashboard() {
@@ -1901,41 +2171,141 @@
         if(val) document.documentElement.style.setProperty('--thermal-width', val + 'mm');
     }
 
-    /* XLSX Backup & Restore for Customer, Meter, and Vata */
-    function backupCustomers() { XLSX.writeFile(XLSX.utils.book_append_sheet(XLSX.utils.book_new(), XLSX.utils.json_to_sheet(customers), "Customers"), "Customers_Backup.xlsx"); }
+    /* EXCEL BACKUP & RESTORE FOR CUSTOMERS, METERS & VATA */
+    function backupCustomers() { 
+        if(!customers || customers.length === 0) return showToast("No customer data available to backup!", 'danger');
+        XLSX.writeFile(XLSX.utils.book_append_sheet(XLSX.utils.book_new(), XLSX.utils.json_to_sheet(customers), "Customers"), "Customers_Backup.xlsx"); 
+        showToast("Customer backup downloaded successfully!", 'success');
+    }
     function restoreCustomers(e) {
         const file = e.target.files[0]; if(!file) return;
         const reader = new FileReader();
         reader.onload = (evt) => {
-            const json = XLSX.utils.sheet_to_json(XLSX.read(new Uint8Array(evt.target.result), {type:'array'}).Sheets[XLSX.read(new Uint8Array(evt.target.result), {type:'array'}).SheetNames[0]]);
-            json.forEach(c => { if(c.phone) db.ref('smart_erp/customers/' + c.phone).set(c); });
-            alert("Customers restored successfully!");
+            try {
+                const workbook = XLSX.read(new Uint8Array(evt.target.result), {type:'array'});
+                const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                json.forEach(c => { if(c.phone) db.ref('smart_erp/customers/' + c.phone).set(c); });
+                showToast("Customers restored successfully!", 'success');
+            } catch(err) {
+                showToast("Invalid Excel File!", 'danger');
+            }
         };
         reader.readAsArrayBuffer(file);
     }
 
-    function backupMeters() { XLSX.writeFile(XLSX.utils.book_append_sheet(XLSX.utils.book_new(), XLSX.utils.json_to_sheet(meters), "Meters"), "Meters_Backup.xlsx"); }
+    function backupMeters() {
+        if(!meters || meters.length === 0) return showToast("No meter data available to backup!", 'danger');
+        try {
+            // Meter No টেক্সট হিসেবে এক্সপোর্ট করা হচ্ছে, যাতে ১২ ডিজিটের নম্বর পরিবর্তিত না হয়।
+            const exportRows = meters.map(m => ({
+                clientName: m.clientName || '',
+                mobile: m.mobile || '',
+                address: m.address || '',
+                meterNo: String(m.meterNo || ''),
+                lastRecharge: m.lastRecharge || '',
+                lastUpdated: m.lastUpdated || ''
+            }));
+            const worksheet = XLSX.utils.json_to_sheet(exportRows, { cellDates: false });
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Meters");
+            XLSX.writeFile(workbook, "Meters_Backup.xlsx");
+            showToast("Meters backup downloaded successfully!", 'success');
+        } catch(err) {
+            console.error(err);
+            showToast("Meter backup failed!", 'danger');
+        }
+    }
+
     function restoreMeters(e) {
-        const file = e.target.files[0]; if(!file) return;
+        const file = e.target.files && e.target.files[0];
+        if(!file) return;
         const reader = new FileReader();
         reader.onload = (evt) => {
-            const json = XLSX.utils.sheet_to_json(XLSX.read(new Uint8Array(evt.target.result), {type:'array'}).Sheets[XLSX.read(new Uint8Array(evt.target.result), {type:'array'}).SheetNames[0]]);
-            json.forEach(m => { if(m.meterNo) db.ref('smart_erp/meters/' + m.meterNo).set(m); });
-            alert("Meters restored successfully!");
+            try {
+                const workbook = XLSX.read(new Uint8Array(evt.target.result), {type:'array', raw:true});
+                if(!workbook.SheetNames || !workbook.SheetNames.length) throw new Error('No worksheet');
+                const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {defval:''});
+                if(!json.length) throw new Error('Empty worksheet');
+
+                const updates = {};
+                let restoredCount = 0;
+                json.forEach(row => {
+                    const meterNo = String(row.meterNo || row.MeterNo || row['Meter No'] || '').trim();
+                    if(!meterNo) return;
+                    const safeMeterNo = meterNo.replace(/[^0-9]/g, '');
+                    if(!safeMeterNo) return;
+
+                    const existing = meters.find(m => String(m.meterNo) === safeMeterNo) || {};
+                    const record = {
+                        clientName: String(row.clientName || row.ClientName || row['Client Name'] || existing.clientName || '').trim(),
+                        mobile: String(row.mobile || row.Mobile || existing.mobile || '').trim(),
+                        address: String(row.address || row.Address || existing.address || '').trim(),
+                        meterNo: safeMeterNo,
+                        lastRecharge: row.lastRecharge || row.LastRecharge || row['Last Recharge'] || existing.lastRecharge || '',
+                        lastUpdated: row.lastUpdated || row.LastUpdated || row['Last Updated'] || existing.lastUpdated || ''
+                    };
+                    updates[safeMeterNo] = record;
+                    restoredCount++;
+                });
+
+                if(!restoredCount) throw new Error('No valid meter records');
+                db.ref('smart_erp/meters').update(updates).then(() => {
+                    showToast(restoredCount + " meter record(s) restored successfully!", 'success');
+                }).catch(err => {
+                    console.error(err);
+                    showToast("Meter restore failed. Check database connection!", 'danger');
+                }).finally(() => {
+                    e.target.value = '';
+                });
+            } catch(err) {
+                console.error(err);
+                showToast("Invalid or empty Meter Excel file!", 'danger');
+                e.target.value = '';
+            }
+        };
+        reader.onerror = () => {
+            showToast("Unable to read the selected Excel file!", 'danger');
+            e.target.value = '';
         };
         reader.readAsArrayBuffer(file);
     }
 
-    function backupVata() { XLSX.writeFile(XLSX.utils.book_append_sheet(XLSX.utils.book_new(), XLSX.utils.json_to_sheet(vataList), "Vata"), "Vata_Backup.xlsx"); }
+    function backupVata() { 
+        if(!vataList || vataList.length === 0) return showToast("No vata data available to backup!", 'danger');
+        XLSX.writeFile(XLSX.utils.book_append_sheet(XLSX.utils.book_new(), XLSX.utils.json_to_sheet(vataList), "Vata"), "Vata_Backup.xlsx"); 
+        showToast("Vata backup downloaded successfully!", 'success');
+    }
     function restoreVata(e) {
         const file = e.target.files[0]; if(!file) return;
         const reader = new FileReader();
         reader.onload = (evt) => {
-            const json = XLSX.utils.sheet_to_json(XLSX.read(new Uint8Array(evt.target.result), {type:'array'}).Sheets[XLSX.read(new Uint8Array(evt.target.result), {type:'array'}).SheetNames[0]]);
-            json.forEach(v => { if(v.mobile) db.ref('smart_erp/vata/' + normalizePhoneBD(v.mobile)).set(v); });
-            alert("Vata records restored successfully!");
+            try {
+                const workbook = XLSX.read(new Uint8Array(evt.target.result), {type:'array'});
+                const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                json.forEach(v => { if(v.mobile) db.ref('smart_erp/vata/' + normalizePhoneBD(v.mobile)).set(v); });
+                showToast("Vata records restored successfully!", 'success');
+            } catch(err) {
+                showToast("Invalid Excel File!", 'danger');
+            }
         };
         reader.readAsArrayBuffer(file);
+    }
+
+    function deleteAllCustomers() {
+        if(customers.length === 0) return showToast("No customers to delete!", 'danger');
+        if(confirm("Are you sure you want to delete ALL customers?")) {
+            lastDeletedCustomers = [...customers];
+            db.ref('smart_erp/customers').remove().then(() => showToast("All customers deleted!", 'danger'));
+        }
+    }
+
+    function undoCustomers() {
+        if(!lastDeletedCustomers || lastDeletedCustomers.length === 0) return showToast("No deleted record available to undo!", 'danger');
+        lastDeletedCustomers.forEach(c => {
+            if(c.phone) db.ref('smart_erp/customers/' + c.phone).set(c);
+        });
+        showToast("Customer database restored!", 'success');
+        lastDeletedCustomers = [];
     }
 
     function openCustomerModal() { document.getElementById('customerModal').classList.remove('hidden'); }
@@ -1943,10 +2313,17 @@
     function saveCustomerData() {
         const phone = document.getElementById('custPhone').value.trim();
         const name = document.getElementById('custName').value.trim();
-        if(!phone || !name) return alert("Name & Phone required!");
-        db.ref('smart_erp/customers/' + phone).update({ name, phone, addr: document.getElementById('custAddr').value, email: document.getElementById('custEmail').value }).then(() => closeCustomerModal());
+        if(!phone || !name) return showToast("Name & Phone required!", 'danger');
+        db.ref('smart_erp/customers/' + phone).update({ name, phone, addr: document.getElementById('custAddr').value, email: document.getElementById('custEmail').value }).then(() => {
+            showToast("Customer record saved!", 'success');
+            closeCustomerModal();
+        });
     }
-    function deleteCustomer(phone) { if(confirm("Delete Customer?")) db.ref('smart_erp/customers/' + phone).remove(); }
+    function deleteCustomer(phone) { 
+        if(confirm("Delete Customer?")) {
+            db.ref('smart_erp/customers/' + phone).remove().then(() => showToast("Customer removed!", 'danger'));
+        }
+    }
     function editCustomer(phone) {
         const c = customers.find(x => matchPhone(x.phone, phone)); if(!c) return;
         openCustomerModal();
@@ -1957,42 +2334,90 @@
     function closeAddModal(){ document.getElementById('addModal').classList.add('hidden'); }
     function saveProduct(){
         const p = { code:sCode.value, name:sName.value, cat:sCat.value, war:sWar.value, cost:sCost.value, price:sPrice.value, qty:sQty.value, alert:sAlert.value };
-        db.ref('smart_erp/stock/'+p.code).set(p); closeAddModal();
+        db.ref('smart_erp/stock/'+p.code).set(p).then(() => {
+            showToast("Product saved successfully!", 'success');
+            closeAddModal();
+        });
     }
     function editStock(code) {
         const p = stock.find(x => x.code === code); if(!p) return; openAddModal();
         sCode.value = p.code; sName.value = p.name; sCat.value = p.cat || ""; sWar.value = p.war || ""; sCost.value = p.cost; sPrice.value = p.price; sQty.value = p.qty; sAlert.value = p.alert;
     }
-    function delP(c){ if(confirm('Delete Product?')) db.ref('smart_erp/stock/'+c).remove(); }
+    function delP(c){ 
+        if(confirm('Delete Product?')) {
+            db.ref('smart_erp/stock/'+c).remove().then(() => showToast("Product deleted!", 'danger'));
+        } 
+    }
 
-    function openMeterModal(){ document.getElementById('meterModal').classList.remove('hidden'); }
+    function openMeterModal(){
+        document.getElementById('editMeterNo').value = '';
+        document.getElementById('meterModal').classList.remove('hidden');
+    }
     function closeMeterModal(){ document.getElementById('meterModal').classList.add('hidden'); }
     function saveMeter(){
         const clientName = document.getElementById('mClientName').value.trim();
         const mobile = document.getElementById('mMobile').value.trim();
         const meterNo = document.getElementById('mMeterNo').value.trim();
-        if(!clientName || !mobile || !meterNo) return alert("Fill all fields!");
-        db.ref('smart_erp/meters/' + meterNo).set({ clientName, mobile, address: document.getElementById('mAddress').value, meterNo, lastRecharge: document.getElementById('mLastRecharge').value });
-        closeMeterModal();
+        const previousMeterNo = document.getElementById('editMeterNo').value.trim();
+        if(!clientName || !mobile || !meterNo) return showToast("Fill all required fields!", 'danger');
+
+        const existing = meters.find(x => String(x.meterNo) === (previousMeterNo || meterNo));
+        const lastRecharge = document.getElementById('mLastRecharge').value;
+        const rechargeChanged = !existing || String(existing.lastRecharge || '') !== String(lastRecharge || '');
+        const nowIso = new Date().toISOString();
+        const meterRecord = {
+            clientName,
+            mobile,
+            address: document.getElementById('mAddress').value,
+            meterNo,
+            lastRecharge,
+            // রিচার্জের তারিখ বদলালে বর্তমান তারিখ-সময় সংরক্ষণ হবে;
+            // শুধু প্রোফাইলের অন্য তথ্য সম্পাদনা করলে আগের আপডেট সময় অপরিবর্তিত থাকবে।
+            lastUpdated: rechargeChanged ? nowIso : (existing.lastUpdated || nowIso)
+        };
+
+        const savePromise = db.ref('smart_erp/meters/' + meterNo).set(meterRecord);
+        savePromise.then(() => {
+            if(previousMeterNo && previousMeterNo !== meterNo) {
+                return db.ref('smart_erp/meters/' + previousMeterNo).remove();
+            }
+        }).then(() => {
+            showToast("Meter profile saved!", 'success');
+            closeMeterModal();
+        }).catch(err => {
+            console.error(err);
+            showToast("Unable to save meter profile!", 'danger');
+        });
     }
     function editMeter(meterNo) {
         const m = meters.find(x => x.meterNo === meterNo); if(!m) return; openMeterModal();
+        document.getElementById('editMeterNo').value = m.meterNo;
         mClientName.value = m.clientName; mMobile.value = m.mobile; mAddress.value = m.address || ""; mMeterNo.value = m.meterNo; mLastRecharge.value = m.lastRecharge || "";
     }
-    function deleteSingleMeter(meterNo){ if(confirm("Delete Meter?")) db.ref('smart_erp/meters/' + meterNo).remove(); }
+    function deleteSingleMeter(meterNo){ 
+        if(confirm("Delete Meter?")) {
+            db.ref('smart_erp/meters/' + meterNo).remove().then(() => showToast("Meter deleted!", 'danger'));
+        } 
+    }
 
     function openVataModal(){ document.getElementById('vataModal').classList.remove('hidden'); }
     function closeVataModal(){ document.getElementById('vataModal').classList.add('hidden'); }
     function saveVata(){
-        const phone = formatPhoneBD(document.getElementById('vataMobile').value.trim()); if(!phone) return alert("Mobile Required!");
-        db.ref('smart_erp/vata/' + normalizePhoneBD(phone)).set({ mobile: phone, name: document.getElementById('vataName').value.trim(), mfs: document.getElementById('vataMfs').value.trim(), category: document.getElementById('vataCategory').value.trim() });
-        closeVataModal();
+        const phone = formatPhoneBD(document.getElementById('vataMobile').value.trim()); if(!phone) return showToast("Mobile required!", 'danger');
+        db.ref('smart_erp/vata/' + normalizePhoneBD(phone)).set({ mobile: phone, name: document.getElementById('vataName').value.trim(), mfs: document.getElementById('vataMfs').value.trim(), category: document.getElementById('vataCategory').value.trim() }).then(() => {
+            showToast("Vata beneficiary saved!", 'success');
+            closeVataModal();
+        });
     }
     function editVata(phone) {
         const v = vataList.find(x => matchPhone(x.mobile, phone)); if(!v) return; openVataModal();
         vataName.value = v.name; vataMobile.value = v.mobile; vataMfs.value = v.mfs; vataCategory.value = v.category;
     }
-    function deleteSingleVata(phone){ if(confirm('Delete Vata Record?')) db.ref('smart_erp/vata/' + normalizePhoneBD(phone)).remove(); }
+    function deleteSingleVata(phone){ 
+        if(confirm('Delete Vata Record?')) {
+            db.ref('smart_erp/vata/' + normalizePhoneBD(phone)).remove().then(() => showToast("Vata record removed!", 'danger'));
+        } 
+    }
 
     function viewInvoice(id) {
         const inv = invoices.find(x => x.id === id); if(!inv) return;
@@ -2016,7 +2441,11 @@
         calc();
         showSec('pos');
     }
-    function deleteInvoice(id) { if(confirm("Delete Invoice?")) db.ref('smart_erp/invoices/' + id).remove(); }
+    function deleteInvoice(id) { 
+        if(confirm("Delete Invoice?")) {
+            db.ref('smart_erp/invoices/' + id).remove().then(() => showToast("Invoice deleted!", 'danger'));
+        } 
+    }
 
     function updateCategoryList(){
         const datalist = document.getElementById("catList"); if(!datalist) return;
@@ -2059,7 +2488,7 @@
         const invId = document.getElementById('invId').innerText;
         const grandT = document.getElementById('grandT').innerText;
         const due = document.getElementById('pDue').innerText;
-        if (!phone) return alert("Enter Phone Number!");
+        if (!phone) return showToast("Enter Phone Number!", 'danger');
         let msg = `*SMART COMPUTER INVOICE*\nCustomer: ${name}\nInvoice: ${invId}\nTotal: ${grandT} TK\nDue: ${due} TK\nThank you!`;
         window.open(`https://wa.me/88${phone.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`, '_blank');
     }
@@ -2068,19 +2497,24 @@
         const data = { stock, invoices, users, customers, meters, vataList, dueLedgers };
         const blob = new Blob([JSON.stringify(data)], {type: "application/json"});
         const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Smart_ERP_Backup.json`; a.click();
+        showToast("JSON Backup downloaded!", 'success');
     }
     function importData(event) {
         const file = event.target.files[0]; if(!file) return;
         const reader = new FileReader();
-        reader.onload = (e) => { if(confirm("Overwrite data?")) db.ref('smart_erp').set(JSON.parse(e.target.result)); };
+        reader.onload = (e) => { 
+            if(confirm("Overwrite data?")) {
+                db.ref('smart_erp').set(JSON.parse(e.target.result)).then(() => showToast("Data restored successfully!", 'success'));
+            } 
+        };
         reader.readAsText(file);
     }
     
     function renderUsers() {
         let h = ""; users.forEach((u, i) => {
-            h += `<li style="display:flex; justify-content:space-between; margin-bottom:8px; padding:8px; background:#f1f5f9; border-radius:4px;">
-                <span><b>${u.id}</b></span>
-                <button onclick="deleteUser(${i})" style="border:none; color:red; background:none;"><i class="fa-solid fa-trash"></i></button>
+            h += `<li style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding:8px 12px; background:#f1f5f9; border-radius:6px;">
+                <span><b>${u.id}</b> (${(u.role||'admin').toUpperCase()})</span>
+                <button onclick="deleteUser(${i})" style="border:none; color:red; background:none; cursor:pointer;"><i class="fa-solid fa-trash"></i></button>
             </li>`;
         });
         document.getElementById('userList').innerHTML = h;
@@ -2088,11 +2522,15 @@
     function saveUser() {
         const id = document.getElementById('newUId').value.trim();
         const pass = document.getElementById('newUPass').value.trim();
-        if(!id || !pass) return alert("Fill all fields!");
-        users.push({id, pass}); db.ref('smart_erp/users').set(users).then(() => resetUserForm());
+        const role = document.getElementById('newUserRole').value;
+        if(!id || !pass) return showToast("Fill all fields!", 'danger');
+        users.push({id, pass, role}); db.ref('smart_erp/users').set(users).then(() => {
+            showToast("User saved successfully!", 'success');
+            resetUserForm();
+        });
     }
     function resetUserForm() { document.getElementById('newUId').value = ""; document.getElementById('newUPass').value = ""; }
-    function deleteUser(i) { users.splice(i, 1); db.ref('smart_erp/users').set(users); }
+    function deleteUser(i) { users.splice(i, 1); db.ref('smart_erp/users').set(users).then(() => showToast("User deleted!", 'danger')); }
 </script>
 </body>
 </html>
